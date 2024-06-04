@@ -1,0 +1,8 @@
+- name: "Read folder: spectro-templates"
+  entityType: "folder"
+  entityName: "spectro-templates"
+  privileges:
+    - Folder.Create
+  clusterName: ""
+  clusterScoped: false
+  ruleType: Spectro Entity Privileges

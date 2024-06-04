@@ -1,0 +1,7 @@
+apiVersion: validation.spectrocloud.labs/v1alpha1
+kind: VsphereValidator
+metadata:
+  name: {{ .Name }}
+  namespace: {{ .Namespace }}
+spec:
+{{ .Spec }}

@@ -1,0 +1,4 @@
+{{- $values := .Values }}
+{{- range $i, $k := .Keys }}
+{{ printf "%s:" $k }}	{{ index $values $i }}
+{{- end }}
