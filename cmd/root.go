@@ -45,8 +45,8 @@ func InitRootCmd() *cobra.Command {
 		Use:   "validator",
 		Short: "Welcome to the Validator CLI",
 		Long: `Welcome to the Validator CLI.
-        Install validator & configure validator plugins.
-        Use 'validator help <sub-command>' to explore all of the functionality the Validator CLI has to offer.`,
+Install validator & configure validator plugins.
+Use 'validator help <sub-command>' to explore all of the functionality the Validator CLI has to offer.`,
 		SilenceUsage: false,
 	}
 
