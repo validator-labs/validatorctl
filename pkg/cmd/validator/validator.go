@@ -27,7 +27,7 @@ import (
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	//"github.com/spectrocloud/palette-cli/pkg/repo"
 	//"github.com/spectrocloud/palette-cli/pkg/services/clouds"
-	//"github.com/validator-labs/validatorctl/pkg/services/validator"
+	"github.com/validator-labs/validatorctl/pkg/services/validator"
 	embed "github.com/validator-labs/validatorctl/pkg/utils/embed"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	"github.com/validator-labs/validatorctl/pkg/utils/kube"
@@ -40,75 +40,72 @@ var (
 )
 
 func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool) error {
-	/*
-		var vc *components.ValidatorConfig
-		var err error
-		var saveConfig bool
+	var vc *components.ValidatorConfig
+	var err error
+	var saveConfig bool
 
-		if tc.ConfigFile == "" && reconfigure {
-			log.FatalCLI("Cannot reconfigure validator without providing a configuration file.")
+	if tc.ConfigFile == "" && reconfigure {
+		log.FatalCLI("Cannot reconfigure validator without providing a configuration file.")
+	}
+
+	if tc.ConfigFile != "" && !reconfigure {
+		// Silent Mode
+		vc, err = components.NewValidatorFromConfig(tc)
+		if err != nil {
+			return errors.Wrap(err, "failed to load validator configuration file")
 		}
-
-		if tc.ConfigFile != "" && !reconfigure {
-			// Silent Mode
+		if tc.UpdatePasswords {
+			log.Header("Updating credentials in validator configuration file")
+			if err := validator.UpdateValidatorCredentials(vc); err != nil {
+				return err
+			}
+			saveConfig = true
+		}
+		if vc.Kubeconfig == "" {
+			vc.Kubeconfig = filepath.Join(c.RunLoc, "kind-cluster.kubeconfig")
+			saveConfig = true
+		}
+	} else {
+		// Interactive mode
+		if reconfigure {
 			vc, err = components.NewValidatorFromConfig(tc)
 			if err != nil {
 				return errors.Wrap(err, "failed to load validator configuration file")
 			}
-			if tc.UpdatePasswords {
-				log.Header("Updating credentials in validator configuration file")
-				if err := validator.UpdateValidatorCredentials(vc); err != nil {
-					return err
-				}
-				saveConfig = true
-			}
-			if vc.Kubeconfig == "" {
-				vc.Kubeconfig = filepath.Join(c.RunLoc, "kind-cluster.kubeconfig")
-				saveConfig = true
-			}
 		} else {
-			// Interactive mode
-			if reconfigure {
-				vc, err = components.NewValidatorFromConfig(tc)
-				if err != nil {
-					return errors.Wrap(err, "failed to load validator configuration file")
-				}
-			} else {
-				vc = components.NewValidatorConfig()
-			}
-
-			// for dev build versions, we allow selection of specific validator and plugin versions
-			// for all other builds, we set a fixed version for the validator and plugins
-			vc.UseFixedVersions = !strings.HasSuffix(tc.CliVersion, "-dev")
-			if err := validator.ReadValidatorConfig(c, tc, vc); err != nil {
-				return errors.Wrap(err, "failed to create new validator configuration")
-			}
-			tc.ConfigFile = filepath.Join(c.RunLoc, cfg.ValidatorConfigFile)
-			saveConfig = true
+			vc = components.NewValidatorConfig()
 		}
 
-		// save / print validator config file
-		if saveConfig {
-			if err := components.SaveValidatorConfig(vc, tc); err != nil {
-				return err
-			}
-		} else {
-			log.InfoCLI("validator configuration file: %s", tc.ConfigFile)
+		// for dev build versions, we allow selection of specific validator and plugin versions
+		// for all other builds, we set a fixed version for the validator and plugins
+		vc.UseFixedVersions = !strings.HasSuffix(tc.CliVersion, "-dev")
+		if err := validator.ReadValidatorConfig(c, tc, vc); err != nil {
+			return errors.Wrap(err, "failed to create new validator configuration")
 		}
+		tc.ConfigFile = filepath.Join(c.RunLoc, cfg.ValidatorConfigFile)
+		saveConfig = true
+	}
 
-		if tc.CreateConfigOnly || tc.UpdatePasswords {
-			return nil
+	// save / print validator config file
+	if saveConfig {
+		if err := components.SaveValidatorConfig(vc, tc); err != nil {
+			return err
 		}
+	} else {
+		log.InfoCLI("validator configuration file: %s", tc.ConfigFile)
+	}
 
-		if vc.UseKindCluster {
-			if err := createKindCluster(c, vc); err != nil {
-				return err
-			}
+	if tc.CreateConfigOnly || tc.UpdatePasswords {
+		return nil
+	}
+
+	if vc.UseKindCluster {
+		if err := createKindCluster(c, vc); err != nil {
+			return err
 		}
+	}
 
-		return applyValidatorAndPlugins(c, vc)
-	*/
-	return nil
+	return applyValidatorAndPlugins(c, vc)
 }
 
 func UpgradeValidatorCommand(c *cfg.Config, taskConfig *cfg.TaskConfig) error {
@@ -256,7 +253,7 @@ func applyValidatorAndPlugins(c *cfg.Config, vc *components.ValidatorConfig) err
 	if err := applyValidator(c, vc); err != nil {
 		return err
 	}
-	log.InfoCLI("\nvalidator and validator plugin(s) installed successfully")
+	log.InfoCLI("\nvalidator installed successfully")
 
 	if err := applyPlugins(c, vc); err != nil {
 		return err
@@ -410,6 +407,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if vc.ProxyConfig.Enabled {
 		args["ProxyCaCertData"] = strings.Split(vc.ProxyConfig.Env.ProxyCaCertData, "\n")
 	}
+
 	values, err := embed.RenderTemplateBytes(args, cfg.Validator, "validator-base-values.tmpl")
 	if err != nil {
 		return errors.Wrap(err, "failed to render validator base values.yaml")

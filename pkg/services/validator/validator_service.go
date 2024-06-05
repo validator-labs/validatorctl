@@ -76,14 +76,16 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 				// use quay.io/validator-labs, as it will be mirrored by the OCI registry
 				vc.ImageRegistry = imageRegistry
 		} else {
-			if vc.ImageRegistry != "" {
-				imageRegistry = vc.ImageRegistry
-			}
-			vc.ImageRegistry, err = prompts.ReadText("Validator image registry", imageRegistry, false, -1)
-			if err != nil {
-				return err
-			}
-			vc.ScarProps.ImageRegistryType = repo.RegistryTypeSpectro
+	*/
+	if vc.ImageRegistry != "" {
+		imageRegistry = vc.ImageRegistry
+	}
+	vc.ImageRegistry, err = prompts.ReadText("Validator image registry", imageRegistry, false, -1)
+	if err != nil {
+		return err
+	}
+	//vc.ScarProps.ImageRegistryType = repo.RegistryTypeSpectro
+	/*
 		}
 	*/
 
@@ -93,11 +95,9 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	if err := readSinkConfig(vc, k8sClient); err != nil {
 		return err
 	}
-	/*
-		if err := readHelmRelease(cfg.Validator, k8sClient, vc, vc.Release, vc.ReleaseSecret); err != nil {
-			return err
-		}
-	*/
+	if err := readHelmRelease(cfg.Validator, k8sClient, vc, vc.Release, vc.ReleaseSecret); err != nil {
+		return err
+	}
 
 	log.Header("Enter Validator Plugin Configuration")
 
@@ -142,11 +142,9 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		return err
 	}
 	if vc.OCIPlugin.Enabled {
-		/*
-			if err = readOciPlugin(vc, k8sClient); err != nil {
-				return err
-			}
-		*/
+		if err = readOciPlugin(vc, k8sClient); err != nil {
+			return err
+		}
 	}
 
 	vc.VspherePlugin.Enabled, err = prompts.ReadBool("Enable vSphere plugin", true)
