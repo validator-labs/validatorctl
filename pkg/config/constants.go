@@ -111,6 +111,9 @@ const (
 	MemoryReqRegex        = "(^\\d+\\.?\\d*[M,G,T]i)"
 	DiskReqRegex          = "(^\\d+\\.?\\d*[M,G,T]i)"
 	MaasApiRegex          = `^https?://.*\/MAAS$`
+
+	IpamPoolRangeKey = "ipIpamPoolRange"
+	ECPoolSize       = 3
 )
 
 var (

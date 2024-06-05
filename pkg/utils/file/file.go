@@ -14,7 +14,7 @@ import (
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	//"github.com/validator-labs/validatorctl/tests/utils/test/mocks"
+	"github.com/validator-labs/validatorctl/tests/utils/test/mocks"
 )
 
 var (
@@ -45,8 +45,7 @@ var (
 	FileReader     = os.ReadFile
 )
 
-// TODO: see if i need the mock or not
-func getEditorExecutor(editor, filename string) *exec.Cmd /*mocks.CommandExecutor*/ {
+func getEditorExecutor(editor, filename string) mocks.CommandExecutor {
 	cmd := exec.Command(editor, filename)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

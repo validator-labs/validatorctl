@@ -24,13 +24,11 @@ import (
 
 var (
 	pluginFuncs = map[string]func(*components.ValidatorConfig, kubernetes.Interface) error{
-		/* TODO: uncomment these lines
 		"AWS":     readAwsPlugin,
 		"Azure":   readAzurePlugin,
 		"Network": readNetworkPlugin,
 		"OCI":     readOciPlugin,
 		"vSphere": readVspherePlugin,
-		*/
 	}
 	plugins = make([]string, 0, len(pluginFuncs))
 
@@ -106,11 +104,9 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		return err
 	}
 	if vc.AWSPlugin.Enabled {
-		/*
-			if err = readAwsPlugin(vc, k8sClient); err != nil {
-				return err
-			}
-		*/
+		if err = readAwsPlugin(vc, k8sClient); err != nil {
+			return err
+		}
 	}
 
 	vc.AzurePlugin.Enabled, err = prompts.ReadBool("Enable Azure plugin", true)
@@ -118,11 +114,9 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		return fmt.Errorf("failed to prompt for bool for enable Azure plugin: %w", err)
 	}
 	if vc.AzurePlugin.Enabled {
-		/*
-			if err = readAzurePlugin(vc, k8sClient); err != nil {
-				return err
-			}
-		*/
+		if err = readAzurePlugin(vc, k8sClient); err != nil {
+			return err
+		}
 	}
 
 	vc.NetworkPlugin.Enabled, err = prompts.ReadBool("Enable Network plugin", true)
@@ -130,11 +124,9 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		return err
 	}
 	if vc.NetworkPlugin.Enabled {
-		/*
-			if err = readNetworkPlugin(vc, k8sClient); err != nil {
-				return err
-			}
-		*/
+		if err = readNetworkPlugin(vc, k8sClient); err != nil {
+			return err
+		}
 	}
 
 	vc.OCIPlugin.Enabled, err = prompts.ReadBool("Enable OCI plugin", true)
@@ -152,11 +144,9 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		return err
 	}
 	if vc.VspherePlugin.Enabled {
-		/*
-			if err = readVspherePlugin(vc, k8sClient); err != nil {
-				return err
-			}
-		*/
+		if err = readVspherePlugin(vc, k8sClient); err != nil {
+			return err
+		}
 	}
 
 	restart, err := prompts.ReadBool("Restart configuration", false)
