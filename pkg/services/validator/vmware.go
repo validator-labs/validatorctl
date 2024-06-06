@@ -16,6 +16,7 @@ import (
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	"github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	"github.com/validator-labs/validator-plugin-vsphere/tests/utils/test/mocks"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -23,7 +24,6 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/services"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
-	"github.com/validator-labs/validatorctl/tests/utils/test/mocks"
 )
 
 var (

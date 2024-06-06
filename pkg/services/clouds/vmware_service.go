@@ -6,19 +6,12 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
-	/*
-		"github.com/vmware/govmomi"
-		"github.com/vmware/govmomi/session"
-		"github.com/vmware/govmomi/vim25"
-		"github.com/vmware/govmomi/vim25/soap"
-	*/
-
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+	"github.com/validator-labs/validator-plugin-vsphere/tests/utils/test/mocks"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
-	"github.com/validator-labs/validatorctl/tests/utils/test/mocks"
 )
 
 const VALUE string = "VALUE"
