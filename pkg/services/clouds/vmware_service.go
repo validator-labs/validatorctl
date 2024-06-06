@@ -9,7 +9,6 @@ import (
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
-	"github.com/validator-labs/validator-plugin-vsphere/tests/utils/test/mocks"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 )
@@ -73,7 +72,7 @@ func ReadVsphereAccountProps(account *vsphere.VsphereCloudAccount) error {
 	return nil
 }
 
-func getVSphereDriver(account *vsphere.VsphereCloudAccount) (mocks.VsphereDriver, error) {
+func getVSphereDriver(account *vsphere.VsphereCloudAccount) (vsphere.VsphereDriver, error) {
 	return vsphere.NewVSphereDriver(account.VcenterServer, account.Username, account.Password, "")
 }
 

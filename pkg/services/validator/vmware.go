@@ -16,7 +16,7 @@ import (
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	"github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
-	"github.com/validator-labs/validator-plugin-vsphere/tests/utils/test/mocks"
+	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -163,7 +163,7 @@ func initVsphereRule[R vSphereRule](r R, ruleType, message string, ruleNames *[]
 	return nil
 }
 
-func configureNtpRules(ctx context.Context, c *components.VspherePluginConfig, driver mocks.VsphereDriver, ruleNames *[]string) error {
+func configureNtpRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
 	log.InfoCLI(`
 	NTP validation ensures that ntpd is enabled and running on a set of ESXi hosts.
 	If enabled, you will be prompted to select one or more of ESXi hosts.
@@ -210,7 +210,7 @@ func configureNtpRules(ctx context.Context, c *components.VspherePluginConfig, d
 	return nil
 }
 
-func readNtpRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.NTPValidationRule, driver mocks.VsphereDriver, idx int, ruleNames *[]string) error {
+func readNtpRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.NTPValidationRule, driver vsphere.VsphereDriver, idx int, ruleNames *[]string) error {
 	err := initVsphereRule(r, "NTP", "The rule's ESXi host selection will be replaced.", ruleNames)
 	if err != nil {
 		return err
@@ -233,7 +233,7 @@ func readNtpRule(ctx context.Context, c *components.VspherePluginConfig, r *v1al
 	return nil
 }
 
-func selectEsxiHosts(ctx context.Context, datacenter string, clusterName string, driver mocks.VsphereDriver) ([]string, error) {
+func selectEsxiHosts(ctx context.Context, datacenter string, clusterName string, driver vsphere.VsphereDriver) ([]string, error) {
 	hosts, err := driver.GetVSphereHostSystems(ctx, datacenter, clusterName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list vSphere ESXi hosts")
@@ -380,7 +380,7 @@ func selectPrivileges(allPrivileges []string) ([]string, error) {
 	return selectedPrivileges, nil
 }
 
-func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePluginConfig, driver mocks.VsphereDriver, ruleNames *[]string) error {
+func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
 	log.InfoCLI(`
 	Entity privilege validation ensures that a vSphere user has certain
 	privileges with respect to a specific vSphere resource.
@@ -444,7 +444,7 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 	return nil
 }
 
-func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver mocks.VsphereDriver, idx int, spectroEntityRuleMap map[string]*components.VsphereEntityPrivilegeRule, ruleNames *[]string) error {
+func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver, idx int, spectroEntityRuleMap map[string]*components.VsphereEntityPrivilegeRule, ruleNames *[]string) error {
 	err := initVsphereRule(r, "entity privilege", "The rule's vSphere privilege set will be replaced.", ruleNames)
 	if err != nil {
 		return err
@@ -514,7 +514,7 @@ func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginCon
 	return nil
 }
 
-func readCustomEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver mocks.VsphereDriver) error {
+func readCustomEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver) error {
 	var err error
 	if r.Username == "" {
 		r.Username, err = prompts.ReadTextRegex("vSphere username to validate entity privileges for", r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
@@ -537,7 +537,7 @@ func readCustomEntityPrivileges(ctx context.Context, c *components.VspherePlugin
 	return nil
 }
 
-func configureResourceRequirementRules(ctx context.Context, c *components.VspherePluginConfig, driver mocks.VsphereDriver, ruleNames *[]string) error {
+func configureResourceRequirementRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
 	log.InfoCLI(`
 	Resource requirement validation ensures that sufficient capacity is available within
 	a vSphere Datacenter or Cluster for a configurable number of VMs with specific CPU, RAM, and Storage minimums.
@@ -584,7 +584,7 @@ func configureResourceRequirementRules(ctx context.Context, c *components.Vspher
 	return nil
 }
 
-func readResourceRequirementRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.ComputeResourceRule, driver mocks.VsphereDriver, idx int, ruleNames *[]string) error {
+func readResourceRequirementRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.ComputeResourceRule, driver vsphere.VsphereDriver, idx int, ruleNames *[]string) error {
 	err := initVsphereRule(r, "resource requirement", "", ruleNames)
 	if err != nil {
 		return err
@@ -675,7 +675,7 @@ func readResourceRequirements(r *v1alpha1.ComputeResourceRule, n *v1alpha1.Nodep
 	return nil
 }
 
-func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginConfig, driver mocks.VsphereDriver, ruleNames *[]string) error {
+func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
 	log.InfoCLI(`
 	Tag validation ensures that a specific tag is present on a particular vSphere resource.
 	`)
@@ -738,7 +738,7 @@ func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginCo
 	return nil
 }
 
-func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver mocks.VsphereDriver, idx int, spectroTagRuleMap map[string]*components.VsphereTagRule, ruleNames *[]string) error {
+func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver vsphere.VsphereDriver, idx int, spectroTagRuleMap map[string]*components.VsphereTagRule, ruleNames *[]string) error {
 	err := initVsphereRule(r, "tag", "", ruleNames)
 	if err != nil {
 		return err
@@ -793,7 +793,7 @@ func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, 
 	return nil
 }
 
-func readCustomVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver mocks.VsphereDriver) error {
+func readCustomVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver vsphere.VsphereDriver) error {
 	var err error
 	r.EntityType, r.EntityName, r.ClusterName, err = getEntityInfo(ctx, r.EntityType, "Entity Type", c.Validator.Datacenter, cfg.ValidatorPluginVsphereEntities, driver)
 	if err != nil {
@@ -806,7 +806,7 @@ func readCustomVsphereTagRule(ctx context.Context, c *components.VspherePluginCo
 	return nil
 }
 
-func getClusterScopedInfo(ctx context.Context, datacenter, entityType string, driver mocks.VsphereDriver) (bool, string, error) {
+func getClusterScopedInfo(ctx context.Context, datacenter, entityType string, driver vsphere.VsphereDriver) (bool, string, error) {
 	var clusterName string
 
 	clusterScopedPrompt := fmt.Sprintf("Is %s cluster scoped", entityType)
@@ -824,7 +824,7 @@ func getClusterScopedInfo(ctx context.Context, datacenter, entityType string, dr
 	return clusterScoped, clusterName, nil
 }
 
-func getClusterName(ctx context.Context, datacenter string, driver mocks.VsphereDriver) (string, error) {
+func getClusterName(ctx context.Context, datacenter string, driver vsphere.VsphereDriver) (string, error) {
 	clusterList, err := driver.GetVSphereClusters(ctx, datacenter)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to list vSphere clusters")
@@ -836,7 +836,7 @@ func getClusterName(ctx context.Context, datacenter string, driver mocks.Vsphere
 	return clusterName, nil
 }
 
-func getEntityInfo(ctx context.Context, entityType, entityTypePrompt, datacenter string, entityTypesList []string, driver mocks.VsphereDriver) (string, string, string, error) {
+func getEntityInfo(ctx context.Context, entityType, entityTypePrompt, datacenter string, entityTypesList []string, driver vsphere.VsphereDriver) (string, string, string, error) {
 	var err error
 	if entityType == "" {
 		entityType, err = prompts.Select(entityTypePrompt, entityTypesList)
@@ -861,7 +861,7 @@ func getEntityInfo(ctx context.Context, entityType, entityTypePrompt, datacenter
 	return validatorEntityType, entityName, clusterName, err
 }
 
-func getEntityAndClusterInfo(ctx context.Context, entityType string, driver mocks.VsphereDriver, datacenter string) (entityName, clusterName string, err error) {
+func getEntityAndClusterInfo(ctx context.Context, entityType string, driver vsphere.VsphereDriver, datacenter string) (entityName, clusterName string, err error) {
 	switch entityType {
 	case cfg.ValidatorVsphereEntityCluster, "cluster":
 		entityName, err = getClusterName(ctx, datacenter, driver)
@@ -898,7 +898,7 @@ func getEntityAndClusterInfo(ctx context.Context, entityType string, driver mock
 	}
 }
 
-func handleDatacenterEntity(ctx context.Context, driver mocks.VsphereDriver) (string, error) {
+func handleDatacenterEntity(ctx context.Context, driver vsphere.VsphereDriver) (string, error) {
 	dcList, err := driver.GetVSphereDatacenters(ctx)
 	if err != nil {
 		return "", err
@@ -910,7 +910,7 @@ func handleDatacenterEntity(ctx context.Context, driver mocks.VsphereDriver) (st
 	return dcName, nil
 }
 
-func handleFolderEntity(ctx context.Context, driver mocks.VsphereDriver, datacenter string) (string, error) {
+func handleFolderEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string) (string, error) {
 	folderList, err := driver.GetVSphereVMFolders(ctx, datacenter)
 	if err != nil {
 		return "", err
@@ -922,7 +922,7 @@ func handleFolderEntity(ctx context.Context, driver mocks.VsphereDriver, datacen
 	return folderName, nil
 }
 
-func handleHostEntity(ctx context.Context, driver mocks.VsphereDriver, datacenter, entityType string) (string, string, error) {
+func handleHostEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter, entityType string) (string, string, error) {
 	_, clusterName, err := getClusterScopedInfo(ctx, datacenter, entityType, driver)
 	if err != nil {
 		return "", "", err
@@ -942,7 +942,7 @@ func handleHostEntity(ctx context.Context, driver mocks.VsphereDriver, datacente
 	return hostName, clusterName, nil
 }
 
-func handleResourcePoolEntity(ctx context.Context, driver mocks.VsphereDriver, datacenter string, entityType string) (string, string, error) {
+func handleResourcePoolEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string, entityType string) (string, string, error) {
 	var allResourcePools []*object.ResourcePool
 	var rpChoiceList []prompts.ChoiceItem
 	var rpClusterMapping = make(map[string]string)
@@ -992,7 +992,7 @@ func handleResourcePoolEntity(ctx context.Context, driver mocks.VsphereDriver, d
 	return choice.ID, rpClusterMapping[choice.Name], nil
 }
 
-func handleVAppEntity(ctx context.Context, driver mocks.VsphereDriver) (string, error) {
+func handleVAppEntity(ctx context.Context, driver vsphere.VsphereDriver) (string, error) {
 	vApps, err := driver.GetVapps(ctx)
 	if err != nil {
 		return "", err
@@ -1008,7 +1008,7 @@ func handleVAppEntity(ctx context.Context, driver mocks.VsphereDriver) (string, 
 	return vAppName, nil
 }
 
-func handleVMEntity(ctx context.Context, driver mocks.VsphereDriver, datacenter string, entityType string) (string, string, error) {
+func handleVMEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string, entityType string) (string, string, error) {
 	var vmList []string
 	var hostClusterMapping = make(map[string]string)
 	//var msgErr *msg.MsgError
