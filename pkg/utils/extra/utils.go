@@ -12,13 +12,6 @@ type V1Env struct {
 	ServiceIPRange  *string `yaml:"serviceIPRange"`
 }
 
-type V1VsphereCloudAccount struct {
-	Insecure      bool    `yaml:"insecure"`
-	Password      *string `yaml:"password"`
-	Username      *string `yaml:"username"`
-	VcenterServer *string `yaml:"vcenterServer"`
-}
-
 // Auth username/password/tls or other auth
 type Auth struct {
 	Username string    `json:"username"`
@@ -37,8 +30,3 @@ type TlsConfig struct {
 }
 
 type RegistryAuthMap map[string]Auth
-
-type MsgError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-}

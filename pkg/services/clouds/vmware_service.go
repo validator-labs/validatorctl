@@ -15,9 +15,8 @@ import (
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
-	vsphere "github.com/validator-labs/validator-plugin-vsphere/clouddriver" // TODO: add hexternal things to either validatorctl or the vsphere-plugin
+	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
-	models "github.com/validator-labs/validatorctl/pkg/utils/extra"
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 	"github.com/validator-labs/validatorctl/tests/utils/test/mocks"
 )
@@ -27,17 +26,10 @@ const VALUE string = "VALUE"
 // GetVSphereDriver enables monkey-patching the vSphere driver for integration tests
 var GetVSphereDriver = getVSphereDriver
 
-func ReadVsphereAccountProps(account *models.V1VsphereCloudAccount) error {
-	var vcenterServer, username, password string
-	if account.VcenterServer != nil {
-		vcenterServer = *account.VcenterServer
-	}
-	if account.Username != nil {
-		username = *account.Username
-	}
-	if account.Password != nil {
-		password = *account.Password
-	}
+func ReadVsphereAccountProps(account *vsphere.VsphereCloudAccount) error {
+	vcenterServer := account.VcenterServer
+	username := account.Username
+	password := account.Password
 
 	// Identity Endpoint
 	vcenterServer, err := prompts.ReadDomainsOrIPs(
@@ -47,7 +39,7 @@ func ReadVsphereAccountProps(account *models.V1VsphereCloudAccount) error {
 		return err
 	}
 	vcenterServer = string_utils.MultiTrim(vcenterServer, cfg.HTTPSchemes, []string{"/"})
-	account.VcenterServer = &vcenterServer
+	account.VcenterServer = vcenterServer
 
 	// Username
 	username, err = prompts.ReadTextRegex(
@@ -56,14 +48,14 @@ func ReadVsphereAccountProps(account *models.V1VsphereCloudAccount) error {
 	if err != nil {
 		return err
 	}
-	account.Username = &username
+	account.Username = username
 
 	// Password
 	password, err = prompts.ReadPassword("vSphere Password", password, false, -1)
 	if err != nil {
 		return err
 	}
-	account.Password = &password
+	account.Password = password
 
 	// Allow Insecure Connection
 	insecure, err := prompts.ReadBool("Allow Insecure Connection (Bypass x509 Verification)", true)
@@ -88,11 +80,11 @@ func ReadVsphereAccountProps(account *models.V1VsphereCloudAccount) error {
 	return nil
 }
 
-func getVSphereDriver(account *models.V1VsphereCloudAccount) (mocks.VsphereDriver, error) {
-	return vsphere.NewVSphereDriver(*account.VcenterServer, *account.Username, *account.Password)
+func getVSphereDriver(account *vsphere.VsphereCloudAccount) (mocks.VsphereDriver, error) {
+	return vsphere.NewVSphereDriver(account.VcenterServer, account.Username, account.Password, "")
 }
 
-func ValidateCloudAccountVsphere(account *models.V1VsphereCloudAccount) error {
+func ValidateCloudAccountVsphere(account *vsphere.VsphereCloudAccount) error {
 	driver, err := GetVSphereDriver(account)
 	if err != nil {
 		return err
@@ -101,18 +93,18 @@ func ValidateCloudAccountVsphere(account *models.V1VsphereCloudAccount) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	isValid, e := driver.IsValidVSphereCredentials(ctx)
-	if e != nil {
-		return errors.New(e.Message)
+	isValid, err := driver.IsValidVSphereCredentials(ctx)
+	if err != nil {
+		return err
 	}
 	if !isValid {
 		return errors.New("vSphere cloud account is not valid")
 	}
 
 	// ensure we have permissions to get tags
-	_, e = driver.GetResourceTags(ctx, "Datacenter")
-	if e != nil {
-		return errors.Wrap(errors.New(e.Message), "vSphere cloud account failed to get tags")
+	_, err = driver.GetResourceTags(ctx, "Datacenter")
+	if err != nil {
+		return errors.Wrap(err, "vSphere cloud account failed to get tags")
 	}
 
 	return nil

@@ -23,8 +23,6 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/services"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
-	msg "github.com/validator-labs/validatorctl/pkg/utils/extra"
-	"github.com/validator-labs/validatorctl/pkg/utils/ptr"
 	"github.com/validator-labs/validatorctl/tests/utils/test/mocks"
 )
 
@@ -138,9 +136,9 @@ func readVsphereCredentials(c *components.VspherePluginConfig, k8sClient kuberne
 		if err != nil {
 			return err
 		}
-		c.Account.VcenterServer = ptr.StringPtr(string(secret.Data["vcenterServer"]))
-		c.Account.Username = ptr.StringPtr(string(secret.Data["username"]))
-		c.Account.Password = ptr.StringPtr(string(secret.Data["password"]))
+		c.Account.VcenterServer = string(secret.Data["vcenterServer"])
+		c.Account.Username = string(secret.Data["username"])
+		c.Account.Password = string(secret.Data["password"])
 		c.Account.Insecure = insecure
 	}
 
@@ -236,9 +234,9 @@ func readNtpRule(ctx context.Context, c *components.VspherePluginConfig, r *v1al
 }
 
 func selectEsxiHosts(ctx context.Context, datacenter string, clusterName string, driver mocks.VsphereDriver) ([]string, error) {
-	hosts, msgErr := driver.GetVSphereHostSystems(ctx, datacenter, clusterName)
-	if msgErr != nil {
-		return nil, fmt.Errorf("failed to list vSphere ESXi hosts; error: %s, code: %s", msgErr.Message, msgErr.Code)
+	hosts, err := driver.GetVSphereHostSystems(ctx, datacenter, clusterName)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list vSphere ESXi hosts")
 	}
 
 	var hostList, selectedHosts []string
@@ -827,9 +825,9 @@ func getClusterScopedInfo(ctx context.Context, datacenter, entityType string, dr
 }
 
 func getClusterName(ctx context.Context, datacenter string, driver mocks.VsphereDriver) (string, error) {
-	clusterList, msgErr := driver.GetVSphereClusters(ctx, datacenter)
-	if msgErr != nil {
-		return "", fmt.Errorf("failed to list vSphere clusters; error: %s, code: %s", msgErr.Message, msgErr.Code)
+	clusterList, err := driver.GetVSphereClusters(ctx, datacenter)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to list vSphere clusters")
 	}
 	clusterName, err := prompts.Select("Cluster", clusterList)
 	if err != nil {
@@ -901,9 +899,9 @@ func getEntityAndClusterInfo(ctx context.Context, entityType string, driver mock
 }
 
 func handleDatacenterEntity(ctx context.Context, driver mocks.VsphereDriver) (string, error) {
-	dcList, msgErr := driver.GetVSphereDatacenters(ctx)
-	if msgErr != nil {
-		return "", fmt.Errorf("err: %s, code: %s", msgErr.Message, msgErr.Code)
+	dcList, err := driver.GetVSphereDatacenters(ctx)
+	if err != nil {
+		return "", err
 	}
 	dcName, err := prompts.Select("Datacenter", dcList)
 	if err != nil {
@@ -913,9 +911,9 @@ func handleDatacenterEntity(ctx context.Context, driver mocks.VsphereDriver) (st
 }
 
 func handleFolderEntity(ctx context.Context, driver mocks.VsphereDriver, datacenter string) (string, error) {
-	folderList, msgErr := driver.GetVSphereVMFolders(ctx, datacenter)
-	if msgErr != nil {
-		return "", fmt.Errorf("err: %s, code: %s", msgErr.Message, msgErr.Code)
+	folderList, err := driver.GetVSphereVMFolders(ctx, datacenter)
+	if err != nil {
+		return "", err
 	}
 	folderName, err := prompts.Select("Folder", folderList)
 	if err != nil {
@@ -929,9 +927,9 @@ func handleHostEntity(ctx context.Context, driver mocks.VsphereDriver, datacente
 	if err != nil {
 		return "", "", err
 	}
-	hosts, msgErr := driver.GetVSphereHostSystems(ctx, datacenter, clusterName)
-	if msgErr != nil {
-		return "", "", fmt.Errorf("err: %s, code: %s", msgErr.Message, msgErr.Code)
+	hosts, err := driver.GetVSphereHostSystems(ctx, datacenter, clusterName)
+	if err != nil {
+		return "", "", err
 	}
 	var hostList []string
 	for _, host := range hosts {
@@ -955,16 +953,16 @@ func handleResourcePoolEntity(ctx context.Context, driver mocks.VsphereDriver, d
 	}
 	if clusterScoped {
 		// Get cluster resourcepools
-		clusterRPs, msgErr := driver.GetResourcePools(ctx, datacenter, clusterName)
-		if msgErr != nil {
-			return "", "", fmt.Errorf("err: %s, code: %s", msgErr.Message, msgErr.Code)
+		clusterRPs, err := driver.GetResourcePools(ctx, datacenter, clusterName)
+		if err != nil {
+			return "", "", err
 		}
 		allResourcePools = append(allResourcePools, clusterRPs...)
 	}
 
-	defaultRPs, msgErr := driver.GetResourcePools(ctx, datacenter, "")
-	if msgErr != nil {
-		return "", "", fmt.Errorf("err: %s, code: %s", msgErr.Message, msgErr.Code)
+	defaultRPs, err := driver.GetResourcePools(ctx, datacenter, "")
+	if err != nil {
+		return "", "", err
 	}
 	allResourcePools = append(allResourcePools, defaultRPs...)
 
@@ -995,9 +993,9 @@ func handleResourcePoolEntity(ctx context.Context, driver mocks.VsphereDriver, d
 }
 
 func handleVAppEntity(ctx context.Context, driver mocks.VsphereDriver) (string, error) {
-	vApps, msgErr := driver.GetVapps(ctx)
-	if msgErr != nil {
-		return "", fmt.Errorf("err: %s, code: %s", msgErr.Message, msgErr.Code)
+	vApps, err := driver.GetVapps(ctx)
+	if err != nil {
+		return "", err
 	}
 	var vAppList []string
 	for _, vapp := range vApps {
@@ -1013,7 +1011,7 @@ func handleVAppEntity(ctx context.Context, driver mocks.VsphereDriver) (string, 
 func handleVMEntity(ctx context.Context, driver mocks.VsphereDriver, datacenter string, entityType string) (string, string, error) {
 	var vmList []string
 	var hostClusterMapping = make(map[string]string)
-	var msgErr *msg.MsgError
+	//var msgErr *msg.MsgError
 
 	clusterScoped, clusterName, err := getClusterScopedInfo(ctx, datacenter, entityType, driver)
 	if err != nil {
@@ -1021,15 +1019,15 @@ func handleVMEntity(ctx context.Context, driver mocks.VsphereDriver, datacenter 
 	}
 	if clusterScoped {
 		// This way because govmomi just doesn't have a way to cheaply determine what cluster a VM belongs to :')
-		hostClusterMapping, msgErr = driver.GetHostClusterMapping(ctx)
-		if msgErr != nil {
-			return "", "", fmt.Errorf("err: %s, code: %s", msgErr.Message, msgErr.Code)
+		hostClusterMapping, err = driver.GetHostClusterMapping(ctx)
+		if err != nil {
+			return "", "", err
 		}
 	}
 
-	vms, msgErr := driver.GetVSphereVms(ctx, datacenter)
-	if msgErr != nil {
-		return "", "", fmt.Errorf("err: %s, code: %s", msgErr.Message, msgErr.Code)
+	vms, err := driver.GetVSphereVms(ctx, datacenter)
+	if err != nil {
+		return "", "", err
 	}
 	for _, vm := range vms {
 		if clusterScoped {

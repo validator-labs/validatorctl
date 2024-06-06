@@ -7,22 +7,21 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"strings"
 
-	vsphere "github.com/validator-labs/validator-plugin-vsphere/clouddriver"
-	msg "github.com/validator-labs/validatorctl/pkg/utils/extra"
+	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 )
 
 type VsphereDriver interface {
-	GetVSphereVMFolders(ctx context.Context, datacenter string) ([]string, *msg.MsgError)
-	GetVSphereDatacenters(ctx context.Context) ([]string, *msg.MsgError)
-	GetVSphereClusters(ctx context.Context, datacenter string) ([]string, *msg.MsgError)
-	GetVSphereHostSystems(ctx context.Context, datacenter, cluster string) ([]vsphere.VSphereHostSystem, *msg.MsgError)
-	IsValidVSphereCredentials(ctx context.Context) (bool, *msg.MsgError)
+	GetVSphereVMFolders(ctx context.Context, datacenter string) ([]string, error)
+	GetVSphereDatacenters(ctx context.Context) ([]string, error)
+	GetVSphereClusters(ctx context.Context, datacenter string) ([]string, error)
+	GetVSphereHostSystems(ctx context.Context, datacenter, cluster string) ([]vsphere.VSphereHostSystem, error)
+	IsValidVSphereCredentials(ctx context.Context) (bool, error)
 	ValidateVsphereVersion(constraint string) error
-	GetHostClusterMapping(ctx context.Context) (map[string]string, *msg.MsgError)
-	GetVSphereVms(ctx context.Context, dcName string) ([]vsphere.VSphereVM, *msg.MsgError)
-	GetResourcePools(ctx context.Context, datacenter string, cluster string) ([]*object.ResourcePool, *msg.MsgError)
-	GetVapps(ctx context.Context) ([]mo.VirtualApp, *msg.MsgError)
-	GetResourceTags(ctx context.Context, resourceType string) (map[string]tags.AttachedTags, *msg.MsgError)
+	GetHostClusterMapping(ctx context.Context) (map[string]string, error)
+	GetVSphereVms(ctx context.Context, dcName string) ([]vsphere.VSphereVM, error)
+	GetResourcePools(ctx context.Context, datacenter string, cluster string) ([]*object.ResourcePool, error)
+	GetVapps(ctx context.Context) ([]mo.VirtualApp, error)
+	GetResourceTags(ctx context.Context, resourceType string) (map[string]tags.AttachedTags, error)
 }
 
 type MockVsphereDriver struct {
@@ -37,23 +36,23 @@ type MockVsphereDriver struct {
 	ResourceTags       map[string]tags.AttachedTags
 }
 
-func (d MockVsphereDriver) GetVSphereVMFolders(ctx context.Context, datacenter string) ([]string, *msg.MsgError) {
+func (d MockVsphereDriver) GetVSphereVMFolders(ctx context.Context, datacenter string) ([]string, error) {
 	return d.VMFolders, nil
 }
 
-func (d MockVsphereDriver) GetVSphereDatacenters(ctx context.Context) ([]string, *msg.MsgError) {
+func (d MockVsphereDriver) GetVSphereDatacenters(ctx context.Context) ([]string, error) {
 	return d.Datacenters, nil
 }
 
-func (d MockVsphereDriver) GetVSphereClusters(ctx context.Context, datacenter string) ([]string, *msg.MsgError) {
+func (d MockVsphereDriver) GetVSphereClusters(ctx context.Context, datacenter string) ([]string, error) {
 	return d.Clusters, nil
 }
 
-func (d MockVsphereDriver) GetVSphereHostSystems(ctx context.Context, datacenter, cluster string) ([]vsphere.VSphereHostSystem, *msg.MsgError) {
+func (d MockVsphereDriver) GetVSphereHostSystems(ctx context.Context, datacenter, cluster string) ([]vsphere.VSphereHostSystem, error) {
 	return d.HostSystems[concat(datacenter, cluster)], nil
 }
 
-func (d MockVsphereDriver) IsValidVSphereCredentials(ctx context.Context) (bool, *msg.MsgError) {
+func (d MockVsphereDriver) IsValidVSphereCredentials(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
@@ -61,23 +60,23 @@ func (d MockVsphereDriver) ValidateVsphereVersion(constraint string) error {
 	return nil
 }
 
-func (d MockVsphereDriver) GetHostClusterMapping(ctx context.Context) (map[string]string, *msg.MsgError) {
+func (d MockVsphereDriver) GetHostClusterMapping(ctx context.Context) (map[string]string, error) {
 	return d.HostClusterMapping, nil
 }
 
-func (d MockVsphereDriver) GetVSphereVms(ctx context.Context, dcName string) ([]vsphere.VSphereVM, *msg.MsgError) {
+func (d MockVsphereDriver) GetVSphereVms(ctx context.Context, dcName string) ([]vsphere.VSphereVM, error) {
 	return d.VMs, nil
 }
 
-func (d MockVsphereDriver) GetResourcePools(ctx context.Context, datacenter string, cluster string) ([]*object.ResourcePool, *msg.MsgError) {
+func (d MockVsphereDriver) GetResourcePools(ctx context.Context, datacenter string, cluster string) ([]*object.ResourcePool, error) {
 	return d.ResourcePools, nil
 }
 
-func (d MockVsphereDriver) GetVapps(ctx context.Context) ([]mo.VirtualApp, *msg.MsgError) {
+func (d MockVsphereDriver) GetVapps(ctx context.Context) ([]mo.VirtualApp, error) {
 	return d.VApps, nil
 }
 
-func (d MockVsphereDriver) GetResourceTags(ctx context.Context, resourceType string) (map[string]tags.AttachedTags, *msg.MsgError) {
+func (d MockVsphereDriver) GetResourceTags(ctx context.Context, resourceType string) (map[string]tags.AttachedTags, error) {
 	return d.ResourceTags, nil
 }
 

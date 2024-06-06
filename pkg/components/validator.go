@@ -11,15 +11,14 @@ import (
 	network "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	oci "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
 	vsphere "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	vsphere_cloud "github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	validator "github.com/validator-labs/validator/api/v1alpha1"
 
-	//"github.com/spectrocloud/palette-cli/models"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/repo"
 	"github.com/validator-labs/validatorctl/pkg/utils/crypto"
 	models "github.com/validator-labs/validatorctl/pkg/utils/extra"
-	"github.com/validator-labs/validatorctl/pkg/utils/ptr"
 )
 
 type ValidatorConfig struct {
@@ -81,7 +80,7 @@ func NewValidatorConfig() *ValidatorConfig {
 			Release:       &validator.HelmRelease{},
 			ReleaseSecret: &Secret{},
 			Validator:     &vsphere.VsphereValidatorSpec{},
-			Account:       &models.V1VsphereCloudAccount{},
+			Account:       &vsphere_cloud.VsphereCloudAccount{},
 		},
 	}
 }
@@ -418,14 +417,14 @@ func (c *OCIPluginConfig) decrypt() error {
 }
 
 type VspherePluginConfig struct {
-	Enabled                     bool                          `yaml:"enabled"`
-	Release                     *validator.HelmRelease        `yaml:"helmRelease"`
-	ReleaseSecret               *Secret                       `yaml:"helmReleaseSecret"`
-	Account                     *models.V1VsphereCloudAccount `yaml:"account"` // TODO: add this
-	Validator                   *vsphere.VsphereValidatorSpec `yaml:"validator"`
-	VsphereEntityPrivilegeRules []VsphereEntityPrivilegeRule  `yaml:"vsphereEntityPrivilegeRules"`
-	VsphereRolePrivilegeRules   []VsphereRolePrivilegeRule    `yaml:"vsphereRolePrivilegeRules"`
-	VsphereTagRules             []VsphereTagRule              `yaml:"vsphereTagRules"`
+	Enabled                     bool                               `yaml:"enabled"`
+	Release                     *validator.HelmRelease             `yaml:"helmRelease"`
+	ReleaseSecret               *Secret                            `yaml:"helmReleaseSecret"`
+	Account                     *vsphere_cloud.VsphereCloudAccount `yaml:"account"`
+	Validator                   *vsphere.VsphereValidatorSpec      `yaml:"validator"`
+	VsphereEntityPrivilegeRules []VsphereEntityPrivilegeRule       `yaml:"vsphereEntityPrivilegeRules"`
+	VsphereRolePrivilegeRules   []VsphereRolePrivilegeRule         `yaml:"vsphereRolePrivilegeRules"`
+	VsphereTagRules             []VsphereTagRule                   `yaml:"vsphereTagRules"`
 }
 
 func (c *VspherePluginConfig) encrypt() error {
@@ -434,12 +433,12 @@ func (c *VspherePluginConfig) encrypt() error {
 			return errors.Wrap(err, "failed to encrypt release secret configuration")
 		}
 	}
-	if c.Account != nil && c.Account.Password != nil {
-		password, err := crypto.EncryptB64([]byte(*c.Account.Password))
+	if c.Account != nil {
+		password, err := crypto.EncryptB64([]byte(c.Account.Password))
 		if err != nil {
 			return errors.Wrap(err, "failed to encrypt password")
 		}
-		c.Account.Password = &password
+		c.Account.Password = password
 	}
 	return nil
 }
@@ -450,12 +449,12 @@ func (c *VspherePluginConfig) decrypt() error {
 			return errors.Wrap(err, "failed to decrypt release secret configuration")
 		}
 	}
-	if c.Account != nil && c.Account.Password != nil {
-		bytes, err := crypto.DecryptB64(*c.Account.Password)
+	if c.Account != nil {
+		bytes, err := crypto.DecryptB64(c.Account.Password)
 		if err != nil {
 			return errors.Wrap(err, "failed to decrypt password")
 		}
-		c.Account.Password = ptr.StringPtr(string(*bytes))
+		c.Account.Password = string(*bytes)
 	}
 	return nil
 }
