@@ -189,60 +189,48 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 
-	fmt.Println(k8sClient) // TODO: remove this line
-
 	log.InfoCLI("Configure Helm release credentials for validator chart")
-	/*
-		if err := readHelmCredentials(c.Release, c.ReleaseSecret, k8sClient, c); err != nil {
-			return err
-		}
-	*/
+	if err := readHelmCredentials(c.Release, c.ReleaseSecret, k8sClient, c); err != nil {
+		return err
+	}
 
 	if c.AWSPlugin != nil && c.AWSPlugin.Enabled {
 		log.InfoCLI("Configure Helm release credentials for validator-plugin-aws chart")
-		/*
-			if err := readHelmCredentials(c.AWSPlugin.Release, c.AWSPlugin.ReleaseSecret, k8sClient, c); err != nil {
-				return err
-			}
-			if err := readAwsCredentials(c.AWSPlugin, k8sClient); err != nil {
-				return err
-			}
-		*/
+		if err := readHelmCredentials(c.AWSPlugin.Release, c.AWSPlugin.ReleaseSecret, k8sClient, c); err != nil {
+			return err
+		}
+		if err := readAwsCredentials(c.AWSPlugin, k8sClient); err != nil {
+			return err
+		}
 	}
 	if c.AzurePlugin != nil && c.AzurePlugin.Enabled {
 		log.InfoCLI("Configure Helm release credentials for validator-plugin-azure chart")
-		/*
-			if err := readHelmCredentials(c.AzurePlugin.Release, c.AzurePlugin.ReleaseSecret, k8sClient, c); err != nil {
-				return err
-			}
-			if err := readAzureCredentials(c.AzurePlugin, k8sClient); err != nil {
-				return err
-			}
-		*/
+		if err := readHelmCredentials(c.AzurePlugin.Release, c.AzurePlugin.ReleaseSecret, k8sClient, c); err != nil {
+			return err
+		}
+		if err := readAzureCredentials(c.AzurePlugin, k8sClient); err != nil {
+			return err
+		}
 	}
 	if c.OCIPlugin != nil && c.OCIPlugin.Enabled {
 		log.InfoCLI("Configure Helm release credentials for validator-plugin-oci chart")
-		/*
-			if err := readHelmCredentials(c.OCIPlugin.Release, c.OCIPlugin.ReleaseSecret, k8sClient, c); err != nil {
+		if err := readHelmCredentials(c.OCIPlugin.Release, c.OCIPlugin.ReleaseSecret, k8sClient, c); err != nil {
+			return err
+		}
+		for _, secret := range c.OCIPlugin.Secrets {
+			if err := readSecret(secret); err != nil {
 				return err
 			}
-			for _, secret := range c.OCIPlugin.Secrets {
-				if err := readSecret(secret); err != nil {
-					return err
-				}
-			}
-		*/
+		}
 	}
 	if c.VspherePlugin != nil && c.VspherePlugin.Enabled {
 		log.InfoCLI("Configure Helm release credentials for validator-plugin-vsphere chart")
-		/*
-			if err = readHelmCredentials(c.VspherePlugin.Release, c.VspherePlugin.ReleaseSecret, k8sClient, c); err != nil {
-				return err
-			}
-			if err := readVsphereCredentials(c.VspherePlugin, k8sClient); err != nil {
-				return err
-			}
-		*/
+		if err = readHelmCredentials(c.VspherePlugin.Release, c.VspherePlugin.ReleaseSecret, k8sClient, c); err != nil {
+			return err
+		}
+		if err := readVsphereCredentials(c.VspherePlugin, k8sClient); err != nil {
+			return err
+		}
 	}
 
 	return nil

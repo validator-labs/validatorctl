@@ -15,6 +15,7 @@ import (
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/client-go/dynamic"
 
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
 	"github.com/validator-labs/validator/pkg/helm"
@@ -109,81 +110,86 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 }
 
 func UpgradeValidatorCommand(c *cfg.Config, taskConfig *cfg.TaskConfig) error {
-	/*
-		vc, err := components.NewValidatorFromConfig(taskConfig)
-		if err != nil {
-			return errors.Wrap(err, "failed to load validator configuration file")
-		}
-		if vc.Kubeconfig == "" {
-			return errors.New("invalid validator configuration: kubeconfig is required")
-		}
-		return applyValidatorAndPlugins(c, vc)
-	*/
-	return nil
+	vc, err := components.NewValidatorFromConfig(taskConfig)
+	if err != nil {
+		return errors.Wrap(err, "failed to load validator configuration file")
+	}
+	if vc.Kubeconfig == "" {
+		return errors.New("invalid validator configuration: kubeconfig is required")
+	}
+	return applyValidatorAndPlugins(c, vc)
 }
 
 func UndeployValidatorCommand(taskConfig *cfg.TaskConfig, deleteCluster bool) error {
-	/*
-		vc, err := components.NewValidatorFromConfig(taskConfig)
-		if err != nil {
-			return errors.Wrap(err, "failed to load validator configuration file")
-		}
+	vc, err := components.NewValidatorFromConfig(taskConfig)
+	if err != nil {
+		return errors.Wrap(err, "failed to load validator configuration file")
+	}
 
-		log.Header("Uninstalling validator")
-		helmClient, err := getHelmClient(vc)
-		if err != nil {
-			return err
-		}
-		if err := helmClient.Delete(cfg.Validator, cfg.Validator); err != nil {
-			return errors.Wrap(err, "failed to delete validator Helm release")
-		}
-		log.InfoCLI("\nUninstalled validator and validator plugin(s) successfully")
+	log.Header("Uninstalling validator")
+	helmClient, err := getHelmClient(vc)
+	if err != nil {
+		return err
+	}
+	if err := helmClient.Delete(cfg.Validator, cfg.Validator); err != nil {
+		return errors.Wrap(err, "failed to delete validator Helm release")
+	}
+	log.InfoCLI("\nUninstalled validator and validator plugin(s) successfully")
 
-		if vc.UseKindCluster && deleteCluster {
-			return kind.DeleteCluster(cfg.ValidatorKindClusterName)
-		}
+	if vc.UseKindCluster && deleteCluster {
+		return kind.DeleteCluster(cfg.ValidatorKindClusterName)
+	}
 
-		return nil
-	*/
 	return nil
 }
 
-/*
-func loadVspherePrivileges(version string) ([]string, error) {
-	var rolePrivilegeVersion string
-	switch {
-	case strings.HasPrefix(version, "6.7"):
-		rolePrivilegeVersion = cfg.SpectroRootLevelPrivilegesV6_7
-	case strings.HasPrefix(version, "7.0"):
-		rolePrivilegeVersion = cfg.SpectroRootLevelPrivilegesV7_0
-	case strings.HasPrefix(version, "8.0"):
-		rolePrivilegeVersion = cfg.SpectroRootLevelPrivilegesV8_0
-	default:
-		return nil, errors.Errorf("Unsupported vSphere version %s", version)
+func DescribeValidationResultsCommand(taskConfig *cfg.TaskConfig) error {
+	kClient, err := getValidationResultsCRDClient(taskConfig)
+	if err != nil {
+		return errors.Wrap(err, "failed to get validation result client")
 	}
 
-	return validator.LoadPrivileges(cfg.ValidatorPluginVsphereRolePrivilegeFiles[rolePrivilegeVersion])
+	vrs, err := kClient.List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return errors.Wrap(err, "failed to list validation results")
+	}
+
+	if err := printValidationResults(vrs.Items); err != nil {
+		return err
+	}
+
+	return nil
 }
-*/
-
-func DescribeValidationResultsCommand(taskConfig *cfg.TaskConfig) error {
-	/*
-		kClient, err := getValidationResultsCRDClient(taskConfig)
+func getValidationResultsCRDClient(taskConfig *cfg.TaskConfig) (dynamic.NamespaceableResourceInterface, error) {
+	if taskConfig.ConfigFile != "" {
+		vc, err := components.NewValidatorFromConfig(taskConfig)
 		if err != nil {
-			return errors.Wrap(err, "failed to get validation result client")
+			return nil, errors.Wrap(err, "failed to load validator configuration file")
 		}
+		if err := os.Setenv("KUBECONFIG", vc.Kubeconfig); err != nil {
+			return nil, err
+		}
+		log.InfoCLI("Using kubeconfig from validator configuration file: %s", vc.Kubeconfig)
+	}
 
-		vrs, err := kClient.List(context.Background(), metav1.ListOptions{})
+	gv := kube.GetGroupVersion("validation.spectrocloud.labs", "v1alpha1")
+	kClient, err := kube.GetCRDClient(gv, "validationresults")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get validation result client")
+	}
+
+	return kClient, nil
+}
+
+func printValidationResults(validationResults []unstructured.Unstructured) error {
+	for _, vrObj := range validationResults {
+		vrStr, err := buildValidationResultString(vrObj)
 		if err != nil {
-			return errors.Wrap(err, "failed to list validation results")
-		}
-
-		if err := printValidationResults(vrs.Items); err != nil {
 			return err
 		}
+		log.InfoCLI(vrStr)
+	}
 
-		return nil
-	*/
 	return nil
 }
 
