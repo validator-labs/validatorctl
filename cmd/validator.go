@@ -31,7 +31,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, configOnly, false, updatePasswords, false, false,
+				Version, configFile, configOnly, false, updatePasswords, false,
 			)
 			if err := c.Save(""); err != nil {
 				return err
@@ -73,7 +73,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, false, false, false, false, false,
+				Version, configFile, false, false, false, false,
 			)
 			if err := validator.UpgradeValidatorCommand(c, taskConfig); err != nil {
 				return fmt.Errorf("failed to upgrade validator: %v", err)
@@ -106,7 +106,7 @@ func NewUndeployValidatorCmd() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, false, false, false, false, false,
+				Version, configFile, false, false, false, false,
 			)
 			if err := validator.UndeployValidatorCommand(taskConfig, deleteCluster); err != nil {
 				return fmt.Errorf("failed to uninstall validator: %v", err)
@@ -143,7 +143,7 @@ If the --config-file flag is specified, the KUBECONFIG specified in the validato
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, false, false, false, false, false,
+				Version, configFile, false, false, false, false,
 			)
 			if err := validator.DescribeValidationResultsCommand(taskConfig); err != nil {
 				return fmt.Errorf("failed to describe validation results: %v", err)

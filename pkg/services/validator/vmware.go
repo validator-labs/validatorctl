@@ -1011,7 +1011,6 @@ func handleVAppEntity(ctx context.Context, driver vsphere.VsphereDriver) (string
 func handleVMEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string, entityType string) (string, string, error) {
 	var vmList []string
 	var hostClusterMapping = make(map[string]string)
-	//var msgErr *msg.MsgError
 
 	clusterScoped, clusterName, err := getClusterScopedInfo(ctx, datacenter, entityType, driver)
 	if err != nil {

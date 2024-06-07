@@ -17,7 +17,6 @@ import (
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 )
 
-// TODO: should this value be changed? Is it safe to have it in the code and not in some env var that can be configured on build?
 const k = "TxXW4Qg4vqorgiCtgeEFW7inLXKLv4bC"
 
 func DecryptB64(cipherstringB64 string) (*[]byte, error) {

@@ -144,23 +144,6 @@ func ReadKubeconfig() (kubernetes.Interface, string, error) {
 	return k8sClient, kubeconfigPath, nil
 }
 
-func readNamespacedName(k8sClient kubernetes.Interface, prefix string) (string, string, error) {
-	nsPrompt := fmt.Sprintf("%s Namespace", prefix)
-	namePrompt := fmt.Sprintf("%s Name", prefix)
-
-	namespace, err := readNamespace(k8sClient, nsPrompt, "")
-	if err != nil {
-		return "", "", err
-	}
-
-	name, err := prompt_utils.ReadK8sName(namePrompt, "", false)
-	if err != nil {
-		return "", "", err
-	}
-
-	return namespace, name, nil
-}
-
 func readNamespace(k8sClient kubernetes.Interface, prompt, defaultVal string) (string, error) {
 	namespace, err := prompt_utils.ReadK8sName(prompt, defaultVal, false)
 	if err != nil {

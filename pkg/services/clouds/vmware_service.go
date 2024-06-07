@@ -13,8 +13,6 @@ import (
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 )
 
-const VALUE string = "VALUE"
-
 // GetVSphereDriver enables monkey-patching the vSphere driver for integration tests
 var GetVSphereDriver = getVSphereDriver
 

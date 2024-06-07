@@ -9,12 +9,6 @@ import (
 	"emperror.dev/errors"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
-	//prompt_utils "github.com/spectrocloud-labs/prompts-tui/prompts"
-	//"github.com/validator-labs/validatorctl/pkg/utils/ptr"
-	//"github.com/spectrocloud/palette-cli/models"
-	//log "github.com/validator-labs/validatorctl/pkg/logging"
-	//"github.com/validator-labs/validatorctl/pkg/utils/crypto"
-	//string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 )
 
 func NewConfig() *Config {
@@ -28,13 +22,6 @@ type Config struct {
 	WorkspaceLoc string `yaml:"workspaceLoc"`
 }
 
-type ImageRegistryType string
-
-const (
-	ImageRegistryTypeDefault = "Default"
-	ImageRegistryTypeCustom  = "Custom"
-)
-
 type TaskConfig struct {
 	CliVersion       string
 	ConfigFile       string
@@ -42,10 +29,9 @@ type TaskConfig struct {
 	Silent           bool
 	UpdatePasswords  bool
 	UpdateTokens     bool
-	SkipTeardown     bool
 }
 
-func NewTaskConfig(cliVersion, configFile string, configOnly, silent, updatePasswords, updateTokens, skipTeardown bool) *TaskConfig {
+func NewTaskConfig(cliVersion, configFile string, configOnly, silent, updatePasswords, updateTokens bool) *TaskConfig {
 	return &TaskConfig{
 		CliVersion:       cliVersion,
 		ConfigFile:       configFile,
@@ -53,7 +39,6 @@ func NewTaskConfig(cliVersion, configFile string, configOnly, silent, updatePass
 		Silent:           silent,
 		UpdatePasswords:  updatePasswords,
 		UpdateTokens:     updateTokens,
-		SkipTeardown:     skipTeardown,
 	}
 }
 
@@ -106,7 +91,6 @@ func (c *Config) restoreGlobalDefaults() (err error) {
 	return
 }
 
-// TODO: check if these Encrypt and Decrypt functions are needed
 func (c *Config) Decrypt() error {
 	return nil
 }

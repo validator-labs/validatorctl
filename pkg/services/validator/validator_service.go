@@ -15,7 +15,6 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	//"github.com/spectrocloud/palette-cli/pkg/repo"
 	"github.com/validator-labs/validatorctl/pkg/services"
 	"github.com/validator-labs/validatorctl/pkg/utils/crypto"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
@@ -64,17 +63,6 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
-	/*
-		if c.EnvironmentConfig.ImageRegistryType == cfg.ImageRegistryTypeCustom {
-				vc.ScarProps.ImageRegistryType = repo.RegistryTypeOCI
-				_, vc.ScarProps.OCIImageRegistry, err = services.ReadOCIRegistry(vc.ProxyConfig.Env, "Image", tc)
-				if err != nil {
-					return err
-				}
-				// use quay.io/validator-labs, as it will be mirrored by the OCI registry
-				vc.ImageRegistry = imageRegistry
-		} else {
-	*/
 	if vc.ImageRegistry != "" {
 		imageRegistry = vc.ImageRegistry
 	}
@@ -82,10 +70,6 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	if err != nil {
 		return err
 	}
-	//vc.ScarProps.ImageRegistryType = repo.RegistryTypeSpectro
-	/*
-		}
-	*/
 
 	if err := readProxyConfig(vc); err != nil {
 		return err

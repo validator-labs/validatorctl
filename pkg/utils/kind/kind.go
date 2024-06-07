@@ -14,8 +14,7 @@ import (
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	models "github.com/validator-labs/validatorctl/pkg/utils/extra"
-	//"github.com/spectrocloud/palette-cli/pkg/repo"
+	env "github.com/validator-labs/validatorctl/pkg/services"
 	embed_utils "github.com/validator-labs/validatorctl/pkg/utils/embed"
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 )
@@ -79,7 +78,7 @@ func DeleteCluster(name string) error {
 
 func DefaultKindArgs() map[string]interface{} {
 	return map[string]interface{}{
-		"Env": models.V1Env{
+		"Env": env.Env{
 			PodCIDR:        &cfg.DefaultPodCIDR,
 			ServiceIPRange: &cfg.DefaultServiceIPRange,
 		},
@@ -87,52 +86,14 @@ func DefaultKindArgs() map[string]interface{} {
 	}
 }
 
-func DefaultConfig(kindConfig string) error {
-	return embed_utils.RenderTemplate(DefaultKindArgs(), cfg.Kind, cfg.ClusterConfigTemplate, kindConfig)
-}
-
 // AdvancedConfig renders a kind cluster configuration file with optional proxy and registry mirror customizations
-func AdvancedConfig(env *models.V1Env /*, p *repo.ScarProps*/, kindConfig string) error {
+func AdvancedConfig(env *env.Env, kindConfig string) error {
 	image := fmt.Sprintf("%s:%s", cfg.KindImage, cfg.KindImageTag)
 
 	clusterConfigArgs := map[string]interface{}{
 		"Env":   env,
 		"Image": image,
 	}
-
-	/*// TODO: commented part out to get it compiling
-	// update kind image to pull from registry mirror in airgapped envs
-	if p != nil && p.ImageRegistryType != repo.RegistryTypeSpectro {
-		image = os.Getenv("KIND_IMAGE")
-		if image == "" {
-			// For airgap & private registry cases, pull kind image from spectro-images-public/kindest/node
-			image = p.ImageUrl(cfg.KindImageInternalRepo, cfg.KindImageTag)
-		}
-		ep := p.OCIImageRegistry.Endpoint(p.ImageRegistryType)
-		basePath := p.OCIImageRegistry.BaseContentPath(p.ImageRegistryType)
-		mirrorEndpoint := strings.TrimSuffix(fmt.Sprintf("%s/v2/%s", ep, basePath), "/")
-		insecure := p.OCIImageRegistry.InsecureSkipVerify(p.ImageRegistryType)
-		username, err := p.OCIImageRegistry.Username(p.ImageRegistryType)
-		if err != nil {
-			return err
-		}
-		password, err := p.OCIImageRegistry.Password(p.ImageRegistryType)
-		if err != nil {
-			return err
-		}
-
-		clusterConfigArgs["Image"] = image
-		clusterConfigArgs["RegistryBaseContentPath"] = basePath
-		clusterConfigArgs["RegistryEndpoint"] = ep
-		clusterConfigArgs["RegistryInsecure"] = strconv.FormatBool(insecure)
-		clusterConfigArgs["RegistryCaCertName"] = p.OCIImageRegistry.CACertName(p.ImageRegistryType)
-		clusterConfigArgs["ReusedProxyCACert"] = p.OCIImageRegistry.ReusedProxyCACert(p.ImageRegistryType)
-		clusterConfigArgs["RegistryUsername"] = username
-		clusterConfigArgs["RegistryPassword"] = password
-		clusterConfigArgs["RegistryMirrorEndpoint"] = mirrorEndpoint
-		clusterConfigArgs["RegistryMirrors"] = strings.Split(p.OCIImageRegistry.OCIRegistryBasic.MirrorRegistries, ",")
-	}
-	*/
 
 	return embed_utils.RenderTemplate(clusterConfigArgs, cfg.Kind, cfg.ClusterConfigTemplate, kindConfig)
 }

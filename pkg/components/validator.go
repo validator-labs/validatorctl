@@ -16,9 +16,8 @@ import (
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	"github.com/validator-labs/validatorctl/pkg/repo"
+	env "github.com/validator-labs/validatorctl/pkg/services"
 	"github.com/validator-labs/validatorctl/pkg/utils/crypto"
-	models "github.com/validator-labs/validatorctl/pkg/utils/extra"
 )
 
 type ValidatorConfig struct {
@@ -27,7 +26,6 @@ type ValidatorConfig struct {
 	UseKindCluster   bool                   `yaml:"useKindCluster"`
 	Kubeconfig       string                 `yaml:"kubeconfig"`
 	SinkConfig       *SinkConfig            `yaml:"sinkConfig"`
-	ScarProps        *repo.ScarProps        `yaml:"scarProps"`
 	ProxyConfig      *ProxyConfig           `yaml:"proxyConfig"`
 	ImageRegistry    string                 `yaml:"imageRegistry"`
 	UseFixedVersions bool                   `yaml:"useFixedVersions"`
@@ -46,9 +44,8 @@ func NewValidatorConfig() *ValidatorConfig {
 		ReleaseSecret: &Secret{},
 		SinkConfig:    &SinkConfig{},
 		ProxyConfig: &ProxyConfig{
-			Env: &models.V1Env{},
+			Env: &env.Env{},
 		},
-		ScarProps: &repo.ScarProps{},
 		// Plugin config
 		AWSPlugin: &AWSPluginConfig{
 			Release:       &validator.HelmRelease{},
@@ -98,9 +95,6 @@ func (c *ValidatorConfig) decrypt() error {
 	if err := c.SinkConfig.decrypt(); err != nil {
 		return errors.Wrap(err, "failed to decrypt Sink configuration")
 	}
-	if err := c.ScarProps.Decrypt(); err != nil {
-		return errors.Wrap(err, "failed to decrypt SCAR properties")
-	}
 
 	if c.AWSPlugin != nil {
 		if err := c.AWSPlugin.decrypt(); err != nil {
@@ -140,9 +134,6 @@ func (c *ValidatorConfig) encrypt() error {
 	if err := c.SinkConfig.encrypt(); err != nil {
 		return errors.Wrap(err, "failed to encrypt Sink configuration")
 	}
-	if err := c.ScarProps.Encrypt(); err != nil {
-		return errors.Wrap(err, "failed to encrypt SCAR properties")
-	}
 
 	if c.AWSPlugin != nil {
 		if err := c.AWSPlugin.encrypt(); err != nil {
@@ -174,8 +165,8 @@ func (c *ValidatorConfig) encrypt() error {
 }
 
 type ProxyConfig struct {
-	Enabled bool          `yaml:"enabled"`
-	Env     *models.V1Env `yaml:"env"`
+	Enabled bool     `yaml:"enabled"`
+	Env     *env.Env `yaml:"env"`
 }
 
 type SinkConfig struct {

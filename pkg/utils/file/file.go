@@ -1,11 +1,8 @@
 package file
 
 import (
-	"archive/tar"
 	"bytes"
 	"errors"
-	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -18,8 +15,9 @@ import (
 )
 
 var (
-	editorBinary = "vi"
-	editorPath   = ""
+	editorBinary   = "vi"
+	editorPath     = ""
+	GetCmdExecutor = getEditorExecutor
 )
 
 func init() {
@@ -39,11 +37,6 @@ func init() {
 		os.Exit(1)
 	}
 }
-
-var (
-	GetCmdExecutor = getEditorExecutor
-	FileReader     = os.ReadFile
-)
 
 func getEditorExecutor(editor, filename string) mocks.CommandExecutor {
 	cmd := exec.Command(editor, filename)
@@ -142,36 +135,4 @@ func EditFileValidated(prompt, content, separator string, validate func(input st
 		content = strings.TrimRight(strings.Join(finalLines, separator), separator)
 		return content, err
 	}
-}
-
-func FindFileInTar(r io.Reader, suffix string) ([]byte, error) {
-	tarReader := tar.NewReader(r)
-	for {
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		switch header.Typeflag {
-		case tar.TypeReg:
-			if !strings.HasSuffix(header.Name, suffix) {
-				log.Warn("FindFileInTar: skipping file: %s", header.Name)
-				continue
-			}
-			data, err := io.ReadAll(tarReader)
-			if err != nil {
-				return nil, err
-			}
-			return data, nil
-		default:
-			log.Warn("FindFileInTar: ignoring file of type: %v in %s", header.Typeflag, header.Name)
-		}
-	}
-	return nil, fmt.Errorf("FindFileInTar: no file with suffix %s was found", suffix)
-}
-
-func ReadFile(filepath string) ([]byte, error) {
-	return FileReader(filepath)
 }

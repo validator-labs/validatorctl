@@ -20,24 +20,13 @@ import (
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
 	"github.com/validator-labs/validator/pkg/helm"
 
-	//"github.com/spectrocloud/palette-cli/models"
 	"github.com/validator-labs/validatorctl/pkg/components"
-	//"github.com/spectrocloud/palette-cli/pkg/components/cluster"
-	//"github.com/spectrocloud/palette-cli/pkg/config"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	//"github.com/spectrocloud/palette-cli/pkg/repo"
-	//"github.com/spectrocloud/palette-cli/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/services/validator"
 	embed "github.com/validator-labs/validatorctl/pkg/utils/embed"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	"github.com/validator-labs/validatorctl/pkg/utils/kube"
-	//net_utils "github.com/spectrocloud/palette-cli/pkg/utils/network"
-	//"github.com/spectrocloud/palette/api/v1alpha1"
-)
-
-var (
-	ErrNilValidationResult = errors.New("validation result is nil")
 )
 
 func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool) error {

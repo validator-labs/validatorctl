@@ -17,6 +17,7 @@ import (
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 )
 
+// TODO: remove  any binaries we dont need
 var Docker, Helm, Kind, Kubectl, Vmtoolsd string
 
 //go:embed bin/docker
@@ -77,18 +78,6 @@ func InitBinaries(c *cfg.Config) {
 
 //go:embed resources/*
 var resources embed.FS
-
-// CopyFile copies a file from the embedded file system into a physical disk location.
-func CopyFile(destPath, sourceDir, sourceName string) error {
-	bytes, err := resources.ReadFile(toEmbeddedFilePath(sourceDir, sourceName))
-	if err != nil {
-		return err
-	}
-	if err := os.WriteFile(destPath, bytes, 0600); err != nil {
-		return err
-	}
-	return nil
-}
 
 // ReadFile reads a file from the embedded file system.
 func ReadFile(dir, filename string) ([]byte, error) {

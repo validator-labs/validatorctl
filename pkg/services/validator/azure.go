@@ -683,12 +683,12 @@ func configureAzureRBACRulePermissionSetActions(actionType string) ([]string, er
 }
 
 const (
-	formatAzureGUID                       = iota
-	formatResourceGroupName               = iota
-	formatVirtualNetworkName              = iota
-	formatSubnetName                      = iota
-	formatComputeGalleryName              = iota
-	formatFullyQualifiedAzureResourceName = iota
+	formatAzureGUID = iota
+	formatResourceGroupName
+	formatVirtualNetworkName
+	formatSubnetName
+	formatComputeGalleryName
+	formatFullyQualifiedAzureResourceName
 )
 
 // logToCollect logs a few messages to guide the user when we need to collect data from them.
