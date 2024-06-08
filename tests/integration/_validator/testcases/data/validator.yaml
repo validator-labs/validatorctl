@@ -470,8 +470,6 @@ azurePlugin:
     password: ""
     caCertFile: ""
     exists: false
-  tenantId: d551b7b1-78ae-43df-9d61-4935c843a454
-  clientId: d551b7b1-78ae-43df-9d61-4935c843a454
   clientSecret: gGT0zDQeoYhTy/lMNl8x4FwTh3tEHSH6xP30AR+8oOQP4w==
   ruleTypes:
     0: Cluster Deployment
