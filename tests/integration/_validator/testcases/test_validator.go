@@ -48,17 +48,15 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testDeploySilent(); result.IsFailed() {
 		return result
 	}
-	/*
-		if result := t.testDescribe(); result.IsFailed() {
-			return result
-		}
-		if result := t.testUndeploy(); result.IsFailed() {
-			return result
-		}
-		if result := t.testUpdatePasswords(); result.IsFailed() {
-			return result
-		}
-	*/
+	if result := t.testDescribe(); result.IsFailed() {
+		return result
+	}
+	if result := t.testUndeploy(); result.IsFailed() {
+		return result
+	}
+	if result := t.testUpdatePasswords(); result.IsFailed() {
+		return result
+	}
 	return test.Success()
 }
 
