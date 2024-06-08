@@ -18,7 +18,7 @@ import (
 )
 
 // TODO: remove  any binaries we dont need
-var Docker, Helm, Kind, Kubectl, Vmtoolsd string
+var Docker, Helm, Kind, Kubectl string
 
 //go:embed bin/docker
 var docker []byte
@@ -32,9 +32,6 @@ var kind []byte
 //go:embed bin/kubectl
 var kubectl []byte
 
-//go:embed bin/vmtoolsd
-var vmtoolsd []byte
-
 func InitBinaries(c *cfg.Config) {
 	if runtime.GOOS == "windows" {
 		Docker = filepath.Join(c.WorkspaceLoc, "bin", "docker.exe")
@@ -47,7 +44,6 @@ func InitBinaries(c *cfg.Config) {
 		Kind = filepath.Join(c.WorkspaceLoc, "bin", "kind")
 		Kubectl = filepath.Join(c.WorkspaceLoc, "bin", "kubectl")
 	}
-	Vmtoolsd = filepath.Join(c.WorkspaceLoc, "bin", "vmtoolsd")
 
 	if _, err := os.Stat(Docker); os.IsNotExist(err) {
 		if err := os.WriteFile(Docker, docker, 0755); err != nil /* #nosec G306 */ {
@@ -66,11 +62,6 @@ func InitBinaries(c *cfg.Config) {
 	}
 	if _, err := os.Stat(Kubectl); os.IsNotExist(err) {
 		if err := os.WriteFile(Kubectl, kubectl, 0755); err != nil /* #nosec G306 */ {
-			log.FatalCLI(err.Error())
-		}
-	}
-	if _, err := os.Stat(Vmtoolsd); os.IsNotExist(err) {
-		if err := os.WriteFile(Vmtoolsd, vmtoolsd, 0755); err != nil /* #nosec G306 */ {
 			log.FatalCLI(err.Error())
 		}
 	}

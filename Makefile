@@ -2,7 +2,7 @@
 # https://www.thapaliya.com/en/writings/well-documented-makefiles/
 
 # Meta
-.PHONY: docker kind kubectl helm build test vmtoolsd-shim # TODO: check if i need vmtoolsd-shim
+.PHONY: docker kind kubectl helm build test
 .DEFAULT_GOAL:=help
 
 # Images
@@ -102,7 +102,7 @@ test-integration: binaries init-kubebuilder ## Run integration tests
 		-covermode=atomic -coverpkg=./... -coverprofile=$(COVER_DIR)/integration.out ./tests/...
 
 .PHONY: test
-test: gocovmerge test-unit test-integration ## Run unit tests, integration test
+test: gocovmerge test-integration test-unit ## Run unit tests, integration test
 	$(GOCOVMERGE) $(COVER_DIR)/*.out > $(COVER_DIR)/coverage.out.tmp
 	# Omit models and test code from coverage report
 	cat $(COVER_DIR)/coverage.out.tmp | grep -vE 'models|tests' > $(COVER_DIR)/coverage.out
@@ -154,7 +154,7 @@ create-images-list: ## Create the image list for CICD
 
 
 ##@ Tools Targets
-binaries: docker helm kind kubectl vmtoolsd-shim  ## Build embedded binaries
+binaries: docker helm kind kubectl
 
 clean-binaries:  ## Clean embedded binaries
 	@echo "Cleaning embedded binaries..."
@@ -162,7 +162,6 @@ clean-binaries:  ## Clean embedded binaries
 	rm -rf $(EMBED_BIN)/helm
 	rm -rf $(EMBED_BIN)/kind
 	rm -rf $(EMBED_BIN)/kubectl
-	rm -rf $(EMBED_BIN)/vmtoolsd
 
 truncate-binaries:
 	@echo "Truncating embedded binaries..."
@@ -170,7 +169,6 @@ truncate-binaries:
 	: > $(EMBED_BIN)/helm
 	: > $(EMBED_BIN)/kind
 	: > $(EMBED_BIN)/kubectl
-	: > $(EMBED_BIN)/vmtoolsd
 
 docker:
 ifeq ("$(wildcard $(EMBED_BIN)/docker)", "")
@@ -217,11 +215,6 @@ ifeq ("$(wildcard $(EMBED_BIN)/helm)", "")
 		rm -rf ./$(GOOS)-$(GOARCH); \
 	fi
 	chmod +x $(EMBED_BIN)/helm
-endif
-
-vmtoolsd-shim: ## Build VMware Tools shim
-ifeq ("$(wildcard $(EMBED_BIN)/vmtoolsd)", "")
-	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) GO111MODULE=on go build -o $(EMBED_BIN)/vmtoolsd vmtoolsd-shim/main.go
 endif
 
 golangci-lint:
