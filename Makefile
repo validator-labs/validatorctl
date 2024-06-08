@@ -105,8 +105,8 @@ test-integration: binaries init-kubebuilder ## Run integration tests
 .PHONY: test
 test: gocovmerge test-integration test-unit ## Run unit tests, integration test
 	$(GOCOVMERGE) $(COVER_DIR)/unit/*.out $(COVER_DIR)/integration/*.out > $(COVER_DIR)/coverage.out.tmp
-	# Omit models and test code from coverage report
-	cat $(COVER_DIR)/coverage.out.tmp | grep -vE 'models|tests' > $(COVER_DIR)/coverage.out
+	# Omit test code from coverage report
+	cat $(COVER_DIR)/coverage.out.tmp | grep -vE 'tests' > $(COVER_DIR)/coverage.out
 	go tool cover -func=$(COVER_DIR)/coverage.out -o $(COVER_DIR)/cover.func
 	go tool cover -html=$(COVER_DIR)/coverage.out -o $(COVER_DIR)/cover.html
 	go tool cover -func $(COVER_DIR)/coverage.out | grep total
