@@ -2,7 +2,7 @@ helmRelease:
   chart:
     name: validator
     repository: https://validator-labs.github.io/validator
-    version: v0.0.39
+    version: v0.0.42
     insecureSkipVerify: true
     authSecretName: ""
   values: ""
@@ -84,7 +84,7 @@ networkPlugin:
     chart:
       name: validator-plugin-network
       repository: https://validator-labs.github.io/validator-plugin-network
-      version: v0.0.15
+      version: v0.0.17
       insecureSkipVerify: true
       authSecretName: ""
     values: ""
@@ -157,7 +157,7 @@ vspherePlugin:
     chart:
       name: validator-plugin-vsphere
       repository: https://validator-labs.github.io/validator-plugin-vsphere
-      version: v0.0.20
+      version: v0.0.23
       insecureSkipVerify: true
       authSecretName: ""
     values: ""

@@ -45,10 +45,10 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testDeployInteractive(ctx); result.IsFailed() {
 		return result
 	}
+	if result := t.testDeploySilent(); result.IsFailed() {
+		return result
+	}
 	/*
-		if result := t.testDeploySilent(); result.IsFailed() {
-			return result
-		}
 		if result := t.testDescribe(); result.IsFailed() {
 			return result
 		}
