@@ -250,6 +250,7 @@ KUBEBUILDER_ASSETS = $(shell pwd)/$(shell $(BIN_DIR)/setup-envtest use -p path -
 
 setup-envtest:
 ifeq ("$(wildcard $(BIN_DIR)/setup-envtest)", "")
+	go get sigs.k8s.io/controller-runtime/tools/setup-envtest
 	GOBIN=$(shell pwd)/bin go install sigs.k8s.io/controller-runtime/tools/setup-envtest
 endif
 SETUP_ENVTEST=$(BIN_DIR)/setup-envtest
