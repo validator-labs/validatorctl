@@ -1,0 +1,31 @@
+package file
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"strings"
+)
+
+const testDir = "tests"
+
+func VCenterRepoPath() string {
+	return fmt.Sprintf("%s/%s", HomePath(testDir), "tests/external/repo/vcenter")
+}
+
+func HelperTestCasesPath() string {
+	return fmt.Sprintf("%s/%s", HomePath(testDir), "tests/integration/helper/testcases")
+}
+
+func ValidatorTestCasesPath() string {
+	// note: '_validator' was used here, rather than 'validator', due to: https://github.com/helm/helm/issues/7862
+	return fmt.Sprintf("%s/%s", HomePath(testDir), "tests/integration/_validator/testcases")
+}
+
+func HomePath(dir string) string {
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return strings.TrimSuffix(pwd[:strings.Index(pwd, dir)], "/")
+}
