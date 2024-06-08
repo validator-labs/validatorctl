@@ -88,27 +88,29 @@ vet: binaries ## Run go vet
 
 ##@ Test Targets
 test-unit: ## Run unit tests
-	@mkdir -p $(COVER_DIR)
-	rm -rf $(COVER_DIR)/*
+	@mkdir -p $(COVER_DIR)/unit
+	rm -rf $(COVER_DIR)/unit/*
 	IS_TEST=true CLI_VERSION=$(VERSION) go test -v -race -parallel 6 -timeout 20m \
-		-covermode=atomic -coverprofile=$(COVER_DIR)/unit.out $(COVER_PKGS)
+		-covermode=atomic -coverprofile=$(COVER_DIR)/unit/unit.out $(COVER_PKGS)
 
 # For now we can't enable -race for integration tests
 # due to https://github.com/spf13/viper/issues/174
 test-integration: binaries init-kubebuilder ## Run integration tests
-	@mkdir -p $(COVER_DIR)
+	@mkdir -p $(COVER_DIR)/integration
+	rm -rf $(COVER_DIR)/integration/*
 	KUBEBUILDER_ASSETS=${KUBEBUILDER_ASSETS} IS_TEST=true CLI_VERSION=$(VERSION) KUBECONFIG= DISABLE_KIND_CLUSTER_CHECK=true \
 		go test -v -parallel 6 -timeout 30m \
-		-covermode=atomic -coverpkg=./... -coverprofile=$(COVER_DIR)/integration.out ./tests/...
+		-covermode=atomic -coverpkg=./... -coverprofile=$(COVER_DIR)/integration/integration.out ./tests/...
 
 .PHONY: test
 test: gocovmerge test-integration test-unit ## Run unit tests, integration test
-	$(GOCOVMERGE) $(COVER_DIR)/*.out > $(COVER_DIR)/coverage.out.tmp
+	$(GOCOVMERGE) $(COVER_DIR)/unit/*.out $(COVER_DIR)/integration/*.out > $(COVER_DIR)/coverage.out.tmp
 	# Omit models and test code from coverage report
 	cat $(COVER_DIR)/coverage.out.tmp | grep -vE 'models|tests' > $(COVER_DIR)/coverage.out
 	go tool cover -func=$(COVER_DIR)/coverage.out -o $(COVER_DIR)/cover.func
 	go tool cover -html=$(COVER_DIR)/coverage.out -o $(COVER_DIR)/cover.html
 	go tool cover -func $(COVER_DIR)/coverage.out | grep total
+	cp $(COVER_DIR)/coverage.out cover.out
 
 coverage: ## Show global test coverage
 	go tool cover -func $(COVER_DIR)/coverage.out
@@ -117,16 +119,16 @@ coverage-html: ## Open global test coverage report in your browser
 	go tool cover -html $(COVER_DIR)/coverage.out
 
 coverage-unit: ## Show unit test coverage
-	go tool cover -func $(COVER_DIR)/unit.out
+	go tool cover -func $(COVER_DIR)/unit/unit.out
 
 coverage-unit-html: ## Open unit test coverage report in your browser
-	go tool cover -html $(COVER_DIR)/unit.out
+	go tool cover -html $(COVER_DIR)/unit/unit.out
 
 coverage-integration: ## Show integration test coverage
-	go tool cover -func $(COVER_DIR)/integration.out
+	go tool cover -func $(COVER_DIR)/integration/integration.out
 
 coverage-integration-html: ## Open integration test coverage report in your browser
-	go tool cover -html $(COVER_DIR)/integration.out
+	go tool cover -html $(COVER_DIR)/integration/integration.out
 
 ##@ Image Targets
 
