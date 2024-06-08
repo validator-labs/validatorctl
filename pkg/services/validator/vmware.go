@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	vSphereSecretName  = "vsphere-creds"
+	vSphereSecretName  = "vsphere-creds" //#nosec G101
 	dataCenter         = "Datacenter"
 	vsphereEntityTypes []string
 )
