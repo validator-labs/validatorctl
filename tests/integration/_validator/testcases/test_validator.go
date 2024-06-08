@@ -9,6 +9,7 @@ import (
 	tuimocks "github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
 
 	vsphere_cloud "github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
@@ -95,9 +96,6 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 
 	prompts.Tui = &tuimocks.MockTUI{
 		ReturnVals: []string{
-			// Image registry
-			"Default", // Default or Custom for OCI
-
 			// Kind
 			"y", // provision & use kind cluster
 
