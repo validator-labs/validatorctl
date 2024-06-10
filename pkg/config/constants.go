@@ -66,7 +66,7 @@ const (
 
 	// Embed dirs
 	Kind      string = "kind"
-	Validator string = "validator" // TODO: should this be an embeded dir?
+	Validator string = "validator"
 
 	// regex
 	DomainRegex          = "([a-zA-Z0-9]{1,63}|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.[a-zA-Z0-9]{1,63}|\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]){0,10}\\.([a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,30}[a-zA-Z0-9]\\.[a-zA-Z]{2,})"
@@ -97,7 +97,7 @@ var (
 		ValidatorPluginAws:     "v0.0.26",
 		ValidatorPluginAzure:   "v0.0.11",
 		ValidatorPluginNetwork: "v0.0.16",
-		ValidatorPluginVsphere: "v0.0.23",
+		ValidatorPluginVsphere: "v0.0.24",
 		ValidatorPluginOci:     "v0.0.10",
 	}
 

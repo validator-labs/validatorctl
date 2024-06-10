@@ -17,7 +17,6 @@ import (
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 )
 
-// TODO: remove  any binaries we dont need
 var Docker, Helm, Kind, Kubectl string
 
 //go:embed bin/docker

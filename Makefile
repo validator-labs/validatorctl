@@ -7,9 +7,7 @@
 
 # Images
 IMAGE_TAG ?= latest
-
-# TODO: update this image location
-CLI_IMG ?= "gcr.io/spectro-common-dev/${USER}/validator:$(IMAGE_TAG)"
+CLI_IMG ?= "quay.io/validator-labs/validatorctl:$(IMAGE_TAG)"
 
 # Dependency Versions
 BUILDER_GOLANG_VERSION ?= 1.22

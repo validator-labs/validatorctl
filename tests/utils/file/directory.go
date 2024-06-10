@@ -9,14 +9,6 @@ import (
 
 const testDir = "tests"
 
-func VCenterRepoPath() string {
-	return fmt.Sprintf("%s/%s", HomePath(testDir), "tests/external/repo/vcenter")
-}
-
-func HelperTestCasesPath() string {
-	return fmt.Sprintf("%s/%s", HomePath(testDir), "tests/integration/helper/testcases")
-}
-
 func ValidatorTestCasesPath() string {
 	// note: '_validator' was used here, rather than 'validator', due to: https://github.com/helm/helm/issues/7862
 	return fmt.Sprintf("%s/%s", HomePath(testDir), "tests/integration/_validator/testcases")
