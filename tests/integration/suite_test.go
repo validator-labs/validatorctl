@@ -11,11 +11,6 @@ import (
 	validator "github.com/validator-labs/validatorctl/tests/integration/_validator"
 	"github.com/validator-labs/validatorctl/tests/integration/common"
 	"github.com/validator-labs/validatorctl/tests/utils/test"
-	"github.com/validator-labs/validatorctl/tests/utils/test/manager"
-)
-
-var (
-	tm *manager.Manager
 )
 
 func TestIntegrationSuite(t *testing.T) {
@@ -23,9 +18,6 @@ func TestIntegrationSuite(t *testing.T) {
 		t.Errorf("failed to setup integration test suite: %v", err)
 	}
 	runSuite(t)
-	if err := teardown(); err != nil {
-		t.Errorf("failed to teardown integration test suite: %v", err)
-	}
 }
 
 func runSuite(t *testing.T) {
@@ -60,15 +52,5 @@ func setup() error {
 
 	// Initialze config, workspace, binaries, logger
 	cmd.InitConfig()
-
-	// Initialize envtest
-	tm = manager.NewTestManager()
-	return nil
-}
-
-func teardown() error {
-	if tm != nil { // tm may be nil if setup() failed to initialize it
-		return tm.DestroyEnvironment()
-	}
 	return nil
 }
