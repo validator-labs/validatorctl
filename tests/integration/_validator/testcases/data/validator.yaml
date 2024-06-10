@@ -14,7 +14,6 @@ helmReleaseSecret:
   exists: false
 imageRegistry: quay.io/validator-labs
 useKindCluster: true
-kubeconfig: /tmp/kind-cluster.kubeconfig
 useFixedVersion: false
 sinkConfig:
   enabled: true
