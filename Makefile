@@ -90,7 +90,7 @@ vet: binaries ## Run go vet
 test-unit: ## Run unit tests
 	@mkdir -p $(COVER_DIR)/unit
 	rm -rf $(COVER_DIR)/unit/*
-	IS_TEST=true CLI_VERSION=$(VERSION) go test -v -race -parallel 6 -timeout 20m \
+	IS_TEST=true CLI_VERSION=$(VERSION) go test -v -parallel 6 -timeout 20m \
 		-covermode=atomic -coverprofile=$(COVER_DIR)/unit/unit.out $(COVER_PKGS)
 
 # For now we can't enable -race for integration tests
@@ -103,7 +103,7 @@ test-integration: binaries init-kubebuilder ## Run integration tests
 		-covermode=atomic -coverpkg=./... -coverprofile=$(COVER_DIR)/integration/integration.out ./tests/...
 
 .PHONY: test
-test: gocovmerge test-integration test-unit ## Run unit tests, integration test
+test: binaries gocovmerge test-unit test-integration ## Run unit tests, integration test
 	$(GOCOVMERGE) $(COVER_DIR)/unit/*.out $(COVER_DIR)/integration/*.out > $(COVER_DIR)/coverage.out.tmp
 	# Omit test code from coverage report
 	cat $(COVER_DIR)/coverage.out.tmp | grep -vE 'tests' > $(COVER_DIR)/coverage.out

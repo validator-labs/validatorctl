@@ -57,6 +57,7 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testUpdatePasswords(); result.IsFailed() {
 		return result
 	}
+	t.log.Print("**** 7")
 	return test.Success()
 }
 
@@ -418,17 +419,24 @@ func (t *ValidatorTest) PreRequisite(ctx *test.TestContext) (tr *test.TestResult
 
 func (t *ValidatorTest) TearDown(ctx *test.TestContext) {
 	t.log.Printf("Executing TearDown for %s and %s ", t.GetName(), t.GetDescription())
+	t.log.Print("**** 0")
 
 	if err := kind.DeleteCluster(cfg.ValidatorKindClusterName); err != nil {
+		t.log.Print("**** 1")
 		t.log.Errorf("Failed to delete validator kind cluster: %v", err)
 	}
+	t.log.Print("**** 2")
 	if err := common.TearDownFun()(ctx); err != nil {
+		t.log.Print("**** 3")
 		t.log.Errorf("Failed to run teardown fun: %v", err)
 	}
+	t.log.Print("**** 4")
 
 	// restore clouds.GetVSphereDriver
 	vsphereDriverFunc := ctx.Get("vsphereDriverFunc")
+	t.log.Print("**** 5")
 	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account *vsphere_cloud.VsphereCloudAccount) (vsphere_cloud.VsphereDriver, error))
+	t.log.Print("**** 6")
 }
 
 func (t *ValidatorTest) filePath(file string) string {
