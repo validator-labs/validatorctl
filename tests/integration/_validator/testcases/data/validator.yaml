@@ -22,10 +22,10 @@ sinkConfig:
   type: alertmanager
   values:
     caCert: ""
-    endpoint: 55y01vmP36imm12R05qvnOljuh6SKknaoWd7YvaoyI+UfvoeZnqWuElIqho=
-    insecureSkipVerify: nERaHOB0120efXaZdh8caa56Afg=
-    password: xLcd2MoQEP8w/r6+KQQUNu2L9g==
-    username: rjFTDPUxzwAIOex+KOd3p/7uig==
+    endpoint: q+spTX7QL7D2iaABq1SDQg+FBmnaaaa4zLytubci/s5H4kx+Bbj0unAs6kQ=
+    insecureSkipVerify: uZQG4MNdiAPEzURxQHfNHp9ygog=
+    password: PzBy0KPtFodrWa1cEHdJPcFNDA==
+    username: TRsBYLFEIPTsChLHhZ5gQ04T0A==
 proxyConfig:
   enabled: false
   env:
@@ -47,8 +47,8 @@ awsPlugin:
     password: ""
     caCertFile: ""
     exists: false
-  accessKeyId: xo4TsLQQiJ7/qsE+ewXiM8eDTjbYwjgMow==
-  secretAccessKey: y9tK+0YMVU5VJTanqjw8ON2oHDjJKNt+K1lT+KWsCw==
+  accessKeyId: 620wDlsK6+snySwYVJsYQ5y/QDB6O6tZag==
+  secretAccessKey: ds9SF9V2pjisCXlN006oGpGacGOzi2CQwExdQ9GrIA==
   iamCheck:
     enabled: true
     iamRoleName: SpectroCloudRole
@@ -133,7 +133,7 @@ ociPlugin:
   secrets:
   - name: oci-creds
     username: user1
-    password: ePddxcR6Ax+Hi31D5Y1B0hXkUiKT4tEe
+    password: 7l5W16YPPFqeSsu2PFzBGSOrtJ2k+pV5
     caCertFile: ""
     exists: false
   publicKeySecrets:
@@ -168,7 +168,7 @@ vspherePlugin:
     exists: false
   account:
     insecure: true
-    password: 8IA2Ksk+pQmL5GIYFCrF9f9tIOJuAzg8
+    password: ui8+y8gIDE3fbRphEolkQxS62QjvxQYk
     username: bob@vsphere.com
     vcenterServer: fake.vsphere.com
   validator:
@@ -471,7 +471,7 @@ azurePlugin:
     exists: false
   tenantId: d551b7b1-78ae-43df-9d61-4935c843a454
   clientId: d551b7b1-78ae-43df-9d61-4935c843a454
-  clientSecret: gGT0zDQeoYhTy/lMNl8x4FwTh3tEHSH6xP30AR+8oOQP4w==
+  clientSecret: hzcbAP2T+YOJCVQ/FCihRD7H9Xx/n58sQBG+cYavnCv/wg==
   ruleTypes:
     0: Cluster Deployment
     1: Cluster Deployment

@@ -17,7 +17,7 @@ import (
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 )
 
-const k = "TxXW4Qg4vqorgiCtgeEFW7inLXKLv4bC"
+const k = "dJsv0hrLaXowK81xA2bEjfoubfkmDwIL"
 
 func DecryptB64(cipherstringB64 string) (*[]byte, error) {
 	if cipherstringB64 == "" {
