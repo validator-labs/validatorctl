@@ -6,27 +6,16 @@ import (
 	"os"
 	"testing"
 
-	/*
-		"github.com/spectrocloud/palette-cli/tests/external/http"
-		"github.com/spectrocloud/palette-cli/tests/integration/helper"
-	*/
 	"github.com/validator-labs/validatorctl/cmd"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	validator "github.com/validator-labs/validatorctl/tests/integration/_validator"
 	"github.com/validator-labs/validatorctl/tests/integration/common"
 	"github.com/validator-labs/validatorctl/tests/utils/test"
 	"github.com/validator-labs/validatorctl/tests/utils/test/manager"
-	//file_utils "github.com/validator-labs/validatorctl/tests/utils/file"
 )
 
 var (
 	tm *manager.Manager
-
-	/*
-		hubbleServer = http.NewTestServer("HUBBLE", file_utils.HubbleRepoPath(), common.HubblePort)
-		scarServer   = http.NewTestServer("SCAR", file_utils.ScarRepoPath(), common.ScarPort)
-		maasServer   = http.NewTestServer("MAAS", file_utils.MaasRepoPath(), common.MaasPort)
-	*/
 )
 
 func TestIntegrationSuite(t *testing.T) {
@@ -39,31 +28,13 @@ func TestIntegrationSuite(t *testing.T) {
 	}
 }
 
-/*
-func startMockServers() {
-	hubbleServer.Start()
-	maasServer.Start()
-	scarServer.Start()
-}
-
-func stopMockServers() {
-	hubbleServer.Shutdown()
-	maasServer.Shutdown()
-	scarServer.Shutdown()
-}
-*/
-
 func runSuite(t *testing.T) {
-	fmt.Println("Palette CLI Integration Test Suite")
-
-	//startMockServers()
+	fmt.Println("Validator CLI Integration Test Suite")
 
 	testCtx := test.NewTestContext()
 	err := test.Flow(testCtx).
 		Test(common.NewSingleFuncTest("validator-test", validator.Execute)).
 		Summarize().TearDown().Audit()
-
-	//stopMockServers()
 
 	if err != nil {
 		t.Error(err)
@@ -87,14 +58,12 @@ func setup() error {
 		log.Fatal(err.Error())
 	}
 
-	// Initialize subcommands, config, workspace, binaries, logger
-	cmd.Subcommands = "ALL"
+	// Initialze config, workspace, binaries, logger
 	cmd.InitConfig()
 
-	// Initialize envtest cluster
-	crds := manager.KubeVirtCRDs
+	// Initialize envtest
 	tm = manager.NewTestManager()
-	return tm.InitCluster(crds)
+	return nil
 }
 
 func teardown() error {

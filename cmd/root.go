@@ -17,12 +17,8 @@ var (
 	cfgFile      string
 	logLevel     string
 	workspaceLoc string
-
-	rootCmd *cobra.Command
-
-	// set at compile time via -ldflags; see release targets in Makefile
-	Subcommands string
-	Version     string
+	rootCmd      *cobra.Command
+	Version      string
 )
 
 func init() {

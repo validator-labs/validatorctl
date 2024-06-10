@@ -344,10 +344,7 @@ func configureAzureRBACRuleClusterDeploymentDynamic(c *components.AzurePluginCon
 	}
 
 	r.Permissions = []plug.PermissionSet{
-		// Permission set can be made narrower in scope in the future. Right now, we're making
-		// this match our docs by having a wide set of permissions checked at the subscription
-		// scope. We should be able to reduce the set of permissions and use a narrower scope
-		// for some of them. For now, this gets Palette users going.
+		// Permission set can be made narrower in scope in the future.
 		{
 			Actions: actionStrs,
 			// This works for subscriptions that are in management groups and ones that aren't.

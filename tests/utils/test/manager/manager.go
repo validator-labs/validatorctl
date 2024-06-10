@@ -51,18 +51,6 @@ type InitEnvironmentInput struct {
 	CRDs []string
 }
 
-// InitCluster loads the test data and initializes a cluster/test env with the given crds installed
-func (m *Manager) InitCluster(crds []string) error {
-	m.LoadTestEnv()
-	if err := m.InitEnvironment(InitEnvironmentInput{
-		CRDs: crds,
-		Name: "test",
-	}); err != nil {
-		return err
-	}
-	return m.SaveKubeconfig("/tmp/kubeconfig-current")
-}
-
 func (m *Manager) InitEnvironment(input InitEnvironmentInput) error {
 	f := false
 	testEnv := &envtest.Environment{
