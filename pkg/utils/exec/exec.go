@@ -1,80 +1,15 @@
 package exec
 
 import (
-	"bufio"
 	"bytes"
 	"io"
 	"os/exec"
-	"strings"
-
-	"github.com/pkg/errors"
 
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 )
 
 // Execute enables monkey-patching cmd execution for integration tests
 var Execute = execute
-
-func GetCmds(commandStr string) []*exec.Cmd {
-
-	cmdArr := strings.Split(commandStr, "|")
-	cmds := make([]*exec.Cmd, 0)
-
-	for _, command := range cmdArr {
-		command = strings.TrimSpace(command)
-		args := strings.Split(command, " ")
-		if len(args) >= 1 {
-			bin, args := args[0], args[1:]
-			cmds = append(cmds, exec.Command(bin, args...)) //#nosec
-		}
-	}
-	return cmds
-}
-
-func StreamingOutput(cmd *exec.Cmd) (string, string, error) {
-	var errs string
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return "", "", err
-	}
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return "", "", err
-	}
-
-	errScanner := bufio.NewScanner(stderr)
-	go func() {
-		for errScanner.Scan() {
-			errs += errScanner.Text()
-			log.Error("%v", errScanner.Text())
-		}
-	}()
-
-	if err := cmd.Start(); err != nil {
-		return "", "", err
-	}
-
-	stdoutb, err := io.ReadAll(stdout)
-	if err != nil {
-		return "", "", err
-	}
-
-	stderrb, err := io.ReadAll(stdout)
-	if err != nil {
-		return "", "", err
-	}
-
-	if err := cmd.Wait(); err != nil {
-		if errs == "" {
-			return "", "", err
-		}
-		return "", "", errors.WithMessage(err, errs)
-	}
-	outStr, errStr := string(stdoutb), string(stderrb)
-
-	return outStr, errStr, nil
-}
 
 type WriterStringer interface {
 	String() string
