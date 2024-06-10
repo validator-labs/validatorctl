@@ -334,8 +334,8 @@ github.com/validator-labs/validator-plugin-network v0.0.16 h1:W+ZKmAXAR4BmAv7KoR
 github.com/validator-labs/validator-plugin-network v0.0.16/go.mod h1:LEd+5Pfdh8uCXi2N8L2vOdVtxxm2rtHriB1egwYFmHg=
 github.com/validator-labs/validator-plugin-oci v0.0.10 h1:Qd6zgS9gN/RjZ+EV3z8LhCBUinhe02w5G1IuHR4u6f8=
 github.com/validator-labs/validator-plugin-oci v0.0.10/go.mod h1:QAFcEmXDGKId3gsbC3C2Kg4qWW71FLimi9VeGQtEp3Y=
-github.com/validator-labs/validator-plugin-vsphere v0.0.23 h1:2d5mO3mpwLYOs8+D0RqwlCcrf5qxgsbrMkpYg4G3N4w=
-github.com/validator-labs/validator-plugin-vsphere v0.0.23/go.mod h1:rCL55Y8Zhodmbs+whEKkEpTOsLQlXzcUGAnew6AZWhA=
+github.com/validator-labs/validator-plugin-vsphere v0.0.24 h1:rlWW9vmsRat+FYfRX/XKcOLNKeMCtpEqeH1FXx4+J9c=
+github.com/validator-labs/validator-plugin-vsphere v0.0.24/go.mod h1:rCL55Y8Zhodmbs+whEKkEpTOsLQlXzcUGAnew6AZWhA=
 github.com/vmware/govmomi v0.37.3 h1:L2y2Ba09tYiZwdPtdF64Ox9QZeJ8vlCUGcAF9SdODn4=
 github.com/vmware/govmomi v0.37.3/go.mod h1:mtGWtM+YhTADHlCgJBiskSRPOZRsN9MSjPzaZLte/oQ=
 github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778/go.mod h1:2MuV+tbUrU1zIOPMxZ5EncGwgmMJsa+9ucAQZXxsObs=
