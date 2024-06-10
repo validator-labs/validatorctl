@@ -13,7 +13,6 @@ CLI_IMG ?= "quay.io/validator-labs/validatorctl:$(IMAGE_TAG)"
 BUILDER_GOLANG_VERSION ?= 1.22
 DOCKER_VERSION ?= 24.0.6
 HELM_VERSION ?= 3.14.0
-ENVTEST_VERSION ?= 1.27.1
 GOLANGCI_VERSION ?= 1.54.2
 KIND_VERSION ?= 0.20.0
 KUBECTL_VERSION ?= 1.24.10
@@ -25,7 +24,6 @@ VERSION ?= 0.0.1${VERSION_SUFFIX}
 # Common vars
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
-TEMPLATE_DIR := $(CURRENT_DIR)/server/internal/templates
 EMBED_BIN := ./pkg/utils/embed/bin
 BIN_DIR ?= ./bin
 
@@ -49,10 +47,6 @@ TARGETARCH ?= amd64
 # Test vars
 COVER_DIR=_build/cov
 COVER_PKGS=$(shell go list ./... | grep -v /tests/) # omit integration tests
-
-# Swagger vars
-MAKE_COMMAND=make -f
-INSTALLER_MAKE_PATH := $(CURRENT_DIR)server/internal/spec/Makefile
 
 # Integrated Images List
 IMAGE_LIST=_build/images/images.list
@@ -93,10 +87,10 @@ test-unit: ## Run unit tests
 
 # For now we can't enable -race for integration tests
 # due to https://github.com/spf13/viper/issues/174
-test-integration: binaries init-kubebuilder ## Run integration tests
+test-integration: binaries ## Run integration tests
 	@mkdir -p $(COVER_DIR)/integration
 	rm -rf $(COVER_DIR)/integration/*
-	KUBEBUILDER_ASSETS=${KUBEBUILDER_ASSETS} IS_TEST=true CLI_VERSION=$(VERSION) KUBECONFIG= DISABLE_KIND_CLUSTER_CHECK=true \
+	IS_TEST=true CLI_VERSION=$(VERSION) KUBECONFIG= DISABLE_KIND_CLUSTER_CHECK=true \
 		go test -v -parallel 6 -timeout 30m \
 		-covermode=atomic -coverpkg=./... -coverprofile=$(COVER_DIR)/integration/integration.out ./tests/...
 
@@ -243,15 +237,3 @@ GOCOVMERGE=$(GOBIN)/gocovmerge
 else
 GOCOVMERGE=$(shell which gocovmerge)
 endif
-
-init-kubebuilder: setup-envtest
-	$(BIN_DIR)/setup-envtest use --bin-dir $(BIN_DIR) $(ENVTEST_VERSION)
-KUBEBUILDER_ASSETS = $(shell pwd)/$(shell $(BIN_DIR)/setup-envtest use -p path --bin-dir $(BIN_DIR) $(ENVTEST_VERSION))
-
-setup-envtest:
-ifeq ("$(wildcard $(BIN_DIR)/setup-envtest)", "")
-	go get sigs.k8s.io/controller-runtime/tools/setup-envtest
-	GOBIN=$(shell pwd)/bin go install sigs.k8s.io/controller-runtime/tools/setup-envtest
-endif
-SETUP_ENVTEST=$(BIN_DIR)/setup-envtest
-
