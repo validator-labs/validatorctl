@@ -1,0 +1,42 @@
+{{- $cert_location := "/usr/local/share/ca-certificates" -}}
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  podSubnet: {{ .Env.PodCIDR }}
+  serviceSubnet: {{ .Env.ServiceIPRange }}
+  disableDefaultCNI: false
+nodes:
+- role: control-plane
+  image: {{ .Image }}
+{{- if or .Env.ProxyCaCertPath (and .RegistryEndpoint (eq .RegistryInsecure "false")) }}
+  extraMounts:
+{{- end }}
+{{- if .Env.ProxyCaCertPath }}
+  - hostPath: {{ .Env.ProxyCaCertPath }}
+    containerPath: {{ printf "%s/%s" $cert_location .Env.ProxyCaCertName }}
+{{- end }}
+{{- if .RegistryEndpoint }}
+{{- $mirrorEndpoint := .RegistryMirrorEndpoint }}
+{{- if and (eq .RegistryInsecure "false") (not .ReusedProxyCACert) }}
+  - hostPath: /etc/docker/certs.d/{{ .RegistryEndpoint }}/{{ .RegistryCaCertName }}
+    containerPath: {{ printf "%s/%s" $cert_location .RegistryCaCertName }}
+{{- end }}
+containerdConfigPatches:
+  - |-
+    {{- if and .RegistryPassword .RegistryUsername }}
+    [plugins."io.containerd.grpc.v1.cri".registry.configs."{{ .RegistryEndpoint }}".auth]
+      password = "{{ .RegistryPassword }}"
+      username = "{{ .RegistryUsername }}"
+    {{- end }}
+    [plugins."io.containerd.grpc.v1.cri".registry.configs."{{ .RegistryEndpoint }}".tls]
+    {{- if eq .RegistryInsecure "true" }}
+      insecure_skip_verify = {{ .RegistryInsecure }}
+    {{- else }}
+      ca_file = "{{ printf "%s/%s" $cert_location .RegistryCaCertName }}"
+    {{- end }}
+    {{- range .RegistryMirrors }}
+    {{- $registryMirror := split "::" . }}
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."{{ $registryMirror._0 }}"]
+      endpoint = ["{{ $registryMirror._1 }}"]
+    {{- end }}
+{{- end }}

@@ -1,0 +1,173 @@
+controllerManager:
+  kubeRbacProxy:
+    args:
+    - --secure-listen-address=0.0.0.0:8443
+    - --upstream=http://127.0.0.1:8080/
+    - --logtostderr=true
+    - --v=0
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    image:
+      repository: gcr.io/kubebuilder/kube-rbac-proxy
+      tag: v0.14.1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 5m
+        memory: 64Mi
+  manager:
+    args:
+    - --health-probe-bind-address=:8081
+    - --leader-elect
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    image:
+      repository: {{ printf "%s/validator" .ImageRegistry }}
+      tag: {{ .Tag }}
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+    sinkWebhookTimeout: 30s
+  replicas: 1
+  serviceAccount:
+    annotations: {}
+kubernetesClusterDomain: cluster.local
+metricsService:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: https
+  type: ClusterIP
+
+{{- if or .ProxyConfig.Env.HTTPProxy .ProxyConfig.Env.HTTPSProxy }}
+env:
+- name: HTTP_PROXY
+  value: "{{ .ProxyConfig.Env.HTTPProxy }}"
+- name: HTTPS_PROXY
+  value: "{{ .ProxyConfig.Env.HTTPSProxy }}"
+- name: NO_PROXY
+  value: "{{ .ProxyConfig.Env.NoProxy }}"
+{{- else }}
+env: []
+{{- end }}
+
+{{- if .ProxyConfig.Enabled }}
+proxy:
+  enabled: true
+  image: {{ printf "%s/validator-certs-init:1.0.0" .ImageRegistry }}
+  secretName: proxy-cert
+  createSecret: true
+  caCert: |
+    {{- range .ProxyCaCertData }}
+    {{ . }}
+    {{- end  }}
+{{- else }}
+proxy:
+  enabled: false
+{{- end }}
+
+{{- if .SinkConfig.Enabled }}
+sink:
+  secretName: {{ .SinkConfig.SecretName }}
+  createSecret: {{ .SinkConfig.CreateSecret }}
+
+  {{- if eq .SinkConfig.Type "alertmanager" }}
+  type: alertmanager
+  endpoint: {{ index .SinkConfig.Values "endpoint" }}
+  insecureSkipVerify: {{ index .SinkConfig.Values "insecureSkipVerify" }}
+  caCert: |
+{{ index .SinkConfig.Values "caCert" | indent 4 }}
+  username: "{{ index .SinkConfig.Values "username" }}"
+  password: "{{ index .SinkConfig.Values "password" }}"
+  {{- end }}
+
+  {{- if eq .SinkConfig.Type "slack" }}
+  type: slack
+  apiToken: {{ index .SinkConfig.Values "apiToken" }}
+  channelId: {{ index .SinkConfig.Values "channelId" }}
+  {{- end }}
+{{- else }}
+sink: {}
+{{- end }}
+
+cleanup:
+  image: {{ printf "%s/spectro-cleanup:1.2.0" .ImageRegistry }}
+  grpcServerEnabled: true
+  hostname: validator-cleanup-service
+  port: 3006
+
+pluginSecrets:
+  {{- if .AWSPlugin.Enabled }}
+  {{- if .AWSPlugin.Validator.Auth.Implicit }}
+  aws: {}
+  {{- else }}
+  aws:
+    secretName: {{ .AWSPlugin.Validator.Auth.SecretName }}
+    env:
+      AWS_ACCESS_KEY_ID: {{ .AWSPlugin.AccessKeyId }}
+      AWS_SECRET_ACCESS_KEY: {{ .AWSPlugin.SecretAccessKey }}
+      AWS_SESSION_TOKEN: {{ .AWSPlugin.SessionToken }}
+  {{- end }}
+  {{- end }}
+
+  {{- if .VspherePlugin.Validator.Auth.SecretName }}
+  vSphere:
+    secretName: {{ .VspherePlugin.Validator.Auth.SecretName }}
+    username: {{ .VspherePlugin.Account.Username }}
+    password: {{ .VspherePlugin.Account.Password }}
+    vcenterServer: {{ .VspherePlugin.Account.VcenterServer }}
+    insecureSkipVerify: {{ .VspherePlugin.Account.Insecure }}
+  {{- else }}
+  vSphere: {}
+  {{- end }}
+
+  {{- if .OCIPlugin.Enabled }}
+  oci:
+    {{- if gt (len .OCIPlugin.Secrets) 0 }}
+    auth:
+    {{- range .OCIPlugin.Secrets }}
+    - secretName: {{ .Name }}
+      username: {{ .Username }}
+      password: {{ .Password }}
+    {{- end }}
+    {{- else }}
+    auth: []
+    {{- end }}
+    {{- if gt (len .OCIPlugin.PublicKeySecrets) 0 }}
+    pubKeys:
+    {{- range .OCIPlugin.PublicKeySecrets }}
+    - secretName: {{ .Name }}
+    {{- range $index, $pubkey := .Keys }}
+      pubkey-{{ $index }}.pub: | {{ $pubkey | nindent 8 }}
+    {{- end }}
+    {{- end }}
+    {{- else}}
+    pubKeys: []
+    {{- end }}
+  {{- end }}
+
+  {{- if .AzurePlugin.Enabled }}
+  {{- if .AzurePlugin.Validator.Auth.Implicit }}
+  azure: {}
+  {{- else }}
+  azure:
+    secretName: {{ .AzurePlugin.Validator.Auth.SecretName }}
+    env:
+      AZURE_TENANT_ID: {{ .AzurePlugin.TenantID }}
+      AZURE_CLIENT_ID: {{ .AzurePlugin.ClientID }}
+      AZURE_CLIENT_SECRET: {{ .AzurePlugin.ClientSecret }}
+  {{- end }}
+  {{- end }}

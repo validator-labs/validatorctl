@@ -1,0 +1,1049 @@
+package validator
+
+import (
+	"context"
+	"fmt"
+	"reflect"
+	"slices"
+	"sort"
+	"strconv"
+	"strings"
+
+	"emperror.dev/errors"
+	"github.com/vmware/govmomi/object"
+	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/yaml"
+
+	"github.com/spectrocloud-labs/prompts-tui/prompts"
+	"github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+
+	"github.com/validator-labs/validatorctl/pkg/components"
+	cfg "github.com/validator-labs/validatorctl/pkg/config"
+	log "github.com/validator-labs/validatorctl/pkg/logging"
+	"github.com/validator-labs/validatorctl/pkg/services"
+	"github.com/validator-labs/validatorctl/pkg/services/clouds"
+	"github.com/validator-labs/validatorctl/pkg/utils/embed"
+)
+
+var (
+	vSphereSecretName  = "vsphere-creds" //#nosec G101
+	dataCenter         = "Datacenter"
+	vsphereEntityTypes []string
+)
+
+func init() {
+	for _, v := range cfg.ValidatorPluginVsphereEntityMap {
+		vsphereEntityTypes = append(vsphereEntityTypes, v)
+	}
+}
+
+type vSphereRule interface {
+	*components.VsphereEntityPrivilegeRule | *components.VsphereRolePrivilegeRule | *components.VsphereTagRule |
+		*v1alpha1.ComputeResourceRule | *v1alpha1.NTPValidationRule
+}
+
+func readVspherePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
+	c := vc.VspherePlugin
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := readHelmRelease(cfg.ValidatorPluginVsphere, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
+		return err
+	}
+	if err := readVsphereCredentials(c, k8sClient); err != nil {
+		return errors.Wrap(err, "failed to read vSphere credentials")
+	}
+
+	vSphereCloudDriver, err := clouds.GetVSphereDriver(c.Account)
+	if err != nil {
+		return err
+	}
+	if err := vSphereCloudDriver.ValidateVsphereVersion(cfg.ValidatorVsphereVersionConstraint); err != nil {
+		return err
+	}
+	log.InfoCLI("Validated vSphere version %s", cfg.ValidatorVsphereVersionConstraint)
+
+	if c.Validator.Datacenter != "" {
+		dataCenter = c.Validator.Datacenter
+	}
+	c.Validator.Datacenter, err = prompts.ReadText("Datacenter", dataCenter, false, -1)
+	if err != nil {
+		return err
+	}
+
+	ruleNames := make([]string, 0)
+
+	if err := configureNtpRules(ctx, c, vSphereCloudDriver, &ruleNames); err != nil {
+		return err
+	}
+	if err := configureRolePrivilegeRules(c, &ruleNames); err != nil {
+		return err
+	}
+	if err := configureEntityPrivilegeRules(ctx, c, vSphereCloudDriver, &ruleNames); err != nil {
+		return err
+	}
+	if err := configureResourceRequirementRules(ctx, c, vSphereCloudDriver, &ruleNames); err != nil {
+		return err
+	}
+	if err := configureVsphereTagRules(ctx, c, vSphereCloudDriver, &ruleNames); err != nil {
+		return err
+	}
+
+	if c.Validator.ResultCount() == 0 {
+		return errNoRulesEnabled
+	}
+	return nil
+}
+
+func readVsphereCredentials(c *components.VspherePluginConfig, k8sClient kubernetes.Interface) error {
+	var err error
+
+	// always create vSphere credential secret if creating a new kind cluster
+	createSecret := true
+
+	if k8sClient != nil {
+		log.InfoCLI(`
+	Either specify vSphere credentials or provide the name of a secret in the target K8s cluster's %s namespace.
+	If using an existing secret, it must contain the following keys: %+v.
+	`, cfg.Validator, cfg.ValidatorPluginVsphereKeys,
+		)
+		createSecret, err = prompts.ReadBool("Create vSphere credential secret", true)
+		if err != nil {
+			return fmt.Errorf("failed to create vSphere credential secret: %w", err)
+		}
+	}
+
+	if createSecret {
+		if c.Validator.Auth.SecretName != "" {
+			vSphereSecretName = c.Validator.Auth.SecretName
+		}
+		c.Validator.Auth.SecretName, err = prompts.ReadText("vSphere credentials secret name", vSphereSecretName, false, -1)
+		if err != nil {
+			return err
+		}
+		if err := clouds.ReadVsphereAccountProps(c.Account); err != nil {
+			return err
+		}
+	} else {
+		secret, err := services.ReadSecret(k8sClient, cfg.Validator, false, cfg.ValidatorPluginVsphereKeys)
+		if err != nil {
+			return err
+		}
+		c.Validator.Auth.SecretName = secret.Name
+		insecure, err := strconv.ParseBool(string(secret.Data["insecureSkipVerify"]))
+		if err != nil {
+			return err
+		}
+		c.Account.VcenterServer = string(secret.Data["vcenterServer"])
+		c.Account.Username = string(secret.Data["username"])
+		c.Account.Password = string(secret.Data["password"])
+		c.Account.Insecure = insecure
+	}
+
+	return nil
+}
+
+func initVsphereRule[R vSphereRule](r R, ruleType, message string, ruleNames *[]string) error {
+	name := reflect.ValueOf(r).Elem().FieldByName("Name").String()
+	if name != "" {
+		log.InfoCLI("\nReconfiguring %s validation rule: %s", ruleType, name)
+		if message != "" {
+			log.InfoCLI(message)
+		}
+		*ruleNames = append(*ruleNames, name)
+	} else {
+		name, err := getRuleName(ruleNames)
+		if err != nil {
+			return err
+		}
+		reflect.ValueOf(r).Elem().FieldByName("Name").Set(reflect.ValueOf(name))
+	}
+	return nil
+}
+
+func configureNtpRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
+	log.InfoCLI(`
+	NTP validation ensures that ntpd is enabled and running on a set of ESXi hosts.
+	If enabled, you will be prompted to select one or more of ESXi hosts.
+	`)
+
+	validateNtp, err := prompts.ReadBool("Enable NTP validation for ESXi host(s)", true)
+	if err != nil {
+		return err
+	}
+	if !validateNtp {
+		c.Validator.NTPValidationRules = nil
+		return nil
+	}
+	for i, r := range c.Validator.NTPValidationRules {
+		r := r
+		if err := readNtpRule(ctx, c, &r, driver, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.Validator.NTPValidationRules == nil {
+		c.Validator.NTPValidationRules = make([]v1alpha1.NTPValidationRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another NTP validation rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readNtpRule(ctx, c, &v1alpha1.NTPValidationRule{}, driver, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another NTP validation rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readNtpRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.NTPValidationRule, driver vsphere.VsphereDriver, idx int, ruleNames *[]string) error {
+	err := initVsphereRule(r, "NTP", "The rule's ESXi host selection will be replaced.", ruleNames)
+	if err != nil {
+		return err
+	}
+	if r.ClusterName == "" {
+		_, r.ClusterName, err = getClusterScopedInfo(ctx, c.Validator.Datacenter, cfg.ValidatorVsphereEntityHost, driver)
+		if err != nil {
+			return err
+		}
+	}
+	r.Hosts, err = selectEsxiHosts(ctx, c.Validator.Datacenter, r.ClusterName, driver)
+	if err != nil {
+		return err
+	}
+	if idx == -1 {
+		c.Validator.NTPValidationRules = append(c.Validator.NTPValidationRules, *r)
+	} else {
+		c.Validator.NTPValidationRules[idx] = *r
+	}
+	return nil
+}
+
+func selectEsxiHosts(ctx context.Context, datacenter string, clusterName string, driver vsphere.VsphereDriver) ([]string, error) {
+	hosts, err := driver.GetVSphereHostSystems(ctx, datacenter, clusterName)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list vSphere ESXi hosts")
+	}
+
+	var hostList, selectedHosts []string
+	for _, host := range hosts {
+		hostList = append(hostList, host.Name)
+	}
+	for {
+		hostName, err := prompts.Select("ESXi Host Name", hostList)
+		if err != nil {
+			return nil, err
+		}
+		selectedHosts = append(selectedHosts, hostName)
+
+		add, err := prompts.ReadBool("Add another ESXi Host", false)
+		if err != nil {
+			return nil, err
+		}
+		if !add {
+			break
+		}
+	}
+	return selectedHosts, nil
+}
+
+func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[]string) error {
+	log.InfoCLI(`
+	Role privilege validation ensures that a vSphere user has a
+	specific set of root-level vSphere privileges.
+	`)
+
+	validateRolePrivileges, err := prompts.ReadBool("Enable role privilege validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateRolePrivileges {
+		c.VsphereRolePrivilegeRules = nil
+		c.Validator.RolePrivilegeValidationRules = nil
+		return nil
+	}
+	for i, r := range c.VsphereRolePrivilegeRules {
+		r := r
+		if err := readRolePrivilegeRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.VsphereRolePrivilegeRules == nil {
+		c.VsphereRolePrivilegeRules = make([]components.VsphereRolePrivilegeRule, 0)
+		c.Validator.RolePrivilegeValidationRules = make([]v1alpha1.GenericRolePrivilegeValidationRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another role privilege validation rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readRolePrivilegeRule(c, &components.VsphereRolePrivilegeRule{}, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another role privilege validation rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.VsphereRolePrivilegeRule, idx int, ruleNames *[]string) error {
+	err := initVsphereRule(r, "role privilege", "The rule's vSphere privilege set will be replaced.", ruleNames)
+	if err != nil {
+		return err
+	}
+	r.Username, err = prompts.ReadTextRegex("vSphere username for privilege validation", r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
+	if err != nil {
+		return err
+	}
+	privilegeSet, err := prompts.Select("Root-level privilege set", cfg.ValidatorPluginVsphereRolePrivilegeChoices)
+	if err != nil {
+		return err
+	}
+	privileges, err := LoadPrivileges(cfg.ValidatorPluginVsphereRolePrivilegeFiles[privilegeSet])
+	if err != nil {
+		return err
+	}
+	if privilegeSet == cfg.CustomPrivileges {
+		privileges, err = selectPrivileges(privileges)
+		if err != nil {
+			return err
+		}
+	}
+	r.Privileges = privileges
+	if idx == -1 {
+		c.VsphereRolePrivilegeRules = append(c.VsphereRolePrivilegeRules, *r)
+		c.Validator.RolePrivilegeValidationRules = append(c.Validator.RolePrivilegeValidationRules, r.GenericRolePrivilegeValidationRule)
+	} else {
+		c.VsphereRolePrivilegeRules[idx] = *r
+		c.Validator.RolePrivilegeValidationRules[idx] = r.GenericRolePrivilegeValidationRule
+	}
+	return nil
+}
+
+func LoadPrivileges(privilegeFile string) ([]string, error) {
+	privilegeBytes, err := embed.ReadFile(cfg.Validator, privilegeFile)
+	if err != nil {
+		return nil, err
+	}
+	var privilegeMap map[string][]string
+	if err := yaml.Unmarshal(privilegeBytes, &privilegeMap); err != nil {
+		return nil, err
+	}
+	privileges := privilegeMap["privilegeIds"]
+	return privileges, nil
+}
+
+func selectPrivileges(allPrivileges []string) ([]string, error) {
+	var selectedPrivileges []string
+	slices.Sort(allPrivileges)
+
+	log.InfoCLI("Select custom privileges:\n")
+	for {
+		privilege, err := prompts.Select("", allPrivileges)
+		if err != nil {
+			return nil, err
+		}
+		selectedPrivileges = append(selectedPrivileges, privilege)
+
+		add, err := prompts.ReadBool("Add another privilege", true)
+		if err != nil {
+			return nil, err
+		}
+		if !add {
+			break
+		}
+	}
+	return selectedPrivileges, nil
+}
+
+func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
+	log.InfoCLI(`
+	Entity privilege validation ensures that a vSphere user has certain
+	privileges with respect to a specific vSphere resource.
+	`)
+
+	validateEntityPrivileges, err := prompts.ReadBool("Enable entity privilege validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateEntityPrivileges {
+		c.VsphereEntityPrivilegeRules = nil
+		c.Validator.EntityPrivilegeValidationRules = nil
+		return nil
+	}
+
+	permissionsBytes, err := embed.ReadFile(cfg.Validator, cfg.SpectroEntityPrivilegesFile)
+	if err != nil {
+		return err
+	}
+	var spectroEntityRules []components.VsphereEntityPrivilegeRule
+	if err := yaml.Unmarshal(permissionsBytes, &spectroEntityRules); err != nil {
+		return err
+	}
+	spectroEntityRuleMap := make(map[string]*components.VsphereEntityPrivilegeRule)
+	for _, r := range spectroEntityRules {
+		r := r
+		spectroEntityRuleMap[r.Name] = &r
+	}
+
+	for i, r := range c.VsphereEntityPrivilegeRules {
+		r := r
+		if err := readEntityPrivilegeRule(ctx, c, &r, driver, i, nil, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.Validator.EntityPrivilegeValidationRules == nil {
+		c.VsphereEntityPrivilegeRules = make([]components.VsphereEntityPrivilegeRule, 0)
+		c.Validator.EntityPrivilegeValidationRules = make([]v1alpha1.EntityPrivilegeValidationRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another entity privilege validation rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readEntityPrivilegeRule(ctx, c, &components.VsphereEntityPrivilegeRule{}, driver, -1, spectroEntityRuleMap, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another entity privilege validation rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver, idx int, spectroEntityRuleMap map[string]*components.VsphereEntityPrivilegeRule, ruleNames *[]string) error {
+	err := initVsphereRule(r, "entity privilege", "The rule's vSphere privilege set will be replaced.", ruleNames)
+	if err != nil {
+		return err
+	}
+
+	if r.RuleType == "" {
+		if len(spectroEntityRuleMap) == 0 {
+			log.InfoCLI("All Spectro Cloud entity rules have been configured.")
+			addCustom, err := prompts.ReadBool("Add a custom entity privilege validation rule", true)
+			if err != nil {
+				return err
+			}
+			if !addCustom {
+				return nil
+			}
+			r.RuleType = cfg.CustomEntityPrivileges
+		} else {
+			r.RuleType, err = prompts.Select("Entity privilege type", cfg.ValidatorPluginVsphereEntityPrivilegeChoices)
+			if err != nil {
+				return err
+			}
+			if r.RuleType == cfg.SpectroEntityPrivileges {
+				var spectroRuleNames []string
+				for name := range spectroEntityRuleMap {
+					spectroRuleNames = append(spectroRuleNames, name)
+				}
+				slices.Sort(spectroRuleNames)
+
+				ruleName, err := prompts.Select("Spectro Cloud entity rule", spectroRuleNames)
+				if err != nil {
+					return err
+				}
+				r = spectroEntityRuleMap[ruleName]
+				delete(spectroEntityRuleMap, ruleName)
+			}
+		}
+	}
+
+	switch r.RuleType {
+	case cfg.SpectroEntityPrivileges:
+		prompt := fmt.Sprintf("vSphere username to validate entity privileges for %s: %s", r.EntityType, r.EntityName)
+		r.Username, err = prompts.ReadTextRegex(prompt, r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
+		if err != nil {
+			return err
+		}
+		if r.ClusterScoped {
+			prompt := fmt.Sprintf("Cluster name under which %s: %s resides", r.EntityType, r.EntityName)
+			r.ClusterName, err = prompts.ReadText(prompt, r.ClusterName, false, -1)
+			if err != nil {
+				return err
+			}
+		}
+	case cfg.CustomEntityPrivileges:
+		if err := readCustomEntityPrivileges(ctx, c, r, driver); err != nil {
+			return err
+		}
+	}
+
+	if idx == -1 {
+		c.VsphereEntityPrivilegeRules = append(c.VsphereEntityPrivilegeRules, *r)
+		c.Validator.EntityPrivilegeValidationRules = append(c.Validator.EntityPrivilegeValidationRules, r.EntityPrivilegeValidationRule)
+	} else {
+		c.VsphereEntityPrivilegeRules[idx] = *r
+		c.Validator.EntityPrivilegeValidationRules[idx] = r.EntityPrivilegeValidationRule
+	}
+
+	return nil
+}
+
+func readCustomEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver) error {
+	var err error
+	if r.Username == "" {
+		r.Username, err = prompts.ReadTextRegex("vSphere username to validate entity privileges for", r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
+		if err != nil {
+			return err
+		}
+		r.EntityType, r.EntityName, r.ClusterName, err = getEntityInfo(ctx, "", "Entity Type", c.Validator.Datacenter, cfg.ValidatorPluginVsphereEntities, driver)
+		if err != nil {
+			return err
+		}
+	}
+	privileges, err := LoadPrivileges("vsphere-root-level-permissions-all.yaml")
+	if err != nil {
+		return err
+	}
+	r.Privileges, err = selectPrivileges(privileges)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func configureResourceRequirementRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
+	log.InfoCLI(`
+	Resource requirement validation ensures that sufficient capacity is available within
+	a vSphere Datacenter or Cluster for a configurable number of VMs with specific CPU, RAM, and Storage minimums.
+	`)
+
+	validateResourceRequirements, err := prompts.ReadBool("Enable resource requirement validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateResourceRequirements {
+		c.Validator.ComputeResourceRules = nil
+		return nil
+	}
+	for i, r := range c.Validator.ComputeResourceRules {
+		r := r
+		if err := readResourceRequirementRule(ctx, c, &r, driver, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.Validator.ComputeResourceRules == nil {
+		c.Validator.ComputeResourceRules = make([]v1alpha1.ComputeResourceRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another resource requirement validation rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readResourceRequirementRule(ctx, c, &v1alpha1.ComputeResourceRule{}, driver, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another resource requirement validation rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readResourceRequirementRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.ComputeResourceRule, driver vsphere.VsphereDriver, idx int, ruleNames *[]string) error {
+	err := initVsphereRule(r, "resource requirement", "", ruleNames)
+	if err != nil {
+		return err
+	}
+
+	r.Scope, r.EntityName, r.ClusterName, err = getEntityInfo(ctx, r.Scope, "Scope", c.Validator.Datacenter, cfg.ValidatorPluginVsphereDeploymentDestination, driver)
+	if err != nil {
+		return err
+	}
+
+	for i, n := range r.NodepoolResourceRequirements {
+		n := n
+		if err := readResourceRequirements(r, &n, i); err != nil {
+			return err
+		}
+	}
+	addNodePool := true
+	if r.NodepoolResourceRequirements == nil {
+		r.NodepoolResourceRequirements = make([]v1alpha1.NodepoolResourceRequirement, 0)
+	} else {
+		addNodePool, err = prompts.ReadBool("Add resource requirements for another node pool", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addNodePool {
+		return nil
+	}
+	for {
+		if err := readResourceRequirements(r, &v1alpha1.NodepoolResourceRequirement{}, -1); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add resource requirements for another node pool", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+
+	if idx == -1 {
+		c.Validator.ComputeResourceRules = append(c.Validator.ComputeResourceRules, *r)
+	} else {
+		c.Validator.ComputeResourceRules[idx] = *r
+	}
+
+	return nil
+}
+
+func readResourceRequirements(r *v1alpha1.ComputeResourceRule, n *v1alpha1.NodepoolResourceRequirement, idx int) error {
+	log.InfoCLI("Specify node pool size and resource requirements")
+
+	var err error
+	n.Name, err = prompts.ReadText("Node pool name", n.Name, false, -1)
+	if err != nil {
+		return err
+	}
+
+	numNodes := 1
+	if n.NumberOfNodes != 0 {
+		numNodes = n.NumberOfNodes
+	}
+	n.NumberOfNodes, err = prompts.ReadInt("Number of nodes in node pool", intToStringDefault(numNodes), 1, 1000)
+	if err != nil {
+		return err
+	}
+
+	n.CPU, err = prompts.ReadTextRegex("CPU requirement per node (Ex: 2.5GHz, 1000MHz)", n.CPU, "Invalid CPU requirement", cfg.CPUReqRegex)
+	if err != nil {
+		return err
+	}
+	n.Memory, err = prompts.ReadTextRegex("Memory requirement per node (Ex: 10.5Gi, 40Ti, 512Mi)", n.Memory, "Invalid memory requirement", cfg.MemoryReqRegex)
+	if err != nil {
+		return err
+	}
+	n.DiskSpace, err = prompts.ReadTextRegex("Storage request per node (Ex: 1000Mi, 5.5Gi, 2Ti)", n.DiskSpace, "Invalid storage requirement", cfg.DiskReqRegex)
+	if err != nil {
+		return err
+	}
+
+	if idx == -1 {
+		r.NodepoolResourceRequirements = append(r.NodepoolResourceRequirements, *n)
+	} else {
+		r.NodepoolResourceRequirements[idx] = *n
+	}
+
+	return nil
+}
+
+func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
+	log.InfoCLI(`
+	Tag validation ensures that a specific tag is present on a particular vSphere resource.
+	`)
+
+	validateTags, err := prompts.ReadBool("Enable tag validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateTags {
+		c.VsphereTagRules = nil
+		c.Validator.TagValidationRules = nil
+		return nil
+	}
+
+	bs, err := embed.ReadFile(cfg.Validator, cfg.SpectroCloudTagsFile)
+	if err != nil {
+		return err
+	}
+	var spectroTagRules []components.VsphereTagRule
+	if err := yaml.Unmarshal(bs, &spectroTagRules); err != nil {
+		return err
+	}
+	spectroTagRuleMap := make(map[string]*components.VsphereTagRule)
+	for _, r := range spectroTagRules {
+		r := r
+		spectroTagRuleMap[r.Name] = &r
+	}
+
+	for i, r := range c.VsphereTagRules {
+		r := r
+		if err := readVsphereTagRule(ctx, c, &r, driver, i, spectroTagRuleMap, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.VsphereTagRules == nil {
+		c.VsphereTagRules = make([]components.VsphereTagRule, 0)
+		c.Validator.TagValidationRules = make([]v1alpha1.TagValidationRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another tag validation rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readVsphereTagRule(ctx, c, &components.VsphereTagRule{}, driver, -1, spectroTagRuleMap, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another tag validation rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver vsphere.VsphereDriver, idx int, spectroTagRuleMap map[string]*components.VsphereTagRule, ruleNames *[]string) error {
+	err := initVsphereRule(r, "tag", "", ruleNames)
+	if err != nil {
+		return err
+	}
+
+	if r.RuleType == "" {
+		r.RuleType, err = prompts.Select("Tag rule type", cfg.ValidatorPluginVsphereTagChoices)
+		if err != nil {
+			return err
+		}
+		if r.RuleType == cfg.SpectroCloudTags {
+			var spectroRuleNames []string
+			for name := range spectroTagRuleMap {
+				spectroRuleNames = append(spectroRuleNames, name)
+			}
+			slices.Sort(spectroRuleNames)
+
+			ruleName, err := prompts.Select("Spectro Cloud tag rule", spectroRuleNames)
+			if err != nil {
+				return err
+			}
+			r = spectroTagRuleMap[ruleName]
+		}
+	}
+
+	switch r.RuleType {
+	case cfg.SpectroCloudTags:
+		switch r.EntityType {
+		case "datacenter":
+			r.EntityName = c.Validator.Datacenter
+		case "cluster":
+			r.ClusterName, err = getClusterName(ctx, c.Validator.Datacenter, driver)
+			if err != nil {
+				return err
+			}
+			r.EntityName = r.ClusterName
+		}
+	default:
+		if err := readCustomVsphereTagRule(ctx, c, r, driver); err != nil {
+			return err
+		}
+	}
+
+	if idx == -1 {
+		c.VsphereTagRules = append(c.VsphereTagRules, *r)
+		c.Validator.TagValidationRules = append(c.Validator.TagValidationRules, r.TagValidationRule)
+	} else {
+		c.VsphereTagRules[idx] = *r
+		c.Validator.TagValidationRules[idx] = r.TagValidationRule
+	}
+
+	return nil
+}
+
+func readCustomVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver vsphere.VsphereDriver) error {
+	var err error
+	r.EntityType, r.EntityName, r.ClusterName, err = getEntityInfo(ctx, r.EntityType, "Entity Type", c.Validator.Datacenter, cfg.ValidatorPluginVsphereEntities, driver)
+	if err != nil {
+		return err
+	}
+	r.Tag, err = prompts.ReadText("Tag", r.Tag, false, -1)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getClusterScopedInfo(ctx context.Context, datacenter, entityType string, driver vsphere.VsphereDriver) (bool, string, error) {
+	var clusterName string
+
+	clusterScopedPrompt := fmt.Sprintf("Is %s cluster scoped", entityType)
+	clusterScoped, err := prompts.ReadBool(clusterScopedPrompt, false)
+	if err != nil {
+		return false, "", err
+	}
+	if clusterScoped {
+		clusterName, err = getClusterName(ctx, datacenter, driver)
+		if err != nil {
+			return false, "", err
+		}
+	}
+
+	return clusterScoped, clusterName, nil
+}
+
+func getClusterName(ctx context.Context, datacenter string, driver vsphere.VsphereDriver) (string, error) {
+	clusterList, err := driver.GetVSphereClusters(ctx, datacenter)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to list vSphere clusters")
+	}
+	clusterName, err := prompts.Select("Cluster", clusterList)
+	if err != nil {
+		return "", err
+	}
+	return clusterName, nil
+}
+
+func getEntityInfo(ctx context.Context, entityType, entityTypePrompt, datacenter string, entityTypesList []string, driver vsphere.VsphereDriver) (string, string, string, error) {
+	var err error
+	if entityType == "" {
+		entityType, err = prompts.Select(entityTypePrompt, entityTypesList)
+		if err != nil {
+			return "", "", "", err
+		}
+	}
+	entityName, clusterName, err := getEntityAndClusterInfo(ctx, entityType, driver, datacenter)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	// Convert pretty entity type to entity type compatible with the vSphere validator plugin
+	validatorEntityType, ok := cfg.ValidatorPluginVsphereEntityMap[entityType]
+	if !ok {
+		// entity type will already be converted if we're reconfiguring a rule
+		if !slices.Contains(vsphereEntityTypes, entityType) {
+			return "", "", "", fmt.Errorf("invalid entity type: %s", entityType)
+		}
+	}
+
+	return validatorEntityType, entityName, clusterName, err
+}
+
+func getEntityAndClusterInfo(ctx context.Context, entityType string, driver vsphere.VsphereDriver, datacenter string) (entityName, clusterName string, err error) {
+	switch entityType {
+	case cfg.ValidatorVsphereEntityCluster, "cluster":
+		entityName, err = getClusterName(ctx, datacenter, driver)
+		if err != nil {
+			return "", "", err
+		}
+		return entityName, entityName, nil
+	case cfg.ValidatorVsphereEntityDatacenter, "datacenter":
+		entityName, err = handleDatacenterEntity(ctx, driver)
+		if err != nil {
+			return "", "", err
+		}
+		return entityName, clusterName, nil
+	case cfg.ValidatorVsphereEntityFolder, "folder":
+		entityName, err = handleFolderEntity(ctx, driver, datacenter)
+		if err != nil {
+			return "", "", err
+		}
+		return entityName, clusterName, nil
+	case cfg.ValidatorVsphereEntityHost, "host":
+		return handleHostEntity(ctx, driver, datacenter, entityType)
+	case cfg.ValidatorVsphereEntityResourcePool, "resourcepool":
+		return handleResourcePoolEntity(ctx, driver, datacenter, entityType)
+	case cfg.ValidatorVsphereEntityVirtualApp, "vapp":
+		entityName, err = handleVAppEntity(ctx, driver)
+		if err != nil {
+			return "", "", err
+		}
+		return entityName, "", nil
+	case cfg.ValidatorVsphereEntityVirtualMachine, "vm":
+		return handleVMEntity(ctx, driver, datacenter, entityType)
+	default:
+		return "", "", fmt.Errorf("invalid entity type: %s", entityType)
+	}
+}
+
+func handleDatacenterEntity(ctx context.Context, driver vsphere.VsphereDriver) (string, error) {
+	dcList, err := driver.GetVSphereDatacenters(ctx)
+	if err != nil {
+		return "", err
+	}
+	dcName, err := prompts.Select("Datacenter", dcList)
+	if err != nil {
+		return "", err
+	}
+	return dcName, nil
+}
+
+func handleFolderEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string) (string, error) {
+	folderList, err := driver.GetVSphereVMFolders(ctx, datacenter)
+	if err != nil {
+		return "", err
+	}
+	folderName, err := prompts.Select("Folder", folderList)
+	if err != nil {
+		return "", err
+	}
+	return folderName, nil
+}
+
+func handleHostEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter, entityType string) (string, string, error) {
+	_, clusterName, err := getClusterScopedInfo(ctx, datacenter, entityType, driver)
+	if err != nil {
+		return "", "", err
+	}
+	hosts, err := driver.GetVSphereHostSystems(ctx, datacenter, clusterName)
+	if err != nil {
+		return "", "", err
+	}
+	var hostList []string
+	for _, host := range hosts {
+		hostList = append(hostList, host.Name)
+	}
+	hostName, err := prompts.Select("ESXi Host", hostList)
+	if err != nil {
+		return "", "", err
+	}
+	return hostName, clusterName, nil
+}
+
+func handleResourcePoolEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string, entityType string) (string, string, error) {
+	var allResourcePools []*object.ResourcePool
+	var rpChoiceList []prompts.ChoiceItem
+	var rpClusterMapping = make(map[string]string)
+
+	clusterScoped, clusterName, err := getClusterScopedInfo(ctx, datacenter, entityType, driver)
+	if err != nil {
+		return "", "", err
+	}
+	if clusterScoped {
+		// Get cluster resourcepools
+		clusterRPs, err := driver.GetResourcePools(ctx, datacenter, clusterName)
+		if err != nil {
+			return "", "", err
+		}
+		allResourcePools = append(allResourcePools, clusterRPs...)
+	}
+
+	defaultRPs, err := driver.GetResourcePools(ctx, datacenter, "")
+	if err != nil {
+		return "", "", err
+	}
+	allResourcePools = append(allResourcePools, defaultRPs...)
+
+	for _, rp := range allResourcePools {
+		rpCluster := strings.Split(rp.InventoryPath, "/")[3]
+		rpChoiceName := rp.Name()
+		if rp.Name() == "Resources" {
+			// if Cluster scoped has been chosen, handle resource pools not belonging to the chosen cluster
+			if clusterScoped && (rpCluster != clusterName) {
+				continue
+			}
+			rpChoiceName = fmt.Sprintf("Default Resource Pool (Cluster: %s)", rpCluster)
+		}
+		choiceItem := prompts.ChoiceItem{
+			ID:   rp.Name(),
+			Name: rpChoiceName,
+		}
+		rpClusterMapping[rpChoiceName] = rpCluster
+		rpChoiceList = append(rpChoiceList, choiceItem)
+	}
+
+	choice, err := prompts.SelectID("Resource Pool", rpChoiceList)
+	if err != nil {
+		return "", "", err
+	}
+
+	return choice.ID, rpClusterMapping[choice.Name], nil
+}
+
+func handleVAppEntity(ctx context.Context, driver vsphere.VsphereDriver) (string, error) {
+	vApps, err := driver.GetVapps(ctx)
+	if err != nil {
+		return "", err
+	}
+	var vAppList []string
+	for _, vapp := range vApps {
+		vAppList = append(vAppList, vapp.Name)
+	}
+	vAppName, err := prompts.Select("Virtual App", vAppList)
+	if err != nil {
+		return "", err
+	}
+	return vAppName, nil
+}
+
+func handleVMEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string, entityType string) (string, string, error) {
+	var vmList []string
+	var hostClusterMapping = make(map[string]string)
+
+	clusterScoped, clusterName, err := getClusterScopedInfo(ctx, datacenter, entityType, driver)
+	if err != nil {
+		return "", "", err
+	}
+	if clusterScoped {
+		// This way because govmomi just doesn't have a way to cheaply determine what cluster a VM belongs to :')
+		hostClusterMapping, err = driver.GetHostClusterMapping(ctx)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	vms, err := driver.GetVSphereVms(ctx, datacenter)
+	if err != nil {
+		return "", "", err
+	}
+	for _, vm := range vms {
+		if clusterScoped {
+			hostLookupKey := vm.Host
+			if hostClusterMapping[hostLookupKey] != clusterName {
+				continue
+			}
+		}
+		vmList = append(vmList, vm.Name)
+	}
+	sort.Slice(vmList, func(i, j int) bool {
+		return vmList[i] < vmList[j]
+	})
+	vmName, err := prompts.Select("Virtual Machine", vmList)
+	if err != nil {
+		return "", "", err
+	}
+
+	return vmName, clusterName, nil
+}

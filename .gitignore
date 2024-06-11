@@ -1,0 +1,45 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+*cert.pem
+*key.pem
+
+# Coverage files
+_build/
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# IDE
+.idea/installer.iml
+.idea/modules.xml
+.idea/workspace.xml
+.vscode
+*__debug_bin*
+
+# Binaries
+bin/
+!bin/.gitkeep
+
+# Embedded Binaries
+pkg/utils/embed/bin/*
+
+# Creds
+.netrc
+
+# hack
+.validator
+
+# test
+tests/unit-test-data/*.tmp
+.idea
+
+# os generated files
+.DS_Store
