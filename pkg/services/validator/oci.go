@@ -14,7 +14,6 @@ import (
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
-	"github.com/validator-labs/validatorctl/pkg/utils/crypto"
 )
 
 const notApplicable = "N/A"
@@ -292,7 +291,7 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 
 	caCertPath := c.CaCertPaths[idx]
-	caCertPath, _, caCertData, err := crypto.ReadCACert("Registry CA certificate filepath", caCertPath, "")
+	caCertPath, _, caCertData, err := prompts.ReadCACert("Registry CA certificate filepath", caCertPath, "")
 	if err != nil {
 		return err
 	}
