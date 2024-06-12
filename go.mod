@@ -18,13 +18,13 @@ require (
 	github.com/validator-labs/validator-plugin-azure v0.0.11
 	github.com/validator-labs/validator-plugin-network v0.0.16
 	github.com/validator-labs/validator-plugin-oci v0.0.10
-	github.com/validator-labs/validator-plugin-vsphere v0.0.24
+	github.com/validator-labs/validator-plugin-vsphere v0.0.26
 	github.com/vmware/govmomi v0.37.3
 	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.30.1
-	k8s.io/apimachinery v0.30.1
-	k8s.io/client-go v0.30.1
+	k8s.io/api v0.30.2
+	k8s.io/apimachinery v0.30.2
+	k8s.io/client-go v0.30.2
 	k8s.io/helm v2.17.0+incompatible
 	sigs.k8s.io/yaml v1.4.0
 )
