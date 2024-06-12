@@ -78,7 +78,7 @@ func readVspherePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 	if err := configureNtpRules(ctx, c, vSphereCloudDriver, &ruleNames); err != nil {
 		return err
 	}
-	if err := configureRolePrivilegeRules(c, &ruleNames); err != nil {
+	if err := configureRolePrivilegeRules(c, &ruleNames, vSphereCloudDriver); err != nil {
 		return err
 	}
 	if err := configureEntityPrivilegeRules(ctx, c, vSphereCloudDriver, &ruleNames); err != nil {
@@ -261,7 +261,7 @@ func selectEsxiHosts(ctx context.Context, datacenter string, clusterName string,
 	return selectedHosts, nil
 }
 
-func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[]string) error {
+func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[]string, vSphereCloudDriver vsphere.VsphereDriver) error {
 	log.InfoCLI(`
 	Role privilege validation ensures that a vSphere user has a
 	specific set of root-level vSphere privileges.
@@ -276,9 +276,15 @@ func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[
 		c.Validator.RolePrivilegeValidationRules = nil
 		return nil
 	}
+
+	isAdmin, err := vSphereCloudDriver.IsAdminAccount(context.Background())
+	if err != nil {
+		return err
+	}
+
 	for i, r := range c.VsphereRolePrivilegeRules {
 		r := r
-		if err := readRolePrivilegeRule(c, &r, i, ruleNames); err != nil {
+		if err := readRolePrivilegeRule(c, &r, i, ruleNames, isAdmin); err != nil {
 			return err
 		}
 	}
@@ -296,7 +302,7 @@ func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[
 		return nil
 	}
 	for {
-		if err := readRolePrivilegeRule(c, &components.VsphereRolePrivilegeRule{}, -1, ruleNames); err != nil {
+		if err := readRolePrivilegeRule(c, &components.VsphereRolePrivilegeRule{}, -1, ruleNames, isAdmin); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another role privilege validation rule", false)
@@ -310,14 +316,20 @@ func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[
 	return nil
 }
 
-func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.VsphereRolePrivilegeRule, idx int, ruleNames *[]string) error {
+func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.VsphereRolePrivilegeRule, idx int, ruleNames *[]string, isAdmin bool) error {
 	err := initVsphereRule(r, "role privilege", "The rule's vSphere privilege set will be replaced.", ruleNames)
 	if err != nil {
 		return err
 	}
-	r.Username, err = prompts.ReadTextRegex("vSphere username for privilege validation", r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
-	if err != nil {
-		return err
+
+	if isAdmin {
+		r.Username, err = prompts.ReadTextRegex("vSphere username for privilege validation", r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Account.Username)
+		r.Username = c.Account.Username
 	}
 	privilegeSet, err := prompts.Select("Root-level privilege set", cfg.ValidatorPluginVsphereRolePrivilegeChoices)
 	if err != nil {
