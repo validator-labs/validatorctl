@@ -16,7 +16,6 @@ import (
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
-	"github.com/validator-labs/validatorctl/pkg/utils/crypto"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 )
@@ -312,7 +311,7 @@ func readSinkConfig(vc *components.ValidatorConfig, k8sClient kubernetes.Interfa
 
 		if !insecure {
 			var caCertData []byte
-			_, _, caCertData, err = crypto.ReadCACert("Alertmanager CA certificate filepath", vc.SinkConfig.Values["caCert"], "")
+			_, _, caCertData, err = prompts.ReadCACert("Alertmanager CA certificate filepath", vc.SinkConfig.Values["caCert"], "")
 			if err != nil {
 				return err
 			}

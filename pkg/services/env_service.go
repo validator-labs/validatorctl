@@ -7,8 +7,6 @@ import (
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	crypto_utils "github.com/validator-labs/validatorctl/pkg/utils/crypto"
-	"github.com/validator-labs/validatorctl/pkg/utils/file"
 )
 
 type Env struct {
@@ -39,13 +37,13 @@ func ReadProxyProps(e *Env) (err error) {
 		// no_proxy
 		log.InfoCLI("Configure NO_PROXY")
 		time.Sleep(2 * time.Second)
-		e.NoProxy, err = file.EditFileValidated(cfg.NoProxyPrompt, e.NoProxy, ",", prompts.ValidateNoProxy, -1)
+		e.NoProxy, err = prompts.EditFileValidated(cfg.NoProxyPrompt, e.NoProxy, ",", prompts.ValidateNoProxy, -1)
 		if err != nil {
 			return
 		}
 
 		// Proxy CA certificate
-		caCertPath, caCertName, caCertData, err := crypto_utils.ReadCACert("Proxy CA certificate filepath", e.ProxyCaCertPath, "")
+		caCertPath, caCertName, caCertData, err := prompts.ReadCACert("Proxy CA certificate filepath", e.ProxyCaCertPath, "")
 		if err != nil {
 			return err
 		}

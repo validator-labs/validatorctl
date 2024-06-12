@@ -20,7 +20,6 @@ import (
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
-	"github.com/validator-labs/validatorctl/pkg/utils/crypto"
 )
 
 var errNoRulesEnabled = errors.New("no validation rules enabled")
@@ -97,7 +96,7 @@ func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient k
 		return err
 	}
 	if !insecure {
-		rs.CaCertFile, _, _, err = crypto.ReadCACert("Helm repository CA certificate filepath", rs.CaCertFile, "")
+		rs.CaCertFile, _, _, err = prompts.ReadCACert("Helm repository CA certificate filepath", rs.CaCertFile, "")
 		if err != nil {
 			return err
 		}
