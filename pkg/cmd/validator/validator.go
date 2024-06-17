@@ -385,12 +385,22 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	}
 
 	if vc.KubescapePlugin.Enabled {
-		log.InfoCLI("\n==== Applying Kubescape plugin validator(s) ====")
-		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginKubescapeTemplate, *vc.KubescapePlugin.Validator,
-		); err != nil {
-			return err
+		args := map[string]interface{}{
+			"Config":        vc.KubescapePlugin,
+			"ImageRegistry": vc.ImageRegistry,
 		}
+		values, err := embed.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-kubescape-values.tmpl")
+		if err != nil {
+			return errors.Wrap(err, "failed to render validator plugin kubescape values.yaml")
+		}
+		validatorSpec.Plugins = append(validatorSpec.Plugins, vapi.HelmRelease{
+			Chart:  vc.KubescapePlugin.Release.Chart,
+			Values: string(values),
+		})
+		if vc.KubescapePlugin.ReleaseSecret != nil && vc.KubescapePlugin.ReleaseSecret.ShouldCreate() {
+			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.KubescapePlugin.ReleaseSecret))
+		}
+		kubecommands = append(kubecommands, cfg.ValidatorPluginKubescapeWaitCmd)
 	}
 
 	if !vc.AnyPluginEnabled() {
@@ -586,6 +596,15 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		log.InfoCLI("\n==== Applying Azure plugin validator(s) ====")
 		if err := createValidator(
 			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginAzureTemplate, *vc.AzurePlugin.Validator,
+		); err != nil {
+			return err
+		}
+	}
+
+	if vc.KubescapePlugin.Enabled {
+		log.InfoCLI("\n==== Applying Kubescape plugin validator(s) ====")
+		if err := createValidator(
+			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginKubescapeTemplate, *vc.KubescapePlugin.Validator,
 		); err != nil {
 			return err
 		}
