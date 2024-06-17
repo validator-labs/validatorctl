@@ -11,7 +11,7 @@ require (
 	github.com/pterm/pterm v0.12.79
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spectrocloud-labs/prompts-tui v0.0.0-20240612005257-a77002b81385
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/validator-labs/validator v0.0.42
 	github.com/validator-labs/validator-plugin-aws v0.0.26
