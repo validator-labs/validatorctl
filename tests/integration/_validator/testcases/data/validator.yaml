@@ -772,7 +772,7 @@ kubescapePlugin:
   helmRelease:
     chart:
       name: validator-plugin-kubescape
-      repository: https://spectrocloud-labs.github.io/validator-plugin-kubescape
+      repository: https://validator-labs.github.io/validator-plugin-kubescape
       version: v0.0.3
       insecureSkipVerify: true
     values: ""
