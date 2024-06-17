@@ -16,7 +16,7 @@ require (
 	github.com/validator-labs/validator v0.0.42
 	github.com/validator-labs/validator-plugin-aws v0.0.26
 	github.com/validator-labs/validator-plugin-azure v0.0.11
-	github.com/validator-labs/validator-plugin-network v0.0.16
+	github.com/validator-labs/validator-plugin-network v0.0.17
 	github.com/validator-labs/validator-plugin-oci v0.0.10
 	github.com/validator-labs/validator-plugin-vsphere v0.0.26
 	github.com/vmware/govmomi v0.37.3
