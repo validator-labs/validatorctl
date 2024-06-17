@@ -767,3 +767,21 @@ azurePlugin:
     auth:
       implicit: false
       secretName: azure-creds
+kubescapePlugin:
+  enabled: true
+  helmRelease:
+    chart:
+      name: validator-plugin-kubescape
+      repository: https://spectrocloud-labs.github.io/validator-plugin-kubescape
+      version: v0.0.3
+      insecureSkipVerify: true
+    values: ""
+  validator:
+    severityLimitRule:
+      critical: 5
+      high: 5
+      unknown: 5
+    flaggedCVERule:
+      - "CVE-2022-21698"
+    ignoredCVERule:
+      - "CVE-xxxx-xxxx"

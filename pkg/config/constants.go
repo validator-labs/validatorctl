@@ -26,17 +26,19 @@ const (
 	ValidatorHelmRepository  = "https://validator-labs.github.io"
 	ValidatorImageRegistry   = "quay.io/validator-labs"
 
-	ValidatorPluginAws     = "validator-plugin-aws"
-	ValidatorPluginAzure   = "validator-plugin-azure"
-	ValidatorPluginNetwork = "validator-plugin-network"
-	ValidatorPluginOci     = "validator-plugin-oci"
-	ValidatorPluginVsphere = "validator-plugin-vsphere"
+	ValidatorPluginAws       = "validator-plugin-aws"
+	ValidatorPluginAzure     = "validator-plugin-azure"
+	ValidatorPluginNetwork   = "validator-plugin-network"
+	ValidatorPluginOci       = "validator-plugin-oci"
+	ValidatorPluginVsphere   = "validator-plugin-vsphere"
+	ValidatorPluginKubescape = "validator-plugin-kubescape"
 
-	ValidatorPluginAwsTemplate     = "validator-rules-aws.tmpl"
-	ValidatorPluginAzureTemplate   = "validator-rules-azure.tmpl"
-	ValidatorPluginNetworkTemplate = "validator-rules-network.tmpl"
-	ValidatorPluginOciTemplate     = "validator-rules-oci.tmpl"
-	ValidatorPluginVsphereTemplate = "validator-rules-vsphere.tmpl"
+	ValidatorPluginAwsTemplate       = "validator-rules-aws.tmpl"
+	ValidatorPluginAzureTemplate     = "validator-rules-azure.tmpl"
+	ValidatorPluginNetworkTemplate   = "validator-rules-network.tmpl"
+	ValidatorPluginOciTemplate       = "validator-rules-oci.tmpl"
+	ValidatorPluginVsphereTemplate   = "validator-rules-vsphere.tmpl"
+	ValidatorPluginKubescapeTemplate = "validator-rules-kubescape.tmpl"
 
 	IamCheckTypeBase           IamCheckType = "Base"
 	IamCheckTypeEks            IamCheckType = "EKS"
@@ -93,20 +95,22 @@ var (
 	PlacementTypes       = []string{PlacementTypeStatic, PlacementTypeDynamic}
 
 	ValidatorChartVersions = map[string]string{
-		Validator:              "v0.0.42",
-		ValidatorPluginAws:     "v0.0.26",
-		ValidatorPluginAzure:   "v0.0.11",
-		ValidatorPluginNetwork: "v0.0.16",
-		ValidatorPluginVsphere: "v0.0.24",
-		ValidatorPluginOci:     "v0.0.10",
+		Validator:                "v0.0.42",
+		ValidatorPluginAws:       "v0.0.26",
+		ValidatorPluginAzure:     "v0.0.11",
+		ValidatorPluginNetwork:   "v0.0.16",
+		ValidatorPluginVsphere:   "v0.0.24",
+		ValidatorPluginOci:       "v0.0.10",
+		ValidatorPluginKubescape: "v0.0.3",
 	}
 
-	ValidatorWaitCmd              = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-controller-manager", "-n", "validator"}
-	ValidatorPluginAwsWaitCmd     = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-aws-controller-manager", "-n", "validator"}
-	ValidatorPluginVsphereWaitCmd = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-vsphere-controller-manager", "-n", "validator"}
-	ValidatorPluginNetworkWaitCmd = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-network-controller-manager", "-n", "validator"}
-	ValidatorPluginOciWaitCmd     = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-oci-controller-manager", "-n", "validator"}
-	ValidatorPluginAzureWaitCmd   = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-azure-controller-manager", "-n", "validator"}
+	ValidatorWaitCmd                = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-controller-manager", "-n", "validator"}
+	ValidatorPluginAwsWaitCmd       = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-aws-controller-manager", "-n", "validator"}
+	ValidatorPluginVsphereWaitCmd   = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-vsphere-controller-manager", "-n", "validator"}
+	ValidatorPluginNetworkWaitCmd   = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-network-controller-manager", "-n", "validator"}
+	ValidatorPluginOciWaitCmd       = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-oci-controller-manager", "-n", "validator"}
+	ValidatorPluginAzureWaitCmd     = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-azure-controller-manager", "-n", "validator"}
+	ValidatorPluginKubescapeWaitCmd = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-kubescape-controller-manager", "-n", "validator"}
 
 	ValidatorBasicAuthKeys = []string{"username", "password"}
 	ValidatorSinkKeys      = map[vtypes.SinkType][]string{

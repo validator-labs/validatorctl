@@ -321,6 +321,30 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 			"C0", // cluster name
 			"n",  // add another tag rule
 
+			// Kubescape Plugin
+			"y",                         // Enabled Kubescape Plugin
+			cfg.ValidatorHelmRepository, // validator-plugin-kubescape helm chart repo
+			cfg.ValidatorChartVersions[cfg.ValidatorPluginKubescape], //validator-plugin-vsphere helm chart version
+			"y",           // Re-use validator chart security configuration
+			"kubescape",   // set namespace for kubescape api server
+			"y",           // enabled severity limit rule
+			"5",           // Critical limit
+			"5",           // High limit
+			"5",           // Medium limit
+			"5",           // Low limit
+			"5",           // Unknown limit
+			"5",           // Negligible limit
+			"y",           // enable CVE flag rule
+			"CVE-abc-def", // CVE
+			"y",           // add another cve
+			"CVE-123-123", // CVE
+			"n",           // dont add another cve
+			"y",           // enable ignore cve list
+			"CVE-abc-def", // CVE
+			"y",           // add another cve
+			"CVE-123-123", // CVE
+			"n",           // dont add another cve
+
 			// Finalization
 			"n", // restart configuration
 			"n", // reconfigure plugin(s)

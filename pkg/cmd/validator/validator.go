@@ -384,20 +384,30 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		kubecommands = append(kubecommands, cfg.ValidatorPluginVsphereWaitCmd)
 	}
 
+	if vc.KubescapePlugin.Enabled {
+		log.InfoCLI("\n==== Applying Kubescape plugin validator(s) ====")
+		if err := createValidator(
+			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginKubescapeTemplate, *vc.KubescapePlugin.Validator,
+		); err != nil {
+			return err
+		}
+	}
+
 	if !vc.AnyPluginEnabled() {
 		log.FatalCLI("Invalid validator config: at least one plugin must be enabled!")
 	}
 
 	// concatenate base validator values w/ plugin values
 	args := map[string]interface{}{
-		"ImageRegistry": vc.ImageRegistry,
-		"Tag":           vc.Release.Chart.Version,
-		"ProxyConfig":   vc.ProxyConfig,
-		"SinkConfig":    vc.SinkConfig,
-		"AWSPlugin":     vc.AWSPlugin,
-		"VspherePlugin": vc.VspherePlugin,
-		"OCIPlugin":     vc.OCIPlugin,
-		"AzurePlugin":   vc.AzurePlugin,
+		"ImageRegistry":   vc.ImageRegistry,
+		"Tag":             vc.Release.Chart.Version,
+		"ProxyConfig":     vc.ProxyConfig,
+		"SinkConfig":      vc.SinkConfig,
+		"AWSPlugin":       vc.AWSPlugin,
+		"VspherePlugin":   vc.VspherePlugin,
+		"OCIPlugin":       vc.OCIPlugin,
+		"AzurePlugin":     vc.AzurePlugin,
+		"KubescapePlugin": vc.KubescapePlugin,
 	}
 	if vc.ProxyConfig.Enabled {
 		args["ProxyCaCertData"] = strings.Split(vc.ProxyConfig.Env.ProxyCaCertData, "\n")

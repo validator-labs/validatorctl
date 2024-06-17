@@ -8,6 +8,7 @@ import (
 
 	aws "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
 	azure "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
+	kubescape "github.com/validator-labs/validator-plugin-kubescape/api/v1alpha1"
 	network "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	oci "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
 	vsphere "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
@@ -30,11 +31,12 @@ type ValidatorConfig struct {
 	ImageRegistry    string                 `yaml:"imageRegistry"`
 	UseFixedVersions bool                   `yaml:"useFixedVersions"`
 
-	AWSPlugin     *AWSPluginConfig     `yaml:"awsPlugin,omitempty"`
-	NetworkPlugin *NetworkPluginConfig `yaml:"networkPlugin,omitempty"`
-	OCIPlugin     *OCIPluginConfig     `yaml:"ociPlugin,omitempty"`
-	VspherePlugin *VspherePluginConfig `yaml:"vspherePlugin,omitempty"`
-	AzurePlugin   *AzurePluginConfig   `yaml:"azurePlugin,omitempty"`
+	AWSPlugin       *AWSPluginConfig       `yaml:"awsPlugin,omitempty"`
+	NetworkPlugin   *NetworkPluginConfig   `yaml:"networkPlugin,omitempty"`
+	OCIPlugin       *OCIPluginConfig       `yaml:"ociPlugin,omitempty"`
+	VspherePlugin   *VspherePluginConfig   `yaml:"vspherePlugin,omitempty"`
+	AzurePlugin     *AzurePluginConfig     `yaml:"azurePlugin,omitempty"`
+	KubescapePlugin *KubescapePluginConfig `yaml:"kubescapePlugin,omitempty"`
 }
 
 func NewValidatorConfig() *ValidatorConfig {
@@ -79,11 +81,16 @@ func NewValidatorConfig() *ValidatorConfig {
 			Validator:     &vsphere.VsphereValidatorSpec{},
 			Account:       &vsphere_cloud.VsphereCloudAccount{},
 		},
+		KubescapePlugin: &KubescapePluginConfig{
+			Release:       &validator.HelmRelease{},
+			ReleaseSecret: &Secret{},
+			Validator:     &kubescape.KubescapeValidatorSpec{},
+		},
 	}
 }
 
 func (c *ValidatorConfig) AnyPluginEnabled() bool {
-	return c.AWSPlugin.Enabled || c.NetworkPlugin.Enabled || c.VspherePlugin.Enabled || c.OCIPlugin.Enabled || c.AzurePlugin.Enabled
+	return c.AWSPlugin.Enabled || c.NetworkPlugin.Enabled || c.VspherePlugin.Enabled || c.OCIPlugin.Enabled || c.AzurePlugin.Enabled || c.KubescapePlugin.Enabled
 }
 
 func (c *ValidatorConfig) decrypt() error {
@@ -119,6 +126,11 @@ func (c *ValidatorConfig) decrypt() error {
 	if c.VspherePlugin != nil {
 		if err := c.VspherePlugin.decrypt(); err != nil {
 			return errors.Wrap(err, "failed to decrypt vSphere plugin configuration")
+		}
+	}
+	if c.KubescapePlugin != nil {
+		if err := c.KubescapePlugin.decrypt(); err != nil {
+			return errors.Wrap(err, "failed to decrypt Kubescape plugin configuration")
 		}
 	}
 
@@ -158,6 +170,11 @@ func (c *ValidatorConfig) encrypt() error {
 	if c.VspherePlugin != nil {
 		if err := c.VspherePlugin.encrypt(); err != nil {
 			return errors.Wrap(err, "failed to encrypt vSphere plugin configuration")
+		}
+	}
+	if c.KubescapePlugin != nil {
+		if err := c.KubescapePlugin.encrypt(); err != nil {
+			return errors.Wrap(err, "failed to encrypt Kubescape plugin configuration")
 		}
 	}
 
@@ -544,5 +561,30 @@ func SaveValidatorConfig(c *ValidatorConfig, taskConfig *cfg.TaskConfig) error {
 		return errors.Wrap(err, "failed to create validator config file")
 	}
 	log.InfoCLI("validator configuration file saved: %s", taskConfig.ConfigFile)
+	return nil
+}
+
+type KubescapePluginConfig struct {
+	Enabled       bool                              `yaml:"enabled"`
+	Release       *validator.HelmRelease            `yaml:"helmRelease"`
+	ReleaseSecret *Secret                           `yaml:"helmReleaseSecret"`
+	Validator     *kubescape.KubescapeValidatorSpec `yaml:"validator"`
+}
+
+func (c *KubescapePluginConfig) encrypt() error {
+	if c.ReleaseSecret != nil {
+		if err := c.ReleaseSecret.encrypt(); err != nil {
+			return errors.Wrap(err, "failed to encrypt release secret configuration")
+		}
+	}
+	return nil
+}
+
+func (c *KubescapePluginConfig) decrypt() error {
+	if c.ReleaseSecret != nil {
+		if err := c.ReleaseSecret.decrypt(); err != nil {
+			return errors.Wrap(err, "failed to decrypt release secret configuration")
+		}
+	}
 	return nil
 }
