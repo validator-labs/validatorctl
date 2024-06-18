@@ -5,7 +5,6 @@ import (
 	"io"
 	logging "log"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -13,19 +12,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// The global logger's standard methods (i.e., log.Infof, log.Debugf, etc.)
-// write log entries to disk.
-//
-//   file location: ~/.validator/logs/validator.log
-//
 // The log.InfoCLI method logs entries to the console. It is used to guide users
 // through an interactive TUI experience.
 
 var (
-	log                 *logrus.Logger
-	cliLog              = pterm.DefaultLogger
-	logFile, statusFile string
-	Newline             = true
+	log     *logrus.Logger
+	cliLog  = pterm.DefaultLogger
+	Newline = true
 )
 
 func init() {
@@ -43,17 +36,6 @@ func SetLevel(logLevel string) {
 		logging.Fatalf("error setting log level: %v", err)
 	}
 	log.SetLevel(level)
-}
-
-func SetOutput(runLoc string) {
-	logFile = filepath.Join(runLoc, "logs", "validator.log")
-	statusFile = filepath.Join(runLoc, "status", "status")
-
-	f, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600) //#nosec
-	if err != nil {
-		logging.Fatalf("error opening file: %v", err)
-	}
-	log.SetOutput(f)
 }
 
 // logContext recovers the original caller context of each log message
