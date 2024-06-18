@@ -24,7 +24,6 @@ VERSION ?= 0.0.1${VERSION_SUFFIX}
 # Common vars
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
-EMBED_BIN := ./pkg/utils/embed/bin
 BIN_DIR ?= ./bin
 
 # Go env vars
@@ -56,14 +55,11 @@ help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[0m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Build Targets
-build: binaries  ## Build CLI
+build: ## Build CLI
 	@echo "Building CLI binary..."
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) GO111MODULE=on go build -ldflags " \
 	  -X github.com/validator-labs/validatorctl/cmd.Version=$(VERSION)" \
 	  -a -o bin/validator validator.go
-
-build-dev: binaries build-cli  ## Build CLI & copy validator binary into your PATH
-	sudo cp bin/validator /usr/local/bin
 
 get-version:  ## Get the product version
 	@echo "$(VERSION)"
@@ -75,7 +71,7 @@ fmt:  ## Run go fmt
 lint: golangci-lint ## Run golangci-lint
 	$(GOLANGCI_LINT) run
 
-vet: binaries ## Run go vet
+vet: ## Run go vet
 	go vet ./...
 
 ##@ Test Targets
@@ -87,7 +83,7 @@ test-unit: ## Run unit tests
 
 # For now we can't enable -race for integration tests
 # due to https://github.com/spf13/viper/issues/174
-test-integration: binaries ## Run integration tests
+test-integration: ## Run integration tests
 	@mkdir -p $(COVER_DIR)/integration
 	rm -rf $(COVER_DIR)/integration/*
 	IS_TEST=true CLI_VERSION=$(VERSION) KUBECONFIG= DISABLE_KIND_CLUSTER_CHECK=true \
@@ -95,7 +91,7 @@ test-integration: binaries ## Run integration tests
 		-covermode=atomic -coverpkg=./... -coverprofile=$(COVER_DIR)/integration/integration.out ./tests/...
 
 .PHONY: test
-test: binaries gocovmerge test-unit test-integration ## Run unit tests, integration test
+test: gocovmerge test-unit test-integration ## Run unit tests, integration test
 	$(GOCOVMERGE) $(COVER_DIR)/unit/*.out $(COVER_DIR)/integration/*.out > $(COVER_DIR)/coverage.out.tmp
 	# Omit test code from coverage report
 	cat $(COVER_DIR)/coverage.out.tmp | grep -vE 'tests' > $(COVER_DIR)/coverage.out
@@ -128,10 +124,10 @@ BUILD_ARGS = --build-arg CLI_VERSION=${VERSION} --build-arg BUILDER_GOLANG_VERSI
 
 docker-all: docker-cli docker-push  ## Builds & pushes Docker images to container registry
 
-docker-cli: binaries
+docker-cli:
 	docker buildx build ${BUILD_ARGS} --platform linux/${TARGETARCH} --load -f build/docker/cli.Dockerfile . -t ${CLI_IMG}
 
-docker-compose: binaries  ## Rebuild images and restart docker-compose
+docker-compose: ## Rebuild images and restart docker-compose
 	docker compose build
 	docker compose up
 
@@ -148,69 +144,6 @@ create-images-list: ## Create the image list for CICD
 
 
 ##@ Tools Targets
-binaries: docker helm kind kubectl
-
-clean-binaries:  ## Clean embedded binaries
-	@echo "Cleaning embedded binaries..."
-	rm -rf $(EMBED_BIN)/docker
-	rm -rf $(EMBED_BIN)/helm
-	rm -rf $(EMBED_BIN)/kind
-	rm -rf $(EMBED_BIN)/kubectl
-
-truncate-binaries:
-	@echo "Truncating embedded binaries..."
-	: > $(EMBED_BIN)/docker
-	: > $(EMBED_BIN)/helm
-	: > $(EMBED_BIN)/kind
-	: > $(EMBED_BIN)/kubectl
-
-docker:
-ifeq ("$(wildcard $(EMBED_BIN)/docker)", "")
-	if [[ "$(GOOS)" == "windows" ]]; then \
-		curl -L https://download.docker.com/$(PLATFORM)/static/stable/x86_64/docker-$(DOCKER_VERSION).zip -o docker.zip; \
-		unzip docker.zip; \
-		rm -f docker.zip; \
-		mv docker/docker.exe $(EMBED_BIN)/docker; \
-	else \
-		curl -L https://download.docker.com/$(PLATFORM)/static/stable/x86_64/docker-$(DOCKER_VERSION).tgz | tar xz docker/docker; \
-		mv docker/docker $(EMBED_BIN)/docker; \
-	fi
-	chmod +x $(EMBED_BIN)/docker
-	rm -rf ./docker
-endif
-
-kind:
-ifeq ("$(wildcard $(EMBED_BIN)/kind)", "")
-	curl -Lo $(EMBED_BIN)/kind https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(GOOS)-$(GOARCH)
-	chmod +x $(EMBED_BIN)/kind
-endif
-
-kubectl:
-ifeq ("$(wildcard $(EMBED_BIN)/kubectl)", "")
-	if [[ "$(GOOS)" == "windows" ]]; then \
-		curl -Lo $(EMBED_BIN)/kubectl https://dl.k8s.io/release/v$(KUBECTL_VERSION)/bin/$(GOOS)/$(GOARCH)/kubectl.exe; \
-	else \
-		curl -Lo $(EMBED_BIN)/kubectl https://dl.k8s.io/release/v$(KUBECTL_VERSION)/bin/$(GOOS)/$(GOARCH)/kubectl; \
-	fi
-	chmod +x $(EMBED_BIN)/kubectl
-endif
-
-helm:
-ifeq ("$(wildcard $(EMBED_BIN)/helm)", "")
-	if [[ "$(GOOS)" == "windows" ]]; then \
-		curl -L https://get.helm.sh/helm-v$(HELM_VERSION)-$(GOOS)-$(GOARCH).zip -o helm.zip; \
-		unzip helm.zip; \
-		rm -f helm.zip; \
-		mv windows-amd64/helm.exe $(EMBED_BIN)/helm; \
-		rm -rf ./windows-amd64; \
-	else \
-		curl -L https://get.helm.sh/helm-v$(HELM_VERSION)-$(GOOS)-$(GOARCH).tar.gz | tar xz; \
-		mv $(GOOS)-$(GOARCH)/helm $(EMBED_BIN)/helm; \
-		rm -rf ./$(GOOS)-$(GOARCH); \
-	fi
-	chmod +x $(EMBED_BIN)/helm
-endif
-
 golangci-lint:
 	if ! test -f $(BIN_DIR)/golangci-lint-linux-amd64; then \
 		curl -LOs https://github.com/golangci/golangci-lint/releases/download/v$(GOLANGCI_VERSION)/golangci-lint-$(GOLANGCI_VERSION)-linux-amd64.tar.gz; \
