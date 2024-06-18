@@ -3,7 +3,6 @@ package embed
 import (
 	"bytes"
 	"embed"
-
 	"fmt"
 	"io"
 	"os"
