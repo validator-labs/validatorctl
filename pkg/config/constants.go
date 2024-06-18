@@ -84,8 +84,8 @@ var (
 	HTTPSchemes           = []string{"https://", "http://"}
 
 	// Command dirs
-	BaseDirs         = []string{"bin", "logs"}
-	ValidatorSubdirs = []string{"logs", "manifests"}
+	BaseDirs         = []string{"bin"}
+	ValidatorSubdirs = []string{"manifests"}
 
 	// Validator
 	PlacementTypeStatic  = "Static"
