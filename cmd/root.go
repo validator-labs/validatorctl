@@ -11,6 +11,7 @@ import (
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	cfgmanager "github.com/validator-labs/validatorctl/pkg/config/manager"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
+	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 )
 
 var (
@@ -52,6 +53,11 @@ Use 'validator help <sub-command>' to explore all of the functionality the Valid
 	globalFlags.StringVarP(&workspaceLoc, "workspace", "w", "", `Workspace location for staging runtime configurations and logs (default "$HOME/.validator")`)
 
 	if err := viper.BindPFlag("logLevel", globalFlags.Lookup("log-level")); err != nil {
+		exit(err)
+	}
+
+	// Verify required binaries exist
+	if err := exec_utils.CheckBinaries(); err != nil {
 		exit(err)
 	}
 

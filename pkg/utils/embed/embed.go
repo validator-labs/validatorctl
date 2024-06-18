@@ -3,68 +3,17 @@ package embed
 import (
 	"bytes"
 	"embed"
+
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"runtime"
 	"text/tabwriter"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 
-	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 )
-
-var Docker, Helm, Kind, Kubectl string
-
-//go:embed bin/docker
-var docker []byte
-
-//go:embed bin/helm
-var helm []byte
-
-//go:embed bin/kind
-var kind []byte
-
-//go:embed bin/kubectl
-var kubectl []byte
-
-func InitBinaries(c *cfg.Config) {
-	if runtime.GOOS == "windows" {
-		Docker = filepath.Join(c.WorkspaceLoc, "bin", "docker.exe")
-		Helm = filepath.Join(c.WorkspaceLoc, "bin", "helm.exe")
-		Kind = filepath.Join(c.WorkspaceLoc, "bin", "kind.exe")
-		Kubectl = filepath.Join(c.WorkspaceLoc, "bin", "kubectl.exe")
-	} else {
-		Docker = filepath.Join(c.WorkspaceLoc, "bin", "docker")
-		Helm = filepath.Join(c.WorkspaceLoc, "bin", "helm")
-		Kind = filepath.Join(c.WorkspaceLoc, "bin", "kind")
-		Kubectl = filepath.Join(c.WorkspaceLoc, "bin", "kubectl")
-	}
-
-	if _, err := os.Stat(Docker); os.IsNotExist(err) {
-		if err := os.WriteFile(Docker, docker, 0755); err != nil /* #nosec G306 */ {
-			log.FatalCLI(err.Error())
-		}
-	}
-	if _, err := os.Stat(Helm); os.IsNotExist(err) {
-		if err := os.WriteFile(Helm, helm, 0755); err != nil /* #nosec G306 */ {
-			log.FatalCLI(err.Error())
-		}
-	}
-	if _, err := os.Stat(Kind); os.IsNotExist(err) {
-		if err := os.WriteFile(Kind, kind, 0755); err != nil /* #nosec G306 */ {
-			log.FatalCLI(err.Error())
-		}
-	}
-	if _, err := os.Stat(Kubectl); os.IsNotExist(err) {
-		if err := os.WriteFile(Kubectl, kubectl, 0755); err != nil /* #nosec G306 */ {
-			log.FatalCLI(err.Error())
-		}
-	}
-}
 
 //go:embed resources/*
 var resources embed.FS

@@ -50,7 +50,7 @@ func StartCluster(name, kindConfig, kubeconfig string) error {
 		"create", "cluster", "--name", name,
 		"--kubeconfig", kubeconfig, "--config", kindConfig,
 	}
-	cmd := exec.Command(embed_utils.Kind, args...) //#nosec G204
+	cmd := exec.Command(exec_utils.Kind, args...) //#nosec G204
 	_, stderr, err := exec_utils.Execute(true, cmd)
 	if err != nil {
 		return errors.Wrap(err, stderr)
@@ -67,7 +67,7 @@ func StartCluster(name, kindConfig, kubeconfig string) error {
 
 func DeleteCluster(name string) error {
 	args := []string{"delete", "cluster", "--name", name}
-	cmd := exec.Command(embed_utils.Kind, args...) //#nosec G204
+	cmd := exec.Command(exec_utils.Kind, args...) //#nosec G204
 	_, stderr, err := exec_utils.Execute(false, cmd)
 	if err != nil {
 		return errors.Wrap(err, stderr)
@@ -99,7 +99,7 @@ func AdvancedConfig(env *env.Env, kindConfig string) error {
 }
 
 func getClusters() ([]string, error) {
-	cmd := exec.Command(embed_utils.Kind, "get", "clusters") //#nosec G204
+	cmd := exec.Command(exec_utils.Kind, "get", "clusters") //#nosec G204
 
 	stdout, stderr, err := exec_utils.Execute(false, cmd)
 	if err != nil {
@@ -127,7 +127,7 @@ func updateCaCerts(name string) error {
 		"exec", fmt.Sprintf("%s-control-plane", name),
 		"sh", "-c", "update-ca-certificates && systemctl restart containerd",
 	}
-	cmd := exec.Command(embed_utils.Docker, args...) //#nosec G204
+	cmd := exec.Command(exec_utils.Docker, args...) //#nosec G204
 	_, stderr, err := exec_utils.Execute(true, cmd)
 	if err != nil {
 		return errors.Wrap(err, stderr)

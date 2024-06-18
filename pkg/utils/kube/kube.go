@@ -17,7 +17,6 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	embed_utils "github.com/validator-labs/validatorctl/pkg/utils/embed"
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 )
 
@@ -31,7 +30,7 @@ type Crd string
 
 func KubectlCommand(params []string, kConfig string) (out, stderr string, err error) {
 	params = append(params, fmt.Sprintf("--kubeconfig=%s", kConfig))
-	cmd := exec.Command(embed_utils.Kubectl, params...) //#nosec
+	cmd := exec.Command(exec_utils.Kubectl, params...) //#nosec
 
 	if slices.Contains(params, "secret") {
 		log.InfoCLI("\n==== Kubectl Command ==== Create Secret")
