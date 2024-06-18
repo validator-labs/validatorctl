@@ -45,10 +45,6 @@ func SetLevel(logLevel string) {
 	log.SetLevel(level)
 }
 
-func GetLevel() logrus.Level {
-	return log.Level
-}
-
 func SetOutput(runLoc string) {
 	logFile = filepath.Join(runLoc, "logs", "validator.log")
 	statusFile = filepath.Join(runLoc, "status", "status")
@@ -151,9 +147,4 @@ func HeaderCustom(s string, bgColor, textColor pterm.Color) {
 		WithFullWidth(true).
 		Println(s)
 	fmt.Fprintf(os.Stdout, "\n")
-}
-
-// Out returns the io.Writer used to write messages to the console
-func Out() *os.File {
-	return os.Stdout
 }
