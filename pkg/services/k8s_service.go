@@ -2,19 +2,16 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path"
 	"regexp"
 
-	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	prompt_utils "github.com/spectrocloud-labs/prompts-tui/prompts"
 
-	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	kube_utils "github.com/validator-labs/validatorctl/pkg/utils/kube"
 )
@@ -154,43 +151,4 @@ func readNamespace(k8sClient kubernetes.Interface, prompt, defaultVal string) (s
 		return readNamespace(k8sClient, prompt, defaultVal)
 	}
 	return namespace, nil
-}
-
-func readAccessMode(prompt, defaultVal string, optional bool) (string, error) {
-	accessMode, err := prompt_utils.ReadText(prompt, defaultVal, optional, 13)
-	if err != nil {
-		return "", err
-	}
-	if !slices.Contains([]string{"", "ReadOnlyMany", "ReadWriteMany", "ReadWriteOnce"}, accessMode) {
-		log.InfoCLI("Access mode %s is invalid. Please try again.", accessMode)
-		return readAccessMode(prompt, defaultVal, optional)
-	}
-	return accessMode, nil
-}
-
-func readStorageClass(ctx context.Context, k8sClient kubernetes.Interface, prompt string) (string, error) {
-	var choices []prompt_utils.ChoiceItem
-
-	storageClassList, err := k8sClient.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return "", err
-	}
-
-	for _, sc := range storageClassList.Items {
-		var storageClassInfo string
-
-		if sc.Annotations[cfg.DefaultStorageClassAnnotation] == "true" {
-			storageClassInfo = " (default)"
-		}
-		choices = append(choices, prompt_utils.ChoiceItem{
-			ID:   sc.Name,
-			Name: fmt.Sprintf("%s%s", sc.Name, storageClassInfo),
-		})
-	}
-
-	storageClass, err := prompt_utils.SelectID(prompt, choices)
-	if err != nil {
-		return readStorageClass(ctx, k8sClient, prompt)
-	}
-	return storageClass.ID, nil
 }

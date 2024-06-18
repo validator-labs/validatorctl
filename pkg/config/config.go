@@ -128,11 +128,3 @@ func (c *Config) Load() error {
 	}
 	return c.Decrypt()
 }
-
-func (c *Config) Kubeconfig() string {
-	return filepath.Join(c.RunLoc, "kubeconfig")
-}
-
-func (c *Config) ManifestDir() string {
-	return filepath.Join(c.RunLoc, "manifests")
-}
