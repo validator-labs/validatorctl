@@ -42,7 +42,13 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
         with:
           submodules: recursive
-      
+
+      - name: Set up Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5
+        with:
+          cache: false
+          go-version-file: go.mod
+
       - name: Build binaries
         run: |
           make build-release
