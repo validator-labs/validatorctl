@@ -25,6 +25,7 @@ VERSION ?= 0.0.1${VERSION_SUFFIX}
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
 BIN_DIR ?= ./bin
+export PATH := $(PATH):$(RUNNER_TOOL_CACHE)
 
 # Go env vars
 GOOS ?= $(shell go env GOOS)
@@ -147,11 +148,9 @@ create-images-list: ## Create the image list for CICD
 binaries: docker helm kind kubectl
 
 docker:
-	@echo PATH: $${PATH}
-	@echo RUNNER_TOOL_CACHE: $${RUNNER_TOOL_CACHE}
 	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
 		@command -v docker >/dev/null 2>&1 || { \
-			echo "Docker not found, downloading to $(RUNNER_TOOL_CACHE)/docker..."; \
+			echo "Docker not found, downloading..."; \
 			curl -L https://download.docker.com/$(PLATFORM)/static/stable/x86_64/docker-$(DOCKER_VERSION).tgz | tar xz docker/docker; \
 			mv docker/docker $(RUNNER_TOOL_CACHE)/docker; \
 			chmod +x $(RUNNER_TOOL_CACHE)/docker; \
@@ -162,7 +161,7 @@ docker:
 kind:
 	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
 		@command -v kind >/dev/null 2>&1 || { \
-			echo "Kind not found, downloading to $(RUNNER_TOOL_CACHE)/kind..."; \
+			echo "Kind not found, downloading..."; \
 			curl -Lo $(RUNNER_TOOL_CACHE)/kind https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(GOOS)-$(GOARCH); \
 			chmod +x $(RUNNER_TOOL_CACHE)/kind; \
 		} \
@@ -171,7 +170,7 @@ kind:
 kubectl:
 	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
 		@command -v kubectl >/dev/null 2>&1 || { \
-			echo "Kubectl not found, downloading to $(RUNNER_TOOL_CACHE)/kubectl..."; \
+			echo "Kubectl not found, downloading..."; \
 			curl -Lo $(RUNNER_TOOL_CACHE)/kubectl https://dl.k8s.io/release/v$(KUBECTL_VERSION)/bin/$(GOOS)/$(GOARCH)/kubectl; \
 			chmod +x $(RUNNER_TOOL_CACHE)/kubectl; \
 		} \
@@ -180,7 +179,7 @@ kubectl:
 helm:
 	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
 		@command -v helm >/dev/null 2>&1 || { \
-			echo "Helm not found, downloading to $(RUNNER_TOOL_CACHE)/helm..."; \
+			echo "Helm not found, downloading..."; \
 			curl -L https://get.helm.sh/helm-v$(HELM_VERSION)-$(GOOS)-$(GOARCH).tar.gz | tar xz; \
 			mv $(GOOS)-$(GOARCH)/helm $(RUNNER_TOOL_CACHE)/helm; \
 			rm -rf ./$(GOOS)-$(GOARCH); \
