@@ -14,7 +14,7 @@ KUBECTL_VERSION ?= 1.24.10
 
 # Product Version
 VERSION_SUFFIX ?= -dev
-VERSION ?= 0.0.2${VERSION_SUFFIX} # x-release-please-version
+VERSION ?= 0.0.1${VERSION_SUFFIX} # x-release-please-version
 
 # Common vars
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
