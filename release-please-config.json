@@ -7,11 +7,7 @@
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "draft": false,
-      "extra-files": [
-        "charts/app-core/Chart.yaml",
-        "charts/app-core/values.yaml",
-        "charts/app-core/README.md"
-      ],
+      "extra-files": ["Makefile"],
       "changelog-sections": [
         {
           "type": "feat",
