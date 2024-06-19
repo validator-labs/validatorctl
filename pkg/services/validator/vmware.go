@@ -481,7 +481,7 @@ func readCustomEntityPrivileges(ctx context.Context, c *components.VspherePlugin
 			return err
 		}
 	}
-	privileges, err := LoadPrivileges("vsphere-root-level-permissions-all.yaml")
+	privileges, err := LoadPrivileges("vsphere-root-level-privileges-all.yaml")
 	if err != nil {
 		return err
 	}
