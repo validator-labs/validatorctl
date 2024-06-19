@@ -385,20 +385,40 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		kubecommands = append(kubecommands, cfg.ValidatorPluginVsphereWaitCmd)
 	}
 
+	if vc.KubescapePlugin.Enabled {
+		args := map[string]interface{}{
+			"Config":        vc.KubescapePlugin,
+			"ImageRegistry": vc.ImageRegistry,
+		}
+		values, err := embed.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-kubescape-values.tmpl")
+		if err != nil {
+			return errors.Wrap(err, "failed to render validator plugin kubescape values.yaml")
+		}
+		validatorSpec.Plugins = append(validatorSpec.Plugins, vapi.HelmRelease{
+			Chart:  vc.KubescapePlugin.Release.Chart,
+			Values: string(values),
+		})
+		if vc.KubescapePlugin.ReleaseSecret != nil && vc.KubescapePlugin.ReleaseSecret.ShouldCreate() {
+			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.KubescapePlugin.ReleaseSecret))
+		}
+		kubecommands = append(kubecommands, cfg.ValidatorPluginKubescapeWaitCmd)
+	}
+
 	if !vc.AnyPluginEnabled() {
 		log.FatalCLI("Invalid validator config: at least one plugin must be enabled!")
 	}
 
 	// concatenate base validator values w/ plugin values
 	args := map[string]interface{}{
-		"ImageRegistry": vc.ImageRegistry,
-		"Tag":           vc.Release.Chart.Version,
-		"ProxyConfig":   vc.ProxyConfig,
-		"SinkConfig":    vc.SinkConfig,
-		"AWSPlugin":     vc.AWSPlugin,
-		"VspherePlugin": vc.VspherePlugin,
-		"OCIPlugin":     vc.OCIPlugin,
-		"AzurePlugin":   vc.AzurePlugin,
+		"ImageRegistry":   vc.ImageRegistry,
+		"Tag":             vc.Release.Chart.Version,
+		"ProxyConfig":     vc.ProxyConfig,
+		"SinkConfig":      vc.SinkConfig,
+		"AWSPlugin":       vc.AWSPlugin,
+		"VspherePlugin":   vc.VspherePlugin,
+		"OCIPlugin":       vc.OCIPlugin,
+		"AzurePlugin":     vc.AzurePlugin,
+		"KubescapePlugin": vc.KubescapePlugin,
 	}
 	if vc.ProxyConfig.Enabled {
 		args["ProxyCaCertData"] = strings.Split(vc.ProxyConfig.Env.ProxyCaCertData, "\n")
@@ -577,6 +597,15 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		log.InfoCLI("\n==== Applying Azure plugin validator(s) ====")
 		if err := createValidator(
 			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginAzureTemplate, *vc.AzurePlugin.Validator,
+		); err != nil {
+			return err
+		}
+	}
+
+	if vc.KubescapePlugin.Enabled {
+		log.InfoCLI("\n==== Applying Kubescape plugin validator(s) ====")
+		if err := createValidator(
+			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginKubescapeTemplate, *vc.KubescapePlugin.Validator,
 		); err != nil {
 			return err
 		}

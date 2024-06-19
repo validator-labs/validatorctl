@@ -22,11 +22,12 @@ import (
 
 var (
 	pluginFuncs = map[string]func(*components.ValidatorConfig, kubernetes.Interface) error{
-		"AWS":     readAwsPlugin,
-		"Azure":   readAzurePlugin,
-		"Network": readNetworkPlugin,
-		"OCI":     readOciPlugin,
-		"vSphere": readVspherePlugin,
+		"AWS":       readAwsPlugin,
+		"Azure":     readAzurePlugin,
+		"Network":   readNetworkPlugin,
+		"OCI":       readOciPlugin,
+		"vSphere":   readVspherePlugin,
+		"Kubescape": readKubescapePlugin,
 	}
 	plugins = make([]string, 0, len(pluginFuncs))
 
@@ -128,6 +129,16 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	}
 	if vc.VspherePlugin.Enabled {
 		if err = readVspherePlugin(vc, k8sClient); err != nil {
+			return err
+		}
+	}
+
+	vc.KubescapePlugin.Enabled, err = prompts.ReadBool("Enable Kubescape plugin", true)
+	if err != nil {
+		return err
+	}
+	if vc.KubescapePlugin.Enabled {
+		if err = readKubescapePlugin(vc, k8sClient); err != nil {
 			return err
 		}
 	}
