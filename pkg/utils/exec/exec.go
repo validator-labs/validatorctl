@@ -2,14 +2,47 @@ package exec
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os/exec"
 
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 )
 
-// Execute enables monkey-patching cmd execution for integration tests
-var Execute = execute
+var (
+	// Execute enables monkey-patching cmd execution for integration tests
+	Execute                     = execute
+	Docker, Helm, Kind, Kubectl string
+)
+
+func CheckBinaries() error {
+	binaries := []struct {
+		name string
+		path *string
+	}{
+		{"docker", &Docker},
+		{"helm", &Helm},
+		{"kind", &Kind},
+		{"kubectl", &Kubectl},
+	}
+
+	hasAllBinaries := true
+
+	for _, binary := range binaries {
+		path, err := exec.LookPath(binary.name)
+		if err != nil {
+			hasAllBinaries = false
+			log.ErrorCLI(fmt.Sprintf("%s is not installed.\nPlease install the missing dependency and ensure it's available on your PATH.", binary.name))
+		}
+		*binary.path = path
+	}
+
+	if !hasAllBinaries {
+		return fmt.Errorf("missing required binaries")
+	}
+
+	return nil
+}
 
 type WriterStringer interface {
 	String() string
