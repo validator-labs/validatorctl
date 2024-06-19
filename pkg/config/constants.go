@@ -51,7 +51,7 @@ const (
 	ValidatorVsphereEntityVirtualMachine = "Virtual Machine"
 	ValidatorVsphereEntityVirtualApp     = "Virtual App"
 	ValidatorVsphereVersionConstraint    = ">= 6.0, < 9.0"
-	ValidatorVsphereRolePrivilegeFiles   = "vsphere-root-level-privileges-all.yaml"
+	ValidatorVspherePrivilegeFile        = "vsphere-root-level-privileges-all.yaml"
 	SpectroCloudTags                     = "Spectro Cloud Tags"
 	CustomVsphereTags                    = "Custom vSphere Tags"
 	SpectroCloudTagsFile                 = "vsphere-spectro-cloud-tags.yaml"

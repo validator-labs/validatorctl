@@ -331,7 +331,7 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 		log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Account.Username)
 		r.Username = c.Account.Username
 	}
-	privileges, err := LoadPrivileges(cfg.ValidatorVsphereRolePrivilegeFiles)
+	privileges, err := LoadPrivileges(cfg.ValidatorVspherePrivilegeFile)
 	if err != nil {
 		return err
 	}
@@ -481,7 +481,7 @@ func readCustomEntityPrivileges(ctx context.Context, c *components.VspherePlugin
 			return err
 		}
 	}
-	privileges, err := LoadPrivileges("vsphere-root-level-privileges-all.yaml")
+	privileges, err := LoadPrivileges(cfg.ValidatorVspherePrivilegeFile)
 	if err != nil {
 		return err
 	}
