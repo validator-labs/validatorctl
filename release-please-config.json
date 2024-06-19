@@ -35,6 +35,10 @@
           "section": "Build"
         },
         {
+          "type": "fix(deps)",
+          "section": "Dependency Updates"
+        },
+        {
           "type": "deps",
           "section": "Dependency Updates"
         },
