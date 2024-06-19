@@ -645,23 +645,9 @@ func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginCo
 		return nil
 	}
 
-	bs, err := embed.ReadFile(cfg.Validator, cfg.SpectroCloudTagsFile)
-	if err != nil {
-		return err
-	}
-	var spectroTagRules []components.VsphereTagRule
-	if err := yaml.Unmarshal(bs, &spectroTagRules); err != nil {
-		return err
-	}
-	spectroTagRuleMap := make(map[string]*components.VsphereTagRule)
-	for _, r := range spectroTagRules {
-		r := r
-		spectroTagRuleMap[r.Name] = &r
-	}
-
 	for i, r := range c.VsphereTagRules {
 		r := r
-		if err := readVsphereTagRule(ctx, c, &r, driver, i, spectroTagRuleMap, ruleNames); err != nil {
+		if err := readVsphereTagRule(ctx, c, &r, driver, i, ruleNames); err != nil {
 			return err
 		}
 	}
@@ -679,7 +665,7 @@ func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginCo
 		return nil
 	}
 	for {
-		if err := readVsphereTagRule(ctx, c, &components.VsphereTagRule{}, driver, -1, spectroTagRuleMap, ruleNames); err != nil {
+		if err := readVsphereTagRule(ctx, c, &components.VsphereTagRule{}, driver, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another tag validation rule", false)
@@ -693,48 +679,14 @@ func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginCo
 	return nil
 }
 
-func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver vsphere.VsphereDriver, idx int, spectroTagRuleMap map[string]*components.VsphereTagRule, ruleNames *[]string) error {
+func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver vsphere.VsphereDriver, idx int, ruleNames *[]string) error {
 	err := initVsphereRule(r, "tag", "", ruleNames)
 	if err != nil {
 		return err
 	}
 
-	if r.RuleType == "" {
-		r.RuleType, err = prompts.Select("Tag rule type", cfg.ValidatorPluginVsphereTagChoices)
-		if err != nil {
-			return err
-		}
-		if r.RuleType == cfg.SpectroCloudTags {
-			var spectroRuleNames []string
-			for name := range spectroTagRuleMap {
-				spectroRuleNames = append(spectroRuleNames, name)
-			}
-			slices.Sort(spectroRuleNames)
-
-			ruleName, err := prompts.Select("Spectro Cloud tag rule", spectroRuleNames)
-			if err != nil {
-				return err
-			}
-			r = spectroTagRuleMap[ruleName]
-		}
-	}
-
-	switch r.RuleType {
-	case cfg.SpectroCloudTags:
-		switch r.EntityType {
-		case "datacenter":
-			r.EntityName = c.Validator.Datacenter
-		case "cluster":
-			r.ClusterName, err = getClusterName(ctx, c.Validator.Datacenter, driver)
-			if err != nil {
-				return err
-			}
-			r.EntityName = r.ClusterName
-		}
-	default:
-		if err := readCustomVsphereTagRule(ctx, c, r, driver); err != nil {
-			return err
-		}
+	if err := readCustomVsphereTagRule(ctx, c, r, driver); err != nil {
+		return err
 	}
 
 	if idx == -1 {

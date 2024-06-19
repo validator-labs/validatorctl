@@ -388,10 +388,15 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, tuiVals []str
 		"n",                           // add more resource requirement checks
 		"y",                           // check tags on entities
 		"tag rule 1",                  // tag rule name
-		cfg.SpectroCloudTags,          // zone & region tags
-		"Cluster: k8s-zone (ensure that the selected cluster has a 'k8s-zone' tag)", // zone tag
-		"C0", // cluster name
-		"n",  // add another tag rule
+		"Datacenter",                  // entity type
+		"DC0",                         // datacenter name
+		"k8s-region",                  // tag
+		"y",                           // add another tag rule
+		"tag rule 2",                  // tag rule name
+		"Cluster",                     // entity type
+		"C0",                          // cluster name
+		"k8s-zone",                    // tag
+		"n",                           // add another tag rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
 		vsphereVals = slices.Insert(vsphereVals, 2,
