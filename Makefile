@@ -5,12 +5,7 @@
 .PHONY: docker kind kubectl helm build test
 .DEFAULT_GOAL:=help
 
-# Images
-IMAGE_TAG ?= latest
-CLI_IMG ?= "quay.io/validator-labs/validatorctl:$(IMAGE_TAG)"
-
 # Dependency Versions
-BUILDER_GOLANG_VERSION ?= 1.22
 DOCKER_VERSION ?= 24.0.6
 HELM_VERSION ?= 3.14.0
 GOLANGCI_VERSION ?= 1.54.2
@@ -19,7 +14,7 @@ KUBECTL_VERSION ?= 1.24.10
 
 # Product Version
 VERSION_SUFFIX ?= -dev
-VERSION ?= 0.0.1${VERSION_SUFFIX}
+VERSION ?= 0.0.1${VERSION_SUFFIX} # x-release-please-version
 
 # Common vars
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -48,9 +43,6 @@ TARGETARCH ?= amd64
 COVER_DIR=_build/cov
 COVER_PKGS=$(shell go list ./... | grep -v /tests/) # omit integration tests
 
-# Integrated Images List
-IMAGE_LIST=_build/images/images.list
-
 ##@ Help Targets
 help:  ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[0m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
@@ -58,12 +50,21 @@ help:  ## Display this help
 ##@ Build Targets
 build: ## Build CLI
 	@echo "Building CLI binary..."
-	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) GO111MODULE=on go build -ldflags " \
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags " \
 	  -X github.com/validator-labs/validatorctl/cmd.Version=$(VERSION)" \
 	  -a -o bin/validator validator.go
 
-get-version:  ## Get the product version
-	@echo "$(VERSION)"
+PLATFORMS ?= linux/amd64 darwin/arm64 windows/amd64
+build-release:  ## Build CLI for multiple platforms
+	for platform in $(PLATFORMS); do \
+		platform_split=($${platform//\// }); \
+		GOOS=$${platform_split[0]}; \
+		GOARCH=$${platform_split[1]}; \
+		echo "Building CLI for $${GOOS}/$${GOARCH}..."; \
+		CGO_ENABLED=0 GOOS=$${GOOS} GOARCH=$${GOARCH} go build -ldflags " \
+		  -X github.com/validator-labs/validatorctl/cmd.Version=$(VERSION)" \
+		  -a -o bin/validator-$${GOOS}-$${GOARCH} validator.go; \
+	done
 
 ##@ Static Analysis Targets
 fmt:  ## Run go fmt
@@ -118,31 +119,6 @@ coverage-integration: ## Show integration test coverage
 
 coverage-integration-html: ## Open integration test coverage report in your browser
 	go tool cover -html $(COVER_DIR)/integration/integration.out
-
-##@ Image Targets
-
-BUILD_ARGS = --build-arg CLI_VERSION=${VERSION} --build-arg BUILDER_GOLANG_VERSION=${BUILDER_GOLANG_VERSION}
-
-docker-all: docker-cli docker-push  ## Builds & pushes Docker images to container registry
-
-docker-cli:
-	docker buildx build ${BUILD_ARGS} --platform linux/${TARGETARCH} --load -f build/docker/cli.Dockerfile . -t ${CLI_IMG}
-
-docker-compose: ## Rebuild images and restart docker-compose
-	docker compose build
-	docker compose up
-
-docker-push: ## Pushes Docker images to container registry
-	docker push ${CLI_IMG}
-	echo cli,core,${CLI_IMG} >> ${IMAGE_LIST}
-
-docker-rmi:  ## Remove Docker images from local Docker engine
-	docker rmi -f ${CLI_IMG}
-
-create-images-list: ## Create the image list for CICD
-	mkdir -p _build/images
-	touch $(IMAGE_LIST)
-
 
 ##@ Tools Targets
 binaries: docker helm kind kubectl

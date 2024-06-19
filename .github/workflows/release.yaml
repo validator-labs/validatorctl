@@ -6,12 +6,62 @@ on:
       - main
       - '[0-9]+.[0-9]+.x'
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  call-release:
-    uses: validator-labs/workflows/.github/workflows/release.yaml@main
+  release-please:
+    permissions:
+      contents: write  # for google-github-actions/release-please-action to create release commit
+      pull-requests: write  # for google-github-actions/release-please-action to create release PR
+    runs-on: [self-hosted, Linux, X64, validator]
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+
+      - uses: googleapis/release-please-action@7987652d64b4581673a76e33ad5e98e3dd56832f # v4
+        id: release
+        with:
+          token: ${{ secrets.PAT }}
+          
+  build-binaries:
+    if: needs.release-please.outputs.releases_created == 'true'
+    needs:
+      - release-please
+    runs-on: [self-hosted, Linux, X64, validator]
     permissions:
       contents: write
-      id-token: write
       packages: write
-      pull-requests: write
-    secrets: inherit
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        with:
+          submodules: recursive
+      
+      - name: Build binaries
+        run: |
+          make build-release
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@e8d2a6937ecead383dfe75190d104edd1f9c5751 # v0.16.0
+        env:
+          SBOM_NAME: validator-linux-amd64-${{ needs.release-please.outputs.tag_name }}
+        with:
+          file: ./bin/validator-linux-amd64
+          artifact-name: sbom-validator
+          output-file: ./sbom-validator.spdx.json
+
+      - name: Attach artifacts to release
+        uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: |
+            ./bin/validator-darwin-arm64
+            ./bin/validator-linux-amd64
+            ./bin/validator-windows-amd64
+            ./sbom-validator.spdx.json
