@@ -68,6 +68,9 @@ jobs:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
           files: |
             ./bin/validator-darwin-arm64
+            ./bin/validator-darwin-arm64.sha256
             ./bin/validator-linux-amd64
+            ./bin/validator-linux-amd64.sha256
             ./bin/validator-windows-amd64
+            ./bin/validator-windows-amd64.sha256
             ./sbom-validator.spdx.json

@@ -62,7 +62,8 @@ build-release:  ## Build CLI for multiple platforms
 		echo "Building CLI for $(GOOS)/$(GOARCH)..."; \
 		CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags " \
 			-X github.com/validator-labs/validatorctl/cmd.Version=$(VERSION)" \
-			-a -o bin/validator-$(GOOS)-$(GOARCH) validator.go;)
+			-a -o bin/validator-$(GOOS)-$(GOARCH) validator.go; \
+		sha256sum bin/validator-$(GOOS)-$(GOARCH) > bin/validator-$(GOOS)-$(GOARCH).sha256;)
 
 ##@ Static Analysis Targets
 fmt:  ## Run go fmt
