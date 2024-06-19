@@ -14,16 +14,16 @@ import (
 )
 
 func TestIntegrationSuite(t *testing.T) {
-	if err := setup(); err != nil {
+	testCtx := test.NewTestContext()
+	if err := setup(testCtx); err != nil {
 		t.Errorf("failed to setup integration test suite: %v", err)
 	}
-	runSuite(t)
+	runSuite(testCtx, t)
 }
 
-func runSuite(t *testing.T) {
+func runSuite(testCtx *test.TestContext, t *testing.T) {
 	fmt.Println("Validator CLI Integration Test Suite")
 
-	testCtx := test.NewTestContext()
 	err := test.Flow(testCtx).
 		Test(common.NewSingleFuncTest("validator-test", validator.Execute)).
 		Summarize().TearDown().Audit()
@@ -33,13 +33,14 @@ func runSuite(t *testing.T) {
 	}
 }
 
-func setup() error {
+func setup(testCtx *test.TestContext) error {
 	// Set CLI version
 	version := os.Getenv("CLI_VERSION")
 	if version == "" && cmd.Version == "" {
 		log.Fatal("CLI_VERSION environment variable or ldflags must be set")
 	}
 	cmd.Version = version
+	testCtx.Put("version", version)
 
 	// Wipe out the default config & workspace location
 	defaultWorkspace, err := cfg.DefaultWorkspaceLoc()
@@ -50,7 +51,7 @@ func setup() error {
 		log.Fatal(err.Error())
 	}
 
-	// Initialze config, workspace, binaries, logger
+	// Initialize config, workspace, logger
 	cmd.InitConfig()
 	return nil
 }

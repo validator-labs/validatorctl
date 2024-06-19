@@ -10,10 +10,10 @@ type SingleFuncTestCase struct {
 	log *log.Entry
 	*test.BaseTest
 
-	testFunc func() error
+	testFunc func(*test.TestContext) error
 }
 
-func NewSingleFuncTest(name string, testFunc func() error) *SingleFuncTestCase {
+func NewSingleFuncTest(name string, testFunc func(*test.TestContext) error) *SingleFuncTestCase {
 	return &SingleFuncTestCase{
 		log:      log.WithField("func", name),
 		testFunc: testFunc,
@@ -23,7 +23,7 @@ func NewSingleFuncTest(name string, testFunc func() error) *SingleFuncTestCase {
 
 func (r *SingleFuncTestCase) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	r.log.Printf("Executing %s", r.GetName())
-	if err := r.testFunc(); err != nil {
+	if err := r.testFunc(ctx); err != nil {
 		r.log.Errorf("Failed to run test: %v", err)
 		return test.Failure(err.Error())
 	}

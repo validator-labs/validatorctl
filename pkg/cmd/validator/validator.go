@@ -28,6 +28,7 @@ import (
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	"github.com/validator-labs/validatorctl/pkg/utils/kube"
+	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 )
 
 func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool) error {
@@ -69,7 +70,7 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 
 		// for dev build versions, we allow selection of specific validator and plugin versions
 		// for all other builds, we set a fixed version for the validator and plugins
-		vc.UseFixedVersions = !strings.HasSuffix(tc.CliVersion, "-dev")
+		vc.UseFixedVersions = !string_utils.IsDevVersion(tc.CliVersion)
 		if err := validator.ReadValidatorConfig(c, tc, vc); err != nil {
 			return errors.Wrap(err, "failed to create new validator configuration")
 		}
