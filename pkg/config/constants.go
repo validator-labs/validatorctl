@@ -51,16 +51,10 @@ const (
 	ValidatorVsphereEntityVirtualMachine = "Virtual Machine"
 	ValidatorVsphereEntityVirtualApp     = "Virtual App"
 	ValidatorVsphereVersionConstraint    = ">= 6.0, < 9.0"
-	SpectroRootLevelPrivilegesV6_7       = "Spectro Root-level Role Privileges vSphere 6.7"
-	SpectroRootLevelPrivilegesV7_0       = "Spectro Root-level Role Privileges vSphere 7.0"
-	SpectroRootLevelPrivilegesV8_0       = "Spectro Root-level Role Privileges vSphere 8.0"
-	CustomPrivileges                     = "Custom Root-level Role Privileges vSphere"
-	SpectroEntityPrivileges              = "Spectro Entity Privileges"
-	CustomEntityPrivileges               = "Custom Entity Privileges"
+	ValidatorVspherePrivilegeFile        = "vsphere-root-level-privileges-all.yaml"
 	SpectroCloudTags                     = "Spectro Cloud Tags"
 	CustomVsphereTags                    = "Custom vSphere Tags"
 	SpectroCloudTagsFile                 = "vsphere-spectro-cloud-tags.yaml"
-	SpectroEntityPrivilegesFile          = "vsphere-spectro-entity-privileges.yaml"
 
 	DefaultStorageClassAnnotation string = "storageclass.kubernetes.io/is-default-class"
 
@@ -171,22 +165,6 @@ var (
 		},
 	}
 
-	ValidatorPluginVsphereRolePrivilegeChoices = []string{
-		SpectroRootLevelPrivilegesV6_7,
-		SpectroRootLevelPrivilegesV7_0,
-		SpectroRootLevelPrivilegesV8_0,
-		CustomPrivileges,
-	}
-	ValidatorPluginVsphereRolePrivilegeFiles = map[string]string{
-		SpectroRootLevelPrivilegesV6_7: "vsphere-root-level-privileges-7.0.yaml",
-		SpectroRootLevelPrivilegesV7_0: "vsphere-root-level-privileges-7.0.yaml",
-		SpectroRootLevelPrivilegesV8_0: "vsphere-root-level-privileges-8.0.yaml",
-		CustomPrivileges:               "vsphere-root-level-privileges-all.yaml",
-	}
-	ValidatorPluginVsphereEntityPrivilegeChoices = []string{
-		SpectroEntityPrivileges,
-		CustomEntityPrivileges,
-	}
 	ValidatorPluginVsphereEntities = []string{
 		ValidatorVsphereEntityCluster,
 		ValidatorVsphereEntityDatacenter,

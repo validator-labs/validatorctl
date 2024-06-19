@@ -460,8 +460,7 @@ func (c *VspherePluginConfig) decrypt() error {
 
 type VsphereEntityPrivilegeRule struct {
 	vsphere.EntityPrivilegeValidationRule `yaml:",inline"`
-	ClusterScoped                         bool   `yaml:"clusterScoped"`
-	RuleType                              string `yaml:"ruleType"`
+	ClusterScoped                         bool `yaml:"clusterScoped"`
 }
 
 type VsphereRolePrivilegeRule struct {
@@ -471,7 +470,6 @@ type VsphereRolePrivilegeRule struct {
 
 type VsphereTagRule struct {
 	vsphere.TagValidationRule `yaml:",inline"`
-	RuleType                  string `yaml:"ruleType"`
 }
 
 type PublicKeySecret struct {
