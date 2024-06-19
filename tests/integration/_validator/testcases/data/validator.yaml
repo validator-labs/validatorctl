@@ -13,8 +13,10 @@ helmReleaseSecret:
   caCertFile: ""
   exists: false
 imageRegistry: quay.io/validator-labs
-useKindCluster: true
 useFixedVersion: false
+kindConfig:
+  useKindCluster: true
+  kindClusterName: "<kind_cluster_name>"
 sinkConfig:
   enabled: true
   createSecret: true

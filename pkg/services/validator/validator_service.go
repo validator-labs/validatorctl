@@ -46,11 +46,11 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	var err error
 	var k8sClient kubernetes.Interface
 
-	vc.UseKindCluster, err = prompts.ReadBool("Provision & use kind cluster", true)
+	vc.KindConfig.UseKindCluster, err = prompts.ReadBool("Provision & use kind cluster", true)
 	if err != nil {
 		return err
 	}
-	if vc.UseKindCluster {
+	if vc.KindConfig.UseKindCluster {
 		if err := kind.ValidateClusters("Validator installation"); err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 	var err error
 	var k8sClient kubernetes.Interface
 
-	if !c.UseKindCluster {
+	if !c.KindConfig.UseKindCluster {
 		k8sClient, c.Kubeconfig, err = services.ReadKubeconfig()
 		if err != nil {
 			return err

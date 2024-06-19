@@ -1,22 +1,25 @@
 package validator
 
 import (
+	"bytes"
 	"fmt"
+	"os"
 
 	log "github.com/sirupsen/logrus"
-
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	tuimocks "github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
-
 	vsphere_cloud "github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
+	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 	"github.com/validator-labs/validatorctl/tests/integration/common"
 	file_utils "github.com/validator-labs/validatorctl/tests/utils/file"
 	"github.com/validator-labs/validatorctl/tests/utils/test"
 )
+
+var kindClusterName string
 
 func Execute() error {
 	testCtx := test.NewTestContext()
@@ -331,6 +334,9 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 }
 
 func (t *ValidatorTest) testDeploySilent() (tr *test.TestResult) {
+	if err := t.updateTestData(); err != nil {
+		return test.Failure(err.Error())
+	}
 	silentCmd, buffer := common.InitCmd([]string{
 		"install", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile),
 	})
@@ -419,7 +425,7 @@ func (t *ValidatorTest) PreRequisite(ctx *test.TestContext) (tr *test.TestResult
 func (t *ValidatorTest) TearDown(ctx *test.TestContext) {
 	t.log.Printf("Executing TearDown for %s and %s ", t.GetName(), t.GetDescription())
 
-	if err := kind.DeleteCluster(cfg.ValidatorKindClusterName); err != nil {
+	if err := kind.DeleteCluster(kindClusterName); err != nil {
 		t.log.Errorf("Failed to delete validator kind cluster: %v", err)
 	}
 	if err := common.TearDownFun()(ctx); err != nil {
@@ -429,6 +435,25 @@ func (t *ValidatorTest) TearDown(ctx *test.TestContext) {
 	// restore clouds.GetVSphereDriver
 	vsphereDriverFunc := ctx.Get("vsphereDriverFunc")
 	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account *vsphere_cloud.VsphereCloudAccount) (vsphere_cloud.VsphereDriver, error))
+}
+
+// updateTestData updates the hard-coded validator config used in silent installation tests
+func (t *ValidatorTest) updateTestData() error {
+	testData := t.filePath(cfg.ValidatorConfigFile)
+	bs, err := os.ReadFile(testData)
+	if err != nil {
+		return err
+	}
+
+	kindClusterName = fmt.Sprintf("%s-%s", cfg.ValidatorKindClusterName, string_utils.RandStr(5))
+	tokens := map[string]string{
+		"<kind_cluster_name>": kindClusterName, // ensure concurrent tests use unique kind cluster names
+	}
+	for k, v := range tokens {
+		bs = bytes.ReplaceAll(bs, []byte(k), []byte(v))
+	}
+
+	return os.WriteFile(testData, bs, 0644)
 }
 
 func (t *ValidatorTest) filePath(file string) string {
