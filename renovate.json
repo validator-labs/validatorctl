@@ -50,5 +50,6 @@
         "# renovate: datasource=(?<datasource>.+?) depName=(?<depName>.+?)\\s.*?_VERSION ?(\\??=|\\: ?) ?\\\"?(?<currentValue>.+?)?\\\"?\\s"
       ]
     }
-  ]
+  ],
+  "semanticCommits": "enabled"
 }
