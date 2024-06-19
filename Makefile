@@ -147,9 +147,11 @@ create-images-list: ## Create the image list for CICD
 binaries: docker helm kind kubectl
 
 docker:
+	@echo PATH: $${PATH}
+	@echo RUNNER_TOOL_CACHE: $${RUNNER_TOOL_CACHE}
 	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
 		@command -v docker >/dev/null 2>&1 || { \
-			echo "Docker not found, downloading..."; \
+			echo "Docker not found, downloading to $(RUNNER_TOOL_CACHE)/docker..."; \
 			curl -L https://download.docker.com/$(PLATFORM)/static/stable/x86_64/docker-$(DOCKER_VERSION).tgz | tar xz docker/docker; \
 			mv docker/docker $(RUNNER_TOOL_CACHE)/docker; \
 			chmod +x $(RUNNER_TOOL_CACHE)/docker; \
@@ -160,7 +162,7 @@ docker:
 kind:
 	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
 		@command -v kind >/dev/null 2>&1 || { \
-			echo "Kind not found, downloading..."; \
+			echo "Kind not found, downloading to $(RUNNER_TOOL_CACHE)/kind..."; \
 			curl -Lo $(RUNNER_TOOL_CACHE)/kind https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(GOOS)-$(GOARCH); \
 			chmod +x $(RUNNER_TOOL_CACHE)/kind; \
 		} \
@@ -169,7 +171,7 @@ kind:
 kubectl:
 	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
 		@command -v kubectl >/dev/null 2>&1 || { \
-			echo "Kubectl not found, downloading..."; \
+			echo "Kubectl not found, downloading to $(RUNNER_TOOL_CACHE)/kubectl..."; \
 			curl -Lo $(RUNNER_TOOL_CACHE)/kubectl https://dl.k8s.io/release/v$(KUBECTL_VERSION)/bin/$(GOOS)/$(GOARCH)/kubectl; \
 			chmod +x $(RUNNER_TOOL_CACHE)/kubectl; \
 		} \
@@ -178,7 +180,7 @@ kubectl:
 helm:
 	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
 		@command -v helm >/dev/null 2>&1 || { \
-			echo "Helm not found, downloading..."; \
+			echo "Helm not found, downloading to $(RUNNER_TOOL_CACHE)/helm..."; \
 			curl -L https://get.helm.sh/helm-v$(HELM_VERSION)-$(GOOS)-$(GOARCH).tar.gz | tar xz; \
 			mv $(GOOS)-$(GOARCH)/helm $(RUNNER_TOOL_CACHE)/helm; \
 			rm -rf ./$(GOOS)-$(GOARCH); \
