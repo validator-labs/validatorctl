@@ -52,12 +52,9 @@ const (
 	ValidatorVsphereEntityVirtualApp     = "Virtual App"
 	ValidatorVsphereVersionConstraint    = ">= 6.0, < 9.0"
 	ValidatorVsphereRolePrivilegeFiles   = "vsphere-root-level-privileges-all.yaml"
-	SpectroEntityPrivileges              = "Spectro Entity Privileges"
-	CustomEntityPrivileges               = "Custom Entity Privileges"
 	SpectroCloudTags                     = "Spectro Cloud Tags"
 	CustomVsphereTags                    = "Custom vSphere Tags"
 	SpectroCloudTagsFile                 = "vsphere-spectro-cloud-tags.yaml"
-	SpectroEntityPrivilegesFile          = "vsphere-spectro-entity-privileges.yaml"
 
 	DefaultStorageClassAnnotation string = "storageclass.kubernetes.io/is-default-class"
 
@@ -168,10 +165,6 @@ var (
 		},
 	}
 
-	ValidatorPluginVsphereEntityPrivilegeChoices = []string{
-		SpectroEntityPrivileges,
-		CustomEntityPrivileges,
-	}
 	ValidatorPluginVsphereEntities = []string{
 		ValidatorVsphereEntityCluster,
 		ValidatorVsphereEntityDatacenter,

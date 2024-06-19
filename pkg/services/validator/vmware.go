@@ -81,7 +81,7 @@ func readVspherePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 	if err := configureRolePrivilegeRules(c, &ruleNames, vSphereCloudDriver); err != nil {
 		return err
 	}
-	if err := configureEntityPrivilegeRules(ctx, c, vSphereCloudDriver, &ruleNames); err != nil {
+	if err := configureEntityPrivilegeRules(ctx, c, vSphereCloudDriver, &ruleNames, vSphereCloudDriver); err != nil {
 		return err
 	}
 	if err := configureResourceRequirementRules(ctx, c, vSphereCloudDriver, &ruleNames); err != nil {
@@ -386,7 +386,7 @@ func selectPrivileges(allPrivileges []string) ([]string, error) {
 	return selectedPrivileges, nil
 }
 
-func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
+func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string, vSphereCloudDriver vsphere.VsphereDriver) error {
 	log.InfoCLI(`
 	Entity privilege validation ensures that a vSphere user has certain
 	privileges with respect to a specific vSphere resource.
@@ -402,23 +402,14 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 		return nil
 	}
 
-	permissionsBytes, err := embed.ReadFile(cfg.Validator, cfg.SpectroEntityPrivilegesFile)
+	isAdmin, err := vSphereCloudDriver.IsAdminAccount(context.Background())
 	if err != nil {
 		return err
-	}
-	var spectroEntityRules []components.VsphereEntityPrivilegeRule
-	if err := yaml.Unmarshal(permissionsBytes, &spectroEntityRules); err != nil {
-		return err
-	}
-	spectroEntityRuleMap := make(map[string]*components.VsphereEntityPrivilegeRule)
-	for _, r := range spectroEntityRules {
-		r := r
-		spectroEntityRuleMap[r.Name] = &r
 	}
 
 	for i, r := range c.VsphereEntityPrivilegeRules {
 		r := r
-		if err := readEntityPrivilegeRule(ctx, c, &r, driver, i, nil, ruleNames); err != nil {
+		if err := readEntityPrivilegeRule(ctx, c, &r, driver, i, ruleNames, isAdmin); err != nil {
 			return err
 		}
 	}
@@ -436,7 +427,7 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 		return nil
 	}
 	for {
-		if err := readEntityPrivilegeRule(ctx, c, &components.VsphereEntityPrivilegeRule{}, driver, -1, spectroEntityRuleMap, ruleNames); err != nil {
+		if err := readEntityPrivilegeRule(ctx, c, &components.VsphereEntityPrivilegeRule{}, driver, -1, ruleNames, isAdmin); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another entity privilege validation rule", false)
@@ -450,63 +441,14 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 	return nil
 }
 
-func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver, idx int, spectroEntityRuleMap map[string]*components.VsphereEntityPrivilegeRule, ruleNames *[]string) error {
+func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver, idx int, ruleNames *[]string, isAdmin bool) error {
 	err := initVsphereRule(r, "entity privilege", "The rule's vSphere privilege set will be replaced.", ruleNames)
 	if err != nil {
 		return err
 	}
 
-	if r.RuleType == "" {
-		if len(spectroEntityRuleMap) == 0 {
-			log.InfoCLI("All Spectro Cloud entity rules have been configured.")
-			addCustom, err := prompts.ReadBool("Add a custom entity privilege validation rule", true)
-			if err != nil {
-				return err
-			}
-			if !addCustom {
-				return nil
-			}
-			r.RuleType = cfg.CustomEntityPrivileges
-		} else {
-			r.RuleType, err = prompts.Select("Entity privilege type", cfg.ValidatorPluginVsphereEntityPrivilegeChoices)
-			if err != nil {
-				return err
-			}
-			if r.RuleType == cfg.SpectroEntityPrivileges {
-				var spectroRuleNames []string
-				for name := range spectroEntityRuleMap {
-					spectroRuleNames = append(spectroRuleNames, name)
-				}
-				slices.Sort(spectroRuleNames)
-
-				ruleName, err := prompts.Select("Spectro Cloud entity rule", spectroRuleNames)
-				if err != nil {
-					return err
-				}
-				r = spectroEntityRuleMap[ruleName]
-				delete(spectroEntityRuleMap, ruleName)
-			}
-		}
-	}
-
-	switch r.RuleType {
-	case cfg.SpectroEntityPrivileges:
-		prompt := fmt.Sprintf("vSphere username to validate entity privileges for %s: %s", r.EntityType, r.EntityName)
-		r.Username, err = prompts.ReadTextRegex(prompt, r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
-		if err != nil {
-			return err
-		}
-		if r.ClusterScoped {
-			prompt := fmt.Sprintf("Cluster name under which %s: %s resides", r.EntityType, r.EntityName)
-			r.ClusterName, err = prompts.ReadText(prompt, r.ClusterName, false, -1)
-			if err != nil {
-				return err
-			}
-		}
-	case cfg.CustomEntityPrivileges:
-		if err := readCustomEntityPrivileges(ctx, c, r, driver); err != nil {
-			return err
-		}
+	if err := readCustomEntityPrivileges(ctx, c, r, driver, isAdmin); err != nil {
+		return err
 	}
 
 	if idx == -1 {
@@ -520,13 +462,20 @@ func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginCon
 	return nil
 }
 
-func readCustomEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver) error {
+func readCustomEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver, isAdmin bool) error {
 	var err error
 	if r.Username == "" {
-		r.Username, err = prompts.ReadTextRegex("vSphere username to validate entity privileges for", r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
-		if err != nil {
-			return err
+
+		if isAdmin {
+			r.Username, err = prompts.ReadTextRegex("vSphere username to validate entity privileges for", r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
+			if err != nil {
+				return err
+			}
+		} else {
+			log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Account.Username)
+			r.Username = c.Account.Username
 		}
+
 		r.EntityType, r.EntityName, r.ClusterName, err = getEntityInfo(ctx, "", "Entity Type", c.Validator.Datacenter, cfg.ValidatorPluginVsphereEntities, driver)
 		if err != nil {
 			return err
