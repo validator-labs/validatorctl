@@ -439,8 +439,8 @@ func (t *ValidatorTest) TearDown(ctx *test.TestContext) {
 
 // updateTestData updates the hard-coded validator config used in silent installation tests
 func (t *ValidatorTest) updateTestData() error {
-	testData := t.filePath(cfg.ValidatorConfigFile) // #nosec G304
-	bs, err := os.ReadFile(testData)
+	testData := t.filePath(cfg.ValidatorConfigFile)
+	bs, err := os.ReadFile(testData) //#nosec G304
 	if err != nil {
 		return err
 	}
