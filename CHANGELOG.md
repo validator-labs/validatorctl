@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.0.2](https://github.com/validator-labs/validatorctl/compare/v0.0.1...v0.0.2) (2024-06-19)
+## [0.0.1](https://github.com/validator-labs/validatorctl/compare/v0.0.1...v0.0.1) (2024-06-19)
 
 
 ### Features
@@ -24,6 +24,7 @@
 
 ### Other
 
+* release 0.0.1 ([5103eb7](https://github.com/validator-labs/validatorctl/commit/5103eb71337b104afc4d78ae3da776872fde2382))
 * remove dead code ([#25](https://github.com/validator-labs/validatorctl/issues/25)) ([0631a09](https://github.com/validator-labs/validatorctl/commit/0631a0998a9c1e51610b6b3fb0cf4a77d3940024))
 * remove logging to disk ([#30](https://github.com/validator-labs/validatorctl/issues/30)) ([c531b74](https://github.com/validator-labs/validatorctl/commit/c531b747dc9caf1a30f91e10c411ffd29f9ae491))
 
