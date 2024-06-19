@@ -331,19 +331,13 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 		log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Account.Username)
 		r.Username = c.Account.Username
 	}
-	privilegeSet, err := prompts.Select("Root-level privilege set", cfg.ValidatorPluginVsphereRolePrivilegeChoices)
+	privileges, err := LoadPrivileges(cfg.ValidatorVsphereRolePrivilegeFiles)
 	if err != nil {
 		return err
 	}
-	privileges, err := LoadPrivileges(cfg.ValidatorPluginVsphereRolePrivilegeFiles[privilegeSet])
+	privileges, err = selectPrivileges(privileges)
 	if err != nil {
 		return err
-	}
-	if privilegeSet == cfg.CustomPrivileges {
-		privileges, err = selectPrivileges(privileges)
-		if err != nil {
-			return err
-		}
 	}
 	r.Privileges = privileges
 	if idx == -1 {

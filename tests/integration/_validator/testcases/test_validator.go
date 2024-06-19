@@ -273,53 +273,56 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 			"y",                         // enable vsphere plugin
 			cfg.ValidatorHelmRepository, // validator-plugin-vsphere helm chart repo
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginVsphere], // validator-plugin-vsphere helm chart version
-			"y",                                // Re-use validator chart security configuration
-			"vsphere-creds",                    // vSphere secret name
-			"fake.vsphere.com",                 // vSphere domain
-			"bob@vsphere.com",                  // vSphere username
-			"password",                         // vSphere password
-			"y",                                // insecure skip verify
-			"DC0",                              // datacenter
-			"y",                                // Enable NTP check
-			"ntpd",                             // NTP rule name
-			"y",                                // are hosts cluster scoped
-			"C0",                               // cluster name
-			"DC0_C0_H0",                        // host1
-			"y",                                // add more hosts
-			"DC0_C0_H1",                        // host2
-			"n",                                // add more hosts
-			"n",                                // add more validation rules
-			"y",                                // Check role privileges
-			"role rule 1",                      // Role privilege rule name
-			"user1@vsphere.local",              // user to check role privileges against
-			cfg.SpectroRootLevelPrivilegesV7_0, // vSphere permission version
-			"n",                                // add more role privilege checks
-			"y",                                // check entity privileges
-			"entity rule 1",                    // entity privilege rule name
-			cfg.SpectroEntityPrivileges,        // entity level permissions
-			"Read folder: spectro-templates",   // spectro entity permission
-			"user2@vsphere.local",              // user to check entity privileges against
-			"n",                                // add more entity permission checks
-			"y",                                // check compute resource requirements
-			"resource requirement rule 1",      // resource requirement rule name
-			"Cluster",                          // select cluster for resource check
-			"C0",                               // cluster name for resource check
-			"master-pool",                      // node pool name
-			"1",                                // number of nodes
-			"2GHz",                             // per node cpu
-			"4Gi",                              // per node memory
-			"10Gi",                             // per node storage
-			"y",                                // add another node pool
-			"worker-pool",                      // node pool name
-			"3",                                // number of nodes
-			"3GHz",                             // per node cpu
-			"8Gi",                              // per node memory
-			"20Gi",                             // per node storage
-			"n",                                // add more node pools
-			"n",                                // add more resource requirement checks
-			"y",                                // check tags on entities
-			"tag rule 1",                       // tag rule name
-			cfg.SpectroCloudTags,               // zone & region tags
+			"y",                              // Re-use validator chart security configuration
+			"vsphere-creds",                  // vSphere secret name
+			"fake.vsphere.com",               // vSphere domain
+			"bob@vsphere.com",                // vSphere username
+			"password",                       // vSphere password
+			"y",                              // insecure skip verify
+			"DC0",                            // datacenter
+			"y",                              // Enable NTP check
+			"ntpd",                           // NTP rule name
+			"y",                              // are hosts cluster scoped
+			"C0",                             // cluster name
+			"DC0_C0_H0",                      // host1
+			"y",                              // add more hosts
+			"DC0_C0_H1",                      // host2
+			"n",                              // add more hosts
+			"n",                              // add more validation rules
+			"y",                              // Check role privileges
+			"role rule 1",                    // Role privilege rule name
+			"user1@vsphere.local",            // user to check role privileges against
+			"System.Read",                    // role privilege
+			"y",                              // add another role privilege to this rule
+			"Alarm.Acknowledge",              // role privilege
+			"n",                              // add another role privilege to this rule
+			"n",                              // add another role privilege rule
+			"y",                              // check entity privileges
+			"entity rule 1",                  // entity privilege rule name
+			cfg.SpectroEntityPrivileges,      // entity level permissions
+			"Read folder: spectro-templates", // spectro entity permission
+			"user2@vsphere.local",            // user to check entity privileges against
+			"n",                              // add more entity permission checks
+			"y",                              // check compute resource requirements
+			"resource requirement rule 1",    // resource requirement rule name
+			"Cluster",                        // select cluster for resource check
+			"C0",                             // cluster name for resource check
+			"master-pool",                    // node pool name
+			"1",                              // number of nodes
+			"2GHz",                           // per node cpu
+			"4Gi",                            // per node memory
+			"10Gi",                           // per node storage
+			"y",                              // add another node pool
+			"worker-pool",                    // node pool name
+			"3",                              // number of nodes
+			"3GHz",                           // per node cpu
+			"8Gi",                            // per node memory
+			"20Gi",                           // per node storage
+			"n",                              // add more node pools
+			"n",                              // add more resource requirement checks
+			"y",                              // check tags on entities
+			"tag rule 1",                     // tag rule name
+			cfg.SpectroCloudTags,             // zone & region tags
 			"Cluster: k8s-zone (ensure that the selected cluster has a 'k8s-zone' tag)", // zone tag
 			"C0", // cluster name
 			"n",  // add another tag rule

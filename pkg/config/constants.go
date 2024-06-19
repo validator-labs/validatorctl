@@ -51,10 +51,7 @@ const (
 	ValidatorVsphereEntityVirtualMachine = "Virtual Machine"
 	ValidatorVsphereEntityVirtualApp     = "Virtual App"
 	ValidatorVsphereVersionConstraint    = ">= 6.0, < 9.0"
-	SpectroRootLevelPrivilegesV6_7       = "Spectro Root-level Role Privileges vSphere 6.7"
-	SpectroRootLevelPrivilegesV7_0       = "Spectro Root-level Role Privileges vSphere 7.0"
-	SpectroRootLevelPrivilegesV8_0       = "Spectro Root-level Role Privileges vSphere 8.0"
-	CustomPrivileges                     = "Custom Root-level Role Privileges vSphere"
+	ValidatorVsphereRolePrivilegeFiles   = "vsphere-root-level-privileges-all.yaml"
 	SpectroEntityPrivileges              = "Spectro Entity Privileges"
 	CustomEntityPrivileges               = "Custom Entity Privileges"
 	SpectroCloudTags                     = "Spectro Cloud Tags"
@@ -171,15 +168,6 @@ var (
 		},
 	}
 
-	ValidatorPluginVsphereRolePrivilegeChoices = []string{
-		SpectroRootLevelPrivilegesV6_7,
-		SpectroRootLevelPrivilegesV7_0,
-		SpectroRootLevelPrivilegesV8_0,
-		CustomPrivileges,
-	}
-	ValidatorPluginVsphereRolePrivilegeFiles = map[string]string{
-		CustomPrivileges: "vsphere-root-level-privileges-all.yaml",
-	}
 	ValidatorPluginVsphereEntityPrivilegeChoices = []string{
 		SpectroEntityPrivileges,
 		CustomEntityPrivileges,
