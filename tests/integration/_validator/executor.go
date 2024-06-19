@@ -8,12 +8,11 @@ import (
 	"github.com/validator-labs/validatorctl/tests/utils/test"
 )
 
-func Execute() error {
+func Execute(ctx *test.TestContext) error {
 	log.Printf("-----------------------------------")
 	log.Printf("--------- Validator Suite ----------")
 	log.Printf("-----------------------------------")
-	testCtx := test.NewTestContext()
-	return test.Flow(testCtx).
+	return test.Flow(ctx).
 		Test(common.NewSingleFuncTest("validator-test", validator.Execute)).
 		Summarize().TearDown().Audit()
 }
