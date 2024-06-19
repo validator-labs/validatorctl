@@ -16,7 +16,6 @@ HELM_VERSION ?= 3.14.0
 GOLANGCI_VERSION ?= 1.54.2
 KIND_VERSION ?= 0.20.0
 KUBECTL_VERSION ?= 1.24.10
-GH_INSTALL_DIR := $(shell echo $$PATH | tr ':' '\n' | grep -E '^/|^/home|^/usr/local/bin' | head -n 1)
 
 # Product Version
 VERSION_SUFFIX ?= -dev
@@ -152,8 +151,8 @@ docker:
 		@command -v docker >/dev/null 2>&1 || { \
 			echo "Docker not found, downloading..."; \
 			curl -L https://download.docker.com/$(PLATFORM)/static/stable/x86_64/docker-$(DOCKER_VERSION).tgz | tar xz docker/docker; \
-			mv docker/docker $(GH_INSTALL_DIR)/docker; \
-			chmod +x $(GH_INSTALL_DIR)/docker; \
+			mv docker/docker $(RUNNER_TOOL_CACHE)/docker; \
+			chmod +x $(RUNNER_TOOL_CACHE)/docker; \
 			rm -rf ./docker; \
 		} \
 	fi
@@ -162,8 +161,8 @@ kind:
 	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
 		@command -v kind >/dev/null 2>&1 || { \
 			echo "Kind not found, downloading..."; \
-			curl -Lo $(GH_INSTALL_DIR)/kind https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(GOOS)-$(GOARCH); \
-			chmod +x $(GH_INSTALL_DIR)/kind; \
+			curl -Lo $(RUNNER_TOOL_CACHE)/kind https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(GOOS)-$(GOARCH); \
+			chmod +x $(RUNNER_TOOL_CACHE)/kind; \
 		} \
 	fi
 
@@ -171,8 +170,8 @@ kubectl:
 	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
 		@command -v kubectl >/dev/null 2>&1 || { \
 			echo "Kubectl not found, downloading..."; \
-			curl -Lo $(GH_INSTALL_DIR)/kubectl https://dl.k8s.io/release/v$(KUBECTL_VERSION)/bin/$(GOOS)/$(GOARCH)/kubectl; \
-			chmod +x $(GH_INSTALL_DIR)/kubectl; \
+			curl -Lo $(RUNNER_TOOL_CACHE)/kubectl https://dl.k8s.io/release/v$(KUBECTL_VERSION)/bin/$(GOOS)/$(GOARCH)/kubectl; \
+			chmod +x $(RUNNER_TOOL_CACHE)/kubectl; \
 		} \
 	fi
 
@@ -181,9 +180,9 @@ helm:
 		@command -v helm >/dev/null 2>&1 || { \
 			echo "Helm not found, downloading..."; \
 			curl -L https://get.helm.sh/helm-v$(HELM_VERSION)-$(GOOS)-$(GOARCH).tar.gz | tar xz; \
-			mv $(GOOS)-$(GOARCH)/helm $(GH_INSTALL_DIR)/helm; \
+			mv $(GOOS)-$(GOARCH)/helm $(RUNNER_TOOL_CACHE)/helm; \
 			rm -rf ./$(GOOS)-$(GOARCH); \
-			chmod +x $(GH_INSTALL_DIR)/helm; \
+			chmod +x $(RUNNER_TOOL_CACHE)/helm; \
 		} \
 	fi
 
