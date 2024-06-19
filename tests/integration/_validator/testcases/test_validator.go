@@ -135,23 +135,24 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 }
 
 func (t *ValidatorTest) baseHelmValues(ctx *test.TestContext, tuiVals []string) []string {
-	tuiVals = append(tuiVals, []string{
+	baseVals := []string{
 		cfg.ValidatorHelmRepository, // validator helm chart repo
 		"y",                         // insecure skip verify
 		"y",                         // use basic auth
 		"bob",                       // release secret username
 		"dog",                       // release secret password
-	}...)
+	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		tuiVals = slices.Insert(tuiVals, 1,
+		baseVals = slices.Insert(baseVals, 1,
 			cfg.ValidatorChartVersions[cfg.Validator], // validator helm chart version
 		)
 	}
+	tuiVals = append(tuiVals, baseVals...)
 	return tuiVals
 }
 
 func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, tuiVals []string) []string {
-	tuiVals = append(tuiVals, []string{
+	awsVals := []string{
 		"y",                         // enable AWS plugin
 		cfg.ValidatorHelmRepository, // validator-plugin-aws helm chart repo
 		"y",                         // Re-use validator chart security configuration
@@ -184,17 +185,18 @@ func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, tuiVals []string)
 		"n",                         // add another subnet arn
 		"n",                         // add another subnet tag rule
 		"n",                         // add another tag rule
-	}...)
+	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		tuiVals = slices.Insert(tuiVals, 2,
+		awsVals = slices.Insert(awsVals, 2,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginAws], // validator-plugin-aws helm chart version
 		)
 	}
+	tuiVals = append(tuiVals, awsVals...)
 	return tuiVals
 }
 
 func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []string) []string {
-	tuiVals = append(tuiVals, []string{
+	azureVals := []string{
 		"y",                                    // enable plugin
 		cfg.ValidatorHelmRepository,            // helm chart repo
 		"n",                                    // Re-use validator chart security configuration
@@ -247,17 +249,18 @@ func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []strin
 		"n",                                    // add DataAction
 		"n",                                    // add permission set
 		"n",                                    // add RBAC rule
-	}...)
+	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		tuiVals = slices.Insert(tuiVals, 2,
+		azureVals = slices.Insert(azureVals, 2,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginAzure], // validator-plugin-azure helm chart version
 		)
 	}
+	tuiVals = append(tuiVals, azureVals...)
 	return tuiVals
 }
 
 func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, tuiVals []string) []string {
-	tuiVals = append(tuiVals, []string{
+	networkVals := []string{
 		"y",                         // enable Network plugin
 		cfg.ValidatorHelmRepository, // validator-plugin-network helm chart repo
 		"y",                         // Re-use validator chart security configuration
@@ -286,17 +289,18 @@ func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, tuiVals []str
 		"80",                        // TCP connection port
 		"n",                         // add another port
 		"n",                         // add another TCP connection rule
-	}...)
+	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		tuiVals = slices.Insert(tuiVals, 2,
+		networkVals = slices.Insert(networkVals, 2,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork], // validator-plugin-network helm chart version
 		)
 	}
+	tuiVals = append(tuiVals, networkVals...)
 	return tuiVals
 }
 
 func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, tuiVals []string) []string {
-	tuiVals = append(tuiVals, []string{
+	ociVals := []string{
 		"y",                         // enable OCI plugin
 		cfg.ValidatorHelmRepository, // validator-plugin-oci helm chart repo
 		"y",                         // Re-use validator chart security configuration
@@ -319,17 +323,18 @@ func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, tuiVals []string)
 		"N/A",                       // signature verification secret name
 		"",                          // ca certificate
 		"n",                         // add another registry rule
-	}...)
+	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		tuiVals = slices.Insert(tuiVals, 2,
+		ociVals = slices.Insert(ociVals, 2,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginOci], // validator-plugin-oci helm chart version
 		)
 	}
+	tuiVals = append(tuiVals, ociVals...)
 	return tuiVals
 }
 
 func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, tuiVals []string) []string {
-	tuiVals = append(tuiVals, []string{
+	vsphereVals := []string{
 		"y",                                // enable vsphere plugin
 		cfg.ValidatorHelmRepository,        // validator-plugin-vsphere helm chart repo
 		"y",                                // Re-use validator chart security configuration
@@ -382,12 +387,13 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, tuiVals []str
 		"Cluster: k8s-zone (ensure that the selected cluster has a 'k8s-zone' tag)", // zone tag
 		"C0", // cluster name
 		"n",  // add another tag rule
-	}...)
+	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		tuiVals = slices.Insert(tuiVals, 2,
+		vsphereVals = slices.Insert(vsphereVals, 2,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginVsphere], // validator-plugin-vsphere helm chart version
 		)
 	}
+	tuiVals = append(tuiVals, vsphereVals...)
 	return tuiVals
 }
 
