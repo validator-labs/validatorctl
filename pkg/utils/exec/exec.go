@@ -32,7 +32,7 @@ func CheckBinaries() error {
 		path, err := exec.LookPath(binary.name)
 		if err != nil {
 			hasAllBinaries = false
-			log.ErrorCLI(fmt.Sprintf("%s is not installed or not in your PATH. Please install %s.", binary.name, binary.name))
+			log.ErrorCLI(fmt.Sprintf("%s is not installed.\nPlease install the missing dependency and ensure it's available on your PATH.", binary.name))
 		}
 		*binary.path = path
 	}
