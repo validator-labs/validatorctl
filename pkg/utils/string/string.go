@@ -1,6 +1,10 @@
 package string
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/google/uuid"
+)
 
 func Capitalize(s string) string {
 	if len(s) == 1 {
@@ -17,4 +21,8 @@ func MultiTrim(str string, prefixes, suffixes []string) string {
 		str = strings.TrimSuffix(str, s)
 	}
 	return str
+}
+
+func RandStr(len int) string {
+	return uuid.NewString()[:len]
 }

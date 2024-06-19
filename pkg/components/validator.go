@@ -23,7 +23,7 @@ import (
 type ValidatorConfig struct {
 	Release          *validator.HelmRelease `yaml:"helmRelease"`
 	ReleaseSecret    *Secret                `yaml:"helmReleaseSecret"`
-	UseKindCluster   bool                   `yaml:"useKindCluster"`
+	KindConfig       KindConfig             `yaml:"kindConfig"`
 	Kubeconfig       string                 `yaml:"kubeconfig"`
 	SinkConfig       *SinkConfig            `yaml:"sinkConfig"`
 	ProxyConfig      *ProxyConfig           `yaml:"proxyConfig"`
@@ -42,7 +42,10 @@ func NewValidatorConfig() *ValidatorConfig {
 		// Base config
 		Release:       &validator.HelmRelease{},
 		ReleaseSecret: &Secret{},
-		SinkConfig:    &SinkConfig{},
+		KindConfig: KindConfig{
+			UseKindCluster: false,
+		},
+		SinkConfig: &SinkConfig{},
 		ProxyConfig: &ProxyConfig{
 			Env: &env.Env{},
 		},
@@ -162,6 +165,11 @@ func (c *ValidatorConfig) encrypt() error {
 	}
 
 	return nil
+}
+
+type KindConfig struct {
+	UseKindCluster  bool   `yaml:"useKindCluster"`
+	KindClusterName string `yaml:"kindClusterName"`
 }
 
 type ProxyConfig struct {

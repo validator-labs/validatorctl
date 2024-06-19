@@ -90,7 +90,7 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 		return nil
 	}
 
-	if vc.UseKindCluster {
+	if vc.KindConfig.UseKindCluster {
 		if err := createKindCluster(c, vc); err != nil {
 			return err
 		}
@@ -126,7 +126,7 @@ func UndeployValidatorCommand(taskConfig *cfg.TaskConfig, deleteCluster bool) er
 	}
 	log.InfoCLI("\nUninstalled validator and validator plugin(s) successfully")
 
-	if vc.UseKindCluster && deleteCluster {
+	if vc.KindConfig.UseKindCluster && deleteCluster {
 		return kind.DeleteCluster(cfg.ValidatorKindClusterName)
 	}
 
@@ -627,7 +627,11 @@ func createKindCluster(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if err := kind.AdvancedConfig(vc.ProxyConfig.Env, clusterConfig); err != nil {
 		return err
 	}
-	if err := kind.StartCluster(cfg.ValidatorKindClusterName, clusterConfig, vc.Kubeconfig); err != nil {
+	kindClusterName := vc.KindConfig.KindClusterName
+	if kindClusterName == "" {
+		kindClusterName = cfg.ValidatorKindClusterName
+	}
+	if err := kind.StartCluster(kindClusterName, clusterConfig, vc.Kubeconfig); err != nil {
 		return errors.Wrap(err, "failed to start validator kind cluster")
 	}
 	if err := os.Setenv("KUBECONFIG", vc.Kubeconfig); err != nil {
