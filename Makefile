@@ -56,15 +56,13 @@ build: ## Build CLI
 
 PLATFORMS ?= linux/amd64 darwin/arm64 windows/amd64
 build-release:  ## Build CLI for multiple platforms
-	for platform in $(PLATFORMS); do \
-		platform_split=($${platform//\// }); \
-		GOOS=$${platform_split[0]}; \
-		GOARCH=$${platform_split[1]}; \
-		echo "Building CLI for $${GOOS}/$${GOARCH}..."; \
-		CGO_ENABLED=0 GOOS=$${GOOS} GOARCH=$${GOARCH} go build -ldflags " \
-		  -X github.com/validator-labs/validatorctl/cmd.Version=$(VERSION)" \
-		  -a -o bin/validator-$${GOOS}-$${GOARCH} validator.go; \
-	done
+	$(foreach platform,$(PLATFORMS),\
+		$(eval GOOS=$(word 1,$(subst /, ,$(platform)))) \
+		$(eval GOARCH=$(word 2,$(subst /, ,$(platform)))) \
+		echo "Building CLI for $(GOOS)/$(GOARCH)..."; \
+		CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags " \
+			-X github.com/validator-labs/validatorctl/cmd.Version=$(VERSION)" \
+			-a -o bin/validator-$(GOOS)-$(GOARCH) validator.go;)
 
 ##@ Static Analysis Targets
 fmt:  ## Run go fmt
