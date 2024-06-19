@@ -178,10 +178,7 @@ var (
 		CustomPrivileges,
 	}
 	ValidatorPluginVsphereRolePrivilegeFiles = map[string]string{
-		SpectroRootLevelPrivilegesV6_7: "vsphere-root-level-privileges-7.0.yaml",
-		SpectroRootLevelPrivilegesV7_0: "vsphere-root-level-privileges-7.0.yaml",
-		SpectroRootLevelPrivilegesV8_0: "vsphere-root-level-privileges-8.0.yaml",
-		CustomPrivileges:               "vsphere-root-level-privileges-all.yaml",
+		CustomPrivileges: "vsphere-root-level-privileges-all.yaml",
 	}
 	ValidatorPluginVsphereEntityPrivilegeChoices = []string{
 		SpectroEntityPrivileges,
