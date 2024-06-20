@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"emperror.dev/errors"
+	awspolicy "github.com/L30Bola/aws-policy"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
@@ -147,7 +148,7 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 			return err
 		}
 
-		var policyDoc string
+		var policyBytes []byte
 		if inputType == "Local Filepath" {
 			policyFile, err := prompts.ReadFilePath("Policy Document Filepath", "", "Invalid policy document path", false)
 			if err != nil {
@@ -160,25 +161,30 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 			}
 			defer file.Close()
 
-			contents, err := os.ReadFile(policyFile)
+			policyBytes, err = os.ReadFile(policyFile)
 			if err != nil {
 				return err
 			}
-			policyDoc = string(contents)
-
 		} else {
 			log.InfoCLI("Configure Policy Document")
 			time.Sleep(2 * time.Second)
-			policyDoc, err = prompts.EditFileValidated(cfg.AWSPolicyDocumentPrompt, "", ",", prompts.ValidateJson, 1)
+			policyFile, err := prompts.EditFileValidated(cfg.AWSPolicyDocumentPrompt, "", ",", prompts.ValidateJson, 1)
 			if err != nil {
 				return err
 			}
+			policyBytes = []byte(policyFile)
 		}
-		// TODO: read the json and setup the policy document from it
-		fmt.Println(policyDoc)
 
-		// TODO: append the actual policy we generated instead of the empty one
-		r.Policies = append(r.Policies, vpawsapi.PolicyDocument{})
+		var policy awspolicy.Policy
+		policy.UnmarshalJSON(policyBytes)
+
+		policyDoc := vpawsapi.PolicyDocument{
+			Name:       policy.ID,
+			Version:    policy.Version,
+			Statements: convertStatements(policy.Statements),
+		}
+
+		r.Policies = append(r.Policies, policyDoc)
 		addPolicies, err = prompts.ReadBool("Add another policy document", false)
 		if err != nil {
 			return err
@@ -190,6 +196,23 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 		c.Validator.IamRoleRules[idx] = *r
 	}
 	return nil
+}
+
+// Convert statements from awspolicy to v1alpha1
+func convertStatements(statements []awspolicy.Statement) []vpawsapi.StatementEntry {
+	var result []vpawsapi.StatementEntry
+	for _, s := range statements {
+		result = append(result, vpawsapi.StatementEntry{
+			// TODO: once plugin is updated to define Condition type as
+			// type Condition map[string]map[string][]string
+			// this should just work
+			Condition: s.Condition,
+			Effect:    s.Effect,
+			Actions:   s.Action,
+			Resources: s.Resource,
+		})
+	}
+	return result
 }
 
 func configureServiceQuotaRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
