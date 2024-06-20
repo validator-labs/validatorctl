@@ -185,8 +185,8 @@ github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ
 github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
 github.com/sourcegraph/conc v0.3.0 h1:OQTbbt6P72L20UqAkXXuLOj79LfEanQ+YQFNpLA9ySo=
 github.com/sourcegraph/conc v0.3.0/go.mod h1:Sdozi7LEKbFPqYX2/J+iBAM6HpqSLTASQIKqDmF7Mt0=
-github.com/spectrocloud-labs/prompts-tui v0.0.0-20240612005257-a77002b81385 h1:UF43njU0MHJzlxKk7dJSr5ifIVMa283HzxPs2XEN/Iw=
-github.com/spectrocloud-labs/prompts-tui v0.0.0-20240612005257-a77002b81385/go.mod h1:XCvyEc3OLxKVXNLbOGZJOR6PiktfWqjYdrwU+ymCmLQ=
+github.com/spectrocloud-labs/prompts-tui v0.0.0-20240620192025-3f0e83e994ec h1:N1JCso2Wg7GvG/xC4UzYB12jV2y0J2fhrV9BJ1ALkE0=
+github.com/spectrocloud-labs/prompts-tui v0.0.0-20240620192025-3f0e83e994ec/go.mod h1:XCvyEc3OLxKVXNLbOGZJOR6PiktfWqjYdrwU+ymCmLQ=
 github.com/spf13/afero v1.11.0 h1:WJQKhtpdm3v2IzqG8VMqrr6Rf3UYpEF239Jy9wNepM8=
 github.com/spf13/afero v1.11.0/go.mod h1:GH9Y3pIexgf1MTIWtNGyogA5MwRIDXGUr+hbWNoBjkY=
 github.com/spf13/cast v1.3.1/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkUJE=
