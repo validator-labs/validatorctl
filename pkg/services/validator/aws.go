@@ -2,7 +2,9 @@ package validator
 
 import (
 	"fmt"
+	"os"
 	"reflect"
+	"time"
 
 	"emperror.dev/errors"
 	"k8s.io/client-go/kubernetes"
@@ -145,23 +147,35 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 			return err
 		}
 
+		var policyDoc string
 		if inputType == "Filepath" {
 			policyFile, err := prompts.ReadFilePath("Policy Document Filepath", "", "Invalid policy document path", false)
 			if err != nil {
 				return err
 			}
-			fmt.Println(policyFile)
-			// TODO: read the files json and setup the policy document from it
-		} else {
-			// TODO: make sure this pops up a window to paste the policy document json
-			policy, err := prompts.ReadText("Policy Document", "", false, -1)
+
+			file, err := os.Open(policyFile)
 			if err != nil {
 				return err
 			}
-			fmt.Println(policy)
+			defer file.Close()
 
-			// TODO: read the json and setp the policy document from it
+			contents, err := os.ReadFile(policyFile)
+			if err != nil {
+				return err
+			}
+			policyDoc = string(contents)
+
+		} else {
+			log.InfoCLI("Configure Policy Document")
+			time.Sleep(2 * time.Second)
+			policyDoc, err = prompts.EditFileValidated(cfg.AWSPolicyDocumentPrompt, "", ",", prompts.ValidateJson, 1)
+			if err != nil {
+				return err
+			}
 		}
+		// TODO: read the json and setp the policy document from it
+		fmt.Println(policyDoc)
 
 		// TODO: append the actual policy we generated instead of the empty one
 		r.Policies = append(r.Policies, vpawsapi.PolicyDocument{})
