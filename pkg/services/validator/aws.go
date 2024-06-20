@@ -142,13 +142,13 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 
 	addPolicies := true
 	for addPolicies {
-		inputType, err := prompts.Select("Add policy document via", []string{"Filepath", "Text"})
+		inputType, err := prompts.Select("Add policy document via", []string{"Local Filepath", "File Editor"})
 		if err != nil {
 			return err
 		}
 
 		var policyDoc string
-		if inputType == "Filepath" {
+		if inputType == "Local Filepath" {
 			policyFile, err := prompts.ReadFilePath("Policy Document Filepath", "", "Invalid policy document path", false)
 			if err != nil {
 				return err
@@ -174,7 +174,7 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 				return err
 			}
 		}
-		// TODO: read the json and setp the policy document from it
+		// TODO: read the json and setup the policy document from it
 		fmt.Println(policyDoc)
 
 		// TODO: append the actual policy we generated instead of the empty one
