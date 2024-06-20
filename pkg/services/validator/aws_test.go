@@ -21,7 +21,6 @@ var awsDummyConfig = &components.ValidatorConfig{
 			Chart: v1alpha1.HelmChart{},
 		},
 		ReleaseSecret: &components.Secret{},
-		IamCheck:      &components.IamCheck{},
 		Validator: &aws.AwsValidatorSpec{
 			Auth: aws.AwsAuth{},
 		},

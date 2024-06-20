@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"fmt"
 	"reflect"
 
 	"emperror.dev/errors"
@@ -23,7 +24,7 @@ var (
 )
 
 type awsRule interface {
-	*vpawsapi.ServiceQuotaRule | *vpawsapi.TagRule
+	*vpawsapi.ServiceQuotaRule | *vpawsapi.TagRule | *vpawsapi.IamRoleRule
 }
 
 func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
@@ -47,9 +48,17 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 
 	ruleNames := make([]string, 0)
 
-	if err := configureIamRule(c); err != nil {
+	if err := configureIamRoleRules(c, &ruleNames); err != nil {
 		return err
 	}
+
+	// TODO: configureIamUserRules
+
+	// TODO: configureIamGroupRules
+
+	// TODO: configureIamPolicyRules
+
+	// add policies
 	if err := configureServiceQuotaRules(c, &ruleNames); err != nil {
 		return err
 	}
@@ -57,41 +66,115 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 		return err
 	}
 
-	if !c.IamCheck.Enabled && c.Validator.ResultCount() == 0 {
+	if c.Validator.ResultCount() == 0 {
 		return errNoRulesEnabled
 	}
 	return nil
 }
 
-func configureIamRule(c *components.AWSPluginConfig) error {
+func configureIamRoleRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
-	AWS IAM validation ensures that a certain IAM Role has every permission
-	specified in one of Spectro Cloud's predefined IAM policies.
-
-	Different permission sets are required to deploy clusters via Spectro Cloud,
-	depending on placement type (static vs. dynamic) and other factors.
+	AWS IAM Role validation ensures that specified IAM Roles have every permission
+	specified in the passed in policy documents.
 	`)
 
-	var err error
-	c.IamCheck.Enabled, err = prompts.ReadBool("Enable IAM validation", true)
+	validateRoles, err := prompts.ReadBool("Enable Iam Role validation", true)
 	if err != nil {
 		return err
 	}
-	if !c.IamCheck.Enabled {
+	if !validateRoles {
+		c.Validator.IamRoleRules = nil
 		return nil
 	}
-	if c.IamCheck.IamRoleName != "" {
-		iamRole = c.IamCheck.IamRoleName
+	for i, r := range c.Validator.IamRoleRules {
+		r := r
+		if err := readIamRoleRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
 	}
-	c.IamCheck.IamRoleName, err = prompts.ReadText("IAM Role Name", iamRole, false, -1)
+	addRules := true
+	if c.Validator.IamRoleRules == nil {
+		c.Validator.IamRoleRules = make([]vpawsapi.IamRoleRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another role rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readIamRoleRule(c, nil, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another role rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx int, ruleNames *[]string) error {
+	if r == nil {
+		r = &vpawsapi.IamRoleRule{
+			IamRoleName: "",
+			Policies:    []vpawsapi.PolicyDocument{},
+		}
+	}
+	err := initAwsRule(r, "iam role rule", ruleNames)
 	if err != nil {
 		return err
 	}
-	checkType, err := prompts.Select("IAM check type", cfg.ValidatorIamCheckTypes())
-	if err != nil {
-		return err
+	if r.IamRoleName == "" {
+		roleName, err := prompts.ReadText("IAM Role Name", "", false, -1)
+		if err != nil {
+			return err
+		}
+		r.IamRoleName = roleName
 	}
-	c.IamCheck.Type = cfg.IamCheckType(checkType)
+
+	addPolicies := true
+	for addPolicies {
+		inputType, err := prompts.Select("Add policy document via", []string{"Filepath", "Text"})
+		if err != nil {
+			return err
+		}
+
+		if inputType == "Filepath" {
+			policyFile, err := prompts.ReadFilePath("Policy Document Filepath", "", "Invalid policy document path", false)
+			if err != nil {
+				return err
+			}
+			fmt.Println(policyFile)
+			// TODO: read the files json and setup the policy document from it
+		} else {
+			// TODO: make sure this pops up a window to paste the policy document json
+			policy, err := prompts.ReadText("Policy Document", "", false, -1)
+			if err != nil {
+				return err
+			}
+			fmt.Println(policy)
+
+			// TODO: read the json and setp the policy document from it
+		}
+
+		// TODO: append the actual policy we generated instead of the empty one
+		r.Policies = append(r.Policies, vpawsapi.PolicyDocument{})
+		addPolicies, err = prompts.ReadBool("Add another policy document", false)
+		if err != nil {
+			return err
+		}
+	}
+	if idx == -1 {
+		c.Validator.IamRoleRules = append(c.Validator.IamRoleRules, *r)
+	} else {
+		c.Validator.IamRoleRules[idx] = *r
+	}
 	return nil
 }
 

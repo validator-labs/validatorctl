@@ -1,14 +1,10 @@
 package config
 
 import (
-	"slices"
-
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	vtypes "github.com/validator-labs/validator/pkg/types"
 )
-
-type IamCheckType string
 
 const (
 	ConfigFile   = "validator.yaml"
@@ -37,11 +33,6 @@ const (
 	ValidatorPluginNetworkTemplate = "validator-rules-network.tmpl"
 	ValidatorPluginOciTemplate     = "validator-rules-oci.tmpl"
 	ValidatorPluginVsphereTemplate = "validator-rules-vsphere.tmpl"
-
-	IamCheckTypeBase           IamCheckType = "Base"
-	IamCheckTypeEks            IamCheckType = "EKS"
-	IamCheckTypeMinimalDynamic IamCheckType = "Minimal-Dynamic"
-	IamCheckTypeMinimalStatic  IamCheckType = "Minimal-Static"
 
 	ValidatorVsphereEntityDatacenter     = "Datacenter"
 	ValidatorVsphereEntityCluster        = "Cluster"
@@ -112,12 +103,6 @@ var (
 	ValidatorPluginVsphereKeys                 = []string{"username", "password", "vcenterServer", "insecureSkipVerify"}
 	ValidatorPluginOciSigVerificationKeysRegex = ".pub$"
 
-	ValidatorPluginAwsIamMap = map[IamCheckType]string{
-		IamCheckTypeBase:           "awsvalidator-iam-role-spectro-cloud-base.tmpl",
-		IamCheckTypeEks:            "awsvalidator-iam-role-spectro-cloud-eks.tmpl",
-		IamCheckTypeMinimalDynamic: "awsvalidator-iam-role-spectro-cloud-minimal-dynamic.tmpl",
-		IamCheckTypeMinimalStatic:  "awsvalidator-iam-role-spectro-cloud-minimal-static.tmpl",
-	}
 	ValidatorPluginAwsServiceQuotas = []prompts.ChoiceItem{
 		{
 			ID:   "ec2",
@@ -321,12 +306,3 @@ var (
 		"Microsoft.Compute/galleries/images/versions/write",
 	}
 )
-
-func ValidatorIamCheckTypes() []string {
-	checkTypes := make([]string, 0)
-	for k := range ValidatorPluginAwsIamMap {
-		checkTypes = append(checkTypes, string(k))
-	}
-	slices.Sort(checkTypes)
-	return checkTypes
-}
