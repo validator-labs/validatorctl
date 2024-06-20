@@ -11,7 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pterm/pterm v0.12.79
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spectrocloud-labs/prompts-tui v0.0.0-20240612005257-a77002b81385
+	github.com/spectrocloud-labs/prompts-tui v0.0.0-20240620192025-3f0e83e994ec
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/validator-labs/validator v0.0.42
@@ -23,7 +23,6 @@ require (
 	github.com/vmware/govmomi v0.37.3
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.30.2
 	k8s.io/apimachinery v0.30.2
 	k8s.io/client-go v0.30.2
@@ -97,6 +96,7 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.30.1 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240521193020-835d969ad83a // indirect
