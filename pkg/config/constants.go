@@ -80,12 +80,12 @@ var (
 	PlacementTypes       = []string{PlacementTypeStatic, PlacementTypeDynamic}
 
 	ValidatorChartVersions = map[string]string{
-		Validator:              "v0.0.42",
-		ValidatorPluginAws:     "v0.0.26",
+		Validator:              "v0.0.43",
+		ValidatorPluginAws:     "v0.1.0",
 		ValidatorPluginAzure:   "v0.0.11",
-		ValidatorPluginNetwork: "v0.0.16",
-		ValidatorPluginVsphere: "v0.0.24",
+		ValidatorPluginNetwork: "v0.0.17",
 		ValidatorPluginOci:     "v0.0.10",
+		ValidatorPluginVsphere: "v0.0.26",
 	}
 
 	ValidatorWaitCmd              = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-controller-manager", "-n", "validator"}
