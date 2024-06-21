@@ -62,6 +62,7 @@ const (
 	CPUReqRegex          = "(^\\d+\\.?\\d*[M,G]Hz)"
 	MemoryReqRegex       = "(^\\d+\\.?\\d*[M,G,T]i)"
 	DiskReqRegex         = "(^\\d+\\.?\\d*[M,G,T]i)"
+	PolicyArnRegex       = "^arn:aws:iam::.*:policy/.*$"
 )
 
 var (
