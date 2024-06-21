@@ -14,7 +14,7 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.0.0-20240620192025-3f0e83e994ec
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.0.42
+	github.com/validator-labs/validator v0.0.43
 	github.com/validator-labs/validator-plugin-aws v0.0.26
 	github.com/validator-labs/validator-plugin-azure v0.0.11
 	github.com/validator-labs/validator-plugin-network v0.0.17
@@ -98,7 +98,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.30.1 // indirect
-	k8s.io/klog/v2 v2.120.1 // indirect
+	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240521193020-835d969ad83a // indirect
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0 // indirect
 	sigs.k8s.io/cluster-api v1.7.3 // indirect
