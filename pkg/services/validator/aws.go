@@ -1,7 +1,6 @@
 package validator
 
 import (
-	"fmt"
 	"os"
 	"reflect"
 	"time"
@@ -203,10 +202,7 @@ func convertStatements(statements []awspolicy.Statement) []vpawsapi.StatementEnt
 	var result []vpawsapi.StatementEntry
 	for _, s := range statements {
 		result = append(result, vpawsapi.StatementEntry{
-			// TODO: once plugin is updated to define Condition type as
-			// type Condition map[string]map[string][]string
-			// this should just work
-			Condition: s.Condition,
+			Condition: vpawsapi.Condition(s.Condition),
 			Effect:    s.Effect,
 			Actions:   s.Action,
 			Resources: s.Resource,
