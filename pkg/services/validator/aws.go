@@ -53,6 +53,11 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 	if err := configureIamRoleRules(c, &ruleNames); err != nil {
 		return err
 	}
+	/*
+		if err := configureIamUserRules(c, &ruleNames); err != nil {
+			return err
+		}
+	*/
 
 	// TODO: configureIamUserRules
 
@@ -142,45 +147,9 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 
 	addPolicies := true
 	for addPolicies {
-		inputType, err := prompts.Select("Add policy document via", []string{"Local Filepath", "File Editor"})
+		policyDoc, err := readIamPolicy()
 		if err != nil {
 			return err
-		}
-
-		var policyBytes []byte
-		if inputType == "Local Filepath" {
-			policyFile, err := prompts.ReadFilePath("Policy Document Filepath", "", "Invalid policy document path", false)
-			if err != nil {
-				return err
-			}
-
-			file, err := os.Open(policyFile)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
-
-			policyBytes, err = os.ReadFile(policyFile)
-			if err != nil {
-				return err
-			}
-		} else {
-			log.InfoCLI("Configure Policy Document")
-			time.Sleep(2 * time.Second)
-			policyFile, err := prompts.EditFileValidatedByFullContent(cfg.AWSPolicyDocumentPrompt, "", prompts.ValidateJson, 1)
-			if err != nil {
-				return err
-			}
-			policyBytes = []byte(policyFile)
-		}
-
-		var policy awspolicy.Policy
-		policy.UnmarshalJSON(policyBytes)
-
-		policyDoc := vpawsapi.PolicyDocument{
-			Name:       policy.ID,
-			Version:    policy.Version,
-			Statements: convertStatements(policy.Statements),
 		}
 
 		r.Policies = append(r.Policies, policyDoc)
@@ -195,6 +164,50 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 		c.Validator.IamRoleRules[idx] = *r
 	}
 	return nil
+}
+
+func readIamPolicy() (vpawsapi.PolicyDocument, error) {
+	policyDoc := vpawsapi.PolicyDocument{}
+	inputType, err := prompts.Select("Add policy document via", []string{"Local Filepath", "File Editor"})
+	if err != nil {
+		return policyDoc, err
+	}
+
+	var policyBytes []byte
+	if inputType == "Local Filepath" {
+		policyFile, err := prompts.ReadFilePath("Policy Document Filepath", "", "Invalid policy document path", false)
+		if err != nil {
+			return policyDoc, err
+		}
+
+		file, err := os.Open(policyFile)
+		if err != nil {
+			return policyDoc, err
+		}
+		defer file.Close()
+
+		policyBytes, err = os.ReadFile(policyFile)
+		if err != nil {
+			return policyDoc, err
+		}
+	} else {
+		log.InfoCLI("Configure Policy Document")
+		time.Sleep(2 * time.Second)
+		policyFile, err := prompts.EditFileValidatedByFullContent(cfg.AWSPolicyDocumentPrompt, "", prompts.ValidateJson, 1)
+		if err != nil {
+			return policyDoc, err
+		}
+		policyBytes = []byte(policyFile)
+	}
+
+	var policy awspolicy.Policy
+	policy.UnmarshalJSON(policyBytes)
+
+	policyDoc.Name = policy.ID
+	policyDoc.Version = policy.Version
+	policyDoc.Statements = convertStatements(policy.Statements)
+
+	return policyDoc, nil
 }
 
 // Convert statements from awspolicy to v1alpha1
