@@ -26,7 +26,7 @@ var (
 )
 
 type awsRule interface {
-	*vpawsapi.ServiceQuotaRule | *vpawsapi.TagRule | *vpawsapi.IamRoleRule | *vpawsapi.IamUserRule
+	*vpawsapi.ServiceQuotaRule | *vpawsapi.TagRule | *vpawsapi.IamRoleRule | *vpawsapi.IamUserRule | *vpawsapi.IamGroupRule
 }
 
 func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
@@ -56,10 +56,10 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 	if err := configureIamUserRules(c, &ruleNames); err != nil {
 		return err
 	}
+	if err := configureIamGroupRules(c, &ruleNames); err != nil {
+		return err
+	}
 	/*
-		if err := configureIamGroupRules(c, &ruleNames); err != nil {
-			return err
-		}
 		if err := configureIamPolicyRules(c, &ruleNames); err != nil {
 			return err
 		}
@@ -170,11 +170,11 @@ func configureIamUserRules(c *components.AWSPluginConfig, ruleNames *[]string) e
 	specified in the passed in policy documents.
 	`)
 
-	validateRoles, err := prompts.ReadBool("Enable Iam User validation", true)
+	validateUsers, err := prompts.ReadBool("Enable Iam User validation", true)
 	if err != nil {
 		return err
 	}
-	if !validateRoles {
+	if !validateUsers {
 		c.Validator.IamUserRules = nil
 		return nil
 	}
@@ -247,6 +247,93 @@ func readIamUserRule(c *components.AWSPluginConfig, r *vpawsapi.IamUserRule, idx
 		c.Validator.IamUserRules = append(c.Validator.IamUserRules, *r)
 	} else {
 		c.Validator.IamUserRules[idx] = *r
+	}
+	return nil
+}
+
+func configureIamGroupRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
+	log.InfoCLI(`
+	AWS IAM Group validation ensures that specified IAM Groups have every permission
+	specified in the passed in policy documents.
+	`)
+
+	validateGroups, err := prompts.ReadBool("Enable Iam Group validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateGroups {
+		c.Validator.IamGroupRules = nil
+		return nil
+	}
+	for i, r := range c.Validator.IamGroupRules {
+		r := r
+		if err := readIamGroupRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.Validator.IamGroupRules == nil {
+		c.Validator.IamGroupRules = make([]vpawsapi.IamGroupRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another group rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readIamGroupRule(c, nil, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another group rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readIamGroupRule(c *components.AWSPluginConfig, r *vpawsapi.IamGroupRule, idx int, ruleNames *[]string) error {
+	if r == nil {
+		r = &vpawsapi.IamGroupRule{
+			IamGroupName: "",
+			Policies:     []vpawsapi.PolicyDocument{},
+		}
+	}
+	err := initAwsRule(r, "iam group rule", ruleNames)
+	if err != nil {
+		return err
+	}
+	if r.IamGroupName == "" {
+		groupName, err := prompts.ReadText("IAM Group Name", "", false, -1)
+		if err != nil {
+			return err
+		}
+		r.IamGroupName = groupName
+	}
+
+	addPolicies := true
+	for addPolicies {
+		policyDoc, err := readIamPolicy()
+		if err != nil {
+			return err
+		}
+
+		r.Policies = append(r.Policies, policyDoc)
+		addPolicies, err = prompts.ReadBool("Add another policy document", false)
+		if err != nil {
+			return err
+		}
+	}
+	if idx == -1 {
+		c.Validator.IamGroupRules = append(c.Validator.IamGroupRules, *r)
+	} else {
+		c.Validator.IamGroupRules[idx] = *r
 	}
 	return nil
 }
