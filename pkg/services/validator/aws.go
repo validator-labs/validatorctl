@@ -167,7 +167,7 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 		} else {
 			log.InfoCLI("Configure Policy Document")
 			time.Sleep(2 * time.Second)
-			policyFile, err := prompts.EditFileValidated(cfg.AWSPolicyDocumentPrompt, "", ",", prompts.ValidateJson, 1)
+			policyFile, err := prompts.EditFileValidatedByFullContent(cfg.AWSPolicyDocumentPrompt, "", prompts.ValidateJson, 1)
 			if err != nil {
 				return err
 			}

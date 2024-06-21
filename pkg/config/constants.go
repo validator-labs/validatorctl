@@ -47,7 +47,7 @@ const (
 	CustomVsphereTags                    = "Custom vSphere Tags"
 	SpectroCloudTagsFile                 = "vsphere-spectro-cloud-tags.yaml"
 
-	AWSPolicyDocumentPrompt = "# Provide the AWS policy document for IAM validation rule. The policy document should be in JSON format. Ensure this line is deleted before saving and exiting. Type :wq to save and exit (if using vi).\n"
+	AWSPolicyDocumentPrompt = "# Provide the AWS policy document for IAM validation rule. The policy document should be in JSON format. Type :wq to save and exit (if using vi).\n"
 
 	DefaultStorageClassAnnotation string = "storageclass.kubernetes.io/is-default-class"
 
