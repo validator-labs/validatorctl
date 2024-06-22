@@ -1,0 +1,24 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Statement1",
+            "Effect": "Allow",
+            "Action": [
+                "sts:GetCallerIdentity"
+            ],
+            "Resource": [
+                "*"
+            ],
+            "Condition": {
+                "StringEqualsIgnoreCase": {
+                    "aws:ResourceTag/myKey": "myValue",
+                    "aws:UserAgent": "my-user-agent"
+                },
+                "IpAddress": {
+                    "aws:SourceIp": "123.123.123.123"
+                }
+            }
+        }
+    ]
+}

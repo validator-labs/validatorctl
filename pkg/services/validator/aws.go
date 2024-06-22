@@ -129,7 +129,7 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 			Policies:    []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "iam role rule", ruleNames)
+	err := initAwsRule(r, "iam role", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func readIamUserRule(c *components.AWSPluginConfig, r *vpawsapi.IamUserRule, idx
 			Policies:    []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "iam user rule", ruleNames)
+	err := initAwsRule(r, "iam user", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -303,7 +303,7 @@ func readIamGroupRule(c *components.AWSPluginConfig, r *vpawsapi.IamGroupRule, i
 			Policies:     []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "iam group rule", ruleNames)
+	err := initAwsRule(r, "iam group", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -390,7 +390,7 @@ func readIamPolicyRule(c *components.AWSPluginConfig, r *vpawsapi.IamPolicyRule,
 			Policies:     []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "iam policy rule", ruleNames)
+	err := initAwsRule(r, "iam policy", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -674,6 +674,10 @@ func readAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernetes.Inte
 func initAwsRule[R awsRule](r R, ruleType string, ruleNames *[]string) error {
 	name := reflect.ValueOf(r).Elem().FieldByName("Name").String()
 	if name != "" {
+		// not all awsRules have a Name field, for now we can create a unique name for them
+		if name == "<invalid Value>" {
+			name = ruleType + " - " + time.Now().Format("20060102T150405.000000000")
+		}
 		log.InfoCLI("Reconfiguring %s rule: %s", ruleType, name)
 		*ruleNames = append(*ruleNames, name)
 	} else {

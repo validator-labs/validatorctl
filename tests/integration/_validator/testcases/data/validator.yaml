@@ -49,10 +49,6 @@ awsPlugin:
     exists: false
   accessKeyId: a0XCQd+Emx7/bwAaTyY13ipTRychb4MiQw==
   secretAccessKey: IrGIW8FPVuOxVDRWQUdTa22SDf1MQ2PBw0kdngVq+w==
-  iamCheck:
-    enabled: true
-    iamRoleName: SpectroCloudRole
-    type: Base
   validator:
     auth:
       implicit: false
@@ -62,6 +58,86 @@ awsPlugin:
         roleSessionName: abc
         durationSeconds: 3600
     defaultRegion: us-west-2
+    iamRoleRules:
+    - iamRoleName: SpectroCloudRole
+      iamPolicies:
+      - name: ""
+        version: "2012-10-17"
+        statements:
+        - condition:
+            IpAddress:
+              aws:SourceIp:
+              - 123.123.123.123
+            StringEqualsIgnoreCase:
+              aws:ResourceTag/myKey:
+              - myValue
+              aws:UserAgent:
+              - my-user-agent
+          effect: Allow
+          actions:
+          - sts:GetCallerIdentity
+          resources:
+          - '*'
+    iamUserRules:
+    - iamUserName: SpectroCloudUser
+      iamPolicies:
+      - name: ""
+        version: "2012-10-17"
+        statements:
+        - condition:
+            IpAddress:
+              aws:SourceIp:
+              - 123.123.123.123
+            StringEqualsIgnoreCase:
+              aws:ResourceTag/myKey:
+              - myValue
+              aws:UserAgent:
+              - my-user-agent
+          effect: Allow
+          actions:
+          - sts:GetCallerIdentity
+          resources:
+          - '*'
+    iamGroupRules:
+    - iamGroupName: SpectroCloudGroup
+      iamPolicies:
+      - name: ""
+        version: "2012-10-17"
+        statements:
+        - condition:
+            IpAddress:
+              aws:SourceIp:
+              - 123.123.123.123
+            StringEqualsIgnoreCase:
+              aws:ResourceTag/myKey:
+              - myValue
+              aws:UserAgent:
+              - my-user-agent
+          effect: Allow
+          actions:
+          - sts:GetCallerIdentity
+          resources:
+          - '*'
+    iamPolicyRules:
+    - iamPolicyArn: arn:aws:iam::account-num:policy/some-policy
+      iamPolicies:
+      - name: ""
+        version: "2012-10-17"
+        statements:
+        - condition:
+            IpAddress:
+              aws:SourceIp:
+              - 123.123.123.123
+            StringEqualsIgnoreCase:
+              aws:ResourceTag/myKey:
+              - myValue
+              aws:UserAgent:
+              - my-user-agent
+          effect: Allow
+          actions:
+          - sts:GetCallerIdentity
+          resources:
+          - '*'
     serviceQuotaRules:
     - name: EC2
       region: us-west-2
