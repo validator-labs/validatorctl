@@ -20,7 +20,6 @@ import (
 
 var (
 	region             = "us-east-1"
-	iamRole            = "SpectroCloudRole"
 	stsDurationSeconds = "3600"
 	awsSecretName      = "aws-creds"
 )

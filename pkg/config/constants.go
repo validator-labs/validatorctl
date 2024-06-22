@@ -43,9 +43,6 @@ const (
 	ValidatorVsphereEntityVirtualApp     = "Virtual App"
 	ValidatorVsphereVersionConstraint    = ">= 6.0, < 9.0"
 	ValidatorVspherePrivilegeFile        = "vsphere-root-level-privileges-all.yaml"
-	SpectroCloudTags                     = "Spectro Cloud Tags"
-	CustomVsphereTags                    = "Custom vSphere Tags"
-	SpectroCloudTagsFile                 = "vsphere-spectro-cloud-tags.yaml"
 
 	AWSPolicyDocumentPrompt = "# Provide the AWS policy document for IAM validation rule. The policy document should be in JSON format. Type :wq to save and exit (if using vi).\n"
 
@@ -176,7 +173,6 @@ var (
 		ValidatorVsphereEntityHost,
 		ValidatorVsphereEntityResourcePool,
 	}
-	ValidatorPluginVsphereTagChoices = []string{SpectroCloudTags, CustomVsphereTags}
 
 	ValidatorAzurePluginStaticPlacementResourceGroupLevelActions = []string{
 		"Microsoft.Compute/disks/delete",
