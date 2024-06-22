@@ -437,13 +437,13 @@ func readIamPolicy() (vpawsapi.PolicyDocument, error) {
 			return policyDoc, err
 		}
 
-		file, err := os.Open(policyFile)
+		file, err := os.Open(policyFile) //#nosec
 		if err != nil {
 			return policyDoc, err
 		}
 		defer file.Close()
 
-		policyBytes, err = os.ReadFile(policyFile)
+		policyBytes, err = os.ReadFile(policyFile) //#nosec
 		if err != nil {
 			return policyDoc, err
 		}
@@ -458,7 +458,10 @@ func readIamPolicy() (vpawsapi.PolicyDocument, error) {
 	}
 
 	var policy awspolicy.Policy
-	policy.UnmarshalJSON(policyBytes)
+	err = policy.UnmarshalJSON(policyBytes)
+	if err != nil {
+		return policyDoc, err
+	}
 
 	policyDoc.Name = policy.ID
 	policyDoc.Version = policy.Version
