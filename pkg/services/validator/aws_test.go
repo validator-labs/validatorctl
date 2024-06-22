@@ -50,7 +50,10 @@ func Test_readAwsPlugin(t *testing.T) {
 				"y",         // use implicit auth
 				"",          // service account name
 				"us-east-1", // region
-				"n",         // enable IAM validation
+				"n",         // enable IAM role validation
+				"n",         // enable IAM user validation
+				"n",         // enable IAM group validation
+				"n",         // enable IAM policy validation
 				"n",         // enable service quota validation
 				"n",         // enable tag validation
 			},
