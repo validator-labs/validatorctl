@@ -4,6 +4,7 @@ go 1.22.4
 
 require (
 	emperror.dev/errors v0.8.1
+	github.com/L30Bola/aws-policy v0.0.0-20230126045340-5e6118545ac1
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/google/uuid v1.6.0
@@ -11,11 +12,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pterm/pterm v0.12.79
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spectrocloud-labs/prompts-tui v0.0.0-20240620192025-3f0e83e994ec
+	github.com/spectrocloud-labs/prompts-tui v0.0.0-20240621222805-66ae32c882c2
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.0.42
-	github.com/validator-labs/validator-plugin-aws v0.0.26
+	github.com/validator-labs/validator v0.0.43
+	github.com/validator-labs/validator-plugin-aws v0.1.0
 	github.com/validator-labs/validator-plugin-azure v0.0.11
 	github.com/validator-labs/validator-plugin-network v0.0.17
 	github.com/validator-labs/validator-plugin-oci v0.0.10
@@ -67,6 +68,8 @@ require (
 	github.com/lithammer/fuzzysearch v1.1.8 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -76,6 +79,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/rs/zerolog v1.28.0 // indirect
 	github.com/sagikazarmark/locafero v0.6.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
@@ -98,7 +102,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.30.1 // indirect
-	k8s.io/klog/v2 v2.120.1 // indirect
+	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240521193020-835d969ad83a // indirect
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0 // indirect
 	sigs.k8s.io/cluster-api v1.7.3 // indirect

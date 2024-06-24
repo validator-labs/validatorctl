@@ -166,25 +166,46 @@ func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, tuiVals []string)
 		"abc",                       // AWS STS Session Name
 		"3600",                      // AWS STS Duration Seconds
 		"us-west-2",                 // default region
-		"y",                         // enable IAM validation
+		"y",                         // enable IAM role validation
 		"SpectroCloudRole",          // IAM role name
-		"Base",                      // IAM check type
-		"y",                         // enable service quota validation
-		"EC2",                       // rule name
-		"EC2-VPC Elastic IPs",       // service quota type
-		"us-west-2",                 // service quota region #1
-		"5",                         // service quota buffer #1
-		"n",                         // add another service quota rule
-		"y",                         // enable subnet tag validation
-		"subnet",                    // tag resource type
-		"elb tag rule",              // rule name
-		"us-west-2",                 // subnet tag region #1
-		"foo",                       // subnet tag key #1
-		"bar",                       // subnet tag value #1
-		"baz",                       // subnet arn #1
-		"n",                         // add another subnet arn
-		"n",                         // add another subnet tag rule
-		"n",                         // add another tag rule
+		"Local Filepath",            // Policy Document Source
+		t.filePath("policy.json"),   // Policy Document File
+		"n",                         // add another policy document
+		"n",                         // add another IAM role rule
+		"y",                         // enable IAM user validation
+		"SpectroCloudUser",          // IAM user name
+		"Local Filepath",            // Policy Document Source
+		t.filePath("policy.json"),   // Policy Document File
+		"n",                         // add another policy document
+		"n",                         // add another IAM user rule
+		"y",                         // enable IAM group validation
+		"SpectroCloudGroup",         // IAM group name
+		"Local Filepath",            // Policy Document Source
+		t.filePath("policy.json"),   // Policy Document File
+		"n",                         // add another policy document
+		"n",                         // add another IAM group rule
+		"y",                         // enable IAM policy validation
+		"arn:aws:iam::account-num:policy/some-policy", // IAM policy ARN
+		"Local Filepath",          // Policy Document Source
+		t.filePath("policy.json"), // Policy Document File
+		"n",                       // add another policy document
+		"n",                       // add another IAM policy rule
+		"y",                       // enable service quota validation
+		"EC2",                     // rule name
+		"EC2-VPC Elastic IPs",     // service quota type
+		"us-west-2",               // service quota region #1
+		"5",                       // service quota buffer #1
+		"n",                       // add another service quota rule
+		"y",                       // enable subnet tag validation
+		"subnet",                  // tag resource type
+		"elb tag rule",            // rule name
+		"us-west-2",               // subnet tag region #1
+		"foo",                     // subnet tag key #1
+		"bar",                     // subnet tag value #1
+		"baz",                     // subnet arn #1
+		"n",                       // add another subnet arn
+		"n",                       // add another subnet tag rule
+		"n",                       // add another tag rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
 		awsVals = slices.Insert(awsVals, 2,

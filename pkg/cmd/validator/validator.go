@@ -516,34 +516,10 @@ func getHelmClient(vc *components.ValidatorConfig) (helm.HelmClient, error) {
 func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if vc.AWSPlugin.Enabled {
 		log.InfoCLI("\n==== Applying AWS plugin validator(s) ====")
-
-		// render & apply any AWS validator rules other than IAM
-		if vc.AWSPlugin.Validator.ResultCount() > 0 {
-			if err := createValidator(
-				vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginAwsTemplate, *vc.AWSPlugin.Validator,
-			); err != nil {
-				return err
-			}
-		}
-
-		// render & apply AWS IAM validator
-		if vc.AWSPlugin.IamCheck.Enabled {
-			template := cfg.ValidatorPluginAwsIamMap[vc.AWSPlugin.IamCheck.Type]
-			outputPath := strings.ReplaceAll(filepath.Join(c.RunLoc, "manifests", template), ".tmpl", ".yaml")
-			auth, err := yaml.Marshal(vc.AWSPlugin.Validator.Auth)
-			if err != nil {
-				return errors.Wrap(err, "failed to marshal AWS plugin auth")
-			}
-			args := map[string]interface{}{
-				"Auth":        indent(auth, 4),
-				"IamRoleName": vc.AWSPlugin.IamCheck.IamRoleName,
-			}
-			if err := embed_utils.RenderTemplate(args, cfg.Validator, template, outputPath); err != nil {
-				return err
-			}
-			if err := applyValidatorManifest(vc.Kubeconfig, cfg.ValidatorPluginAws, outputPath); err != nil {
-				return err
-			}
+		if err := createValidator(
+			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginAwsTemplate, *vc.AWSPlugin.Validator,
+		); err != nil {
+			return err
 		}
 	}
 

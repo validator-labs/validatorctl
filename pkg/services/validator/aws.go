@@ -1,9 +1,12 @@
 package validator
 
 import (
+	"os"
 	"reflect"
+	"time"
 
 	"emperror.dev/errors"
+	awspolicy "github.com/L30Bola/aws-policy"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
@@ -17,13 +20,12 @@ import (
 
 var (
 	region             = "us-east-1"
-	iamRole            = "SpectroCloudRole"
 	stsDurationSeconds = "3600"
 	awsSecretName      = "aws-creds"
 )
 
 type awsRule interface {
-	*vpawsapi.ServiceQuotaRule | *vpawsapi.TagRule
+	*vpawsapi.ServiceQuotaRule | *vpawsapi.TagRule | *vpawsapi.IamRoleRule | *vpawsapi.IamUserRule | *vpawsapi.IamGroupRule | *vpawsapi.IamPolicyRule
 }
 
 func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
@@ -47,7 +49,16 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 
 	ruleNames := make([]string, 0)
 
-	if err := configureIamRule(c); err != nil {
+	if err := configureIamRoleRules(c, &ruleNames); err != nil {
+		return err
+	}
+	if err := configureIamUserRules(c, &ruleNames); err != nil {
+		return err
+	}
+	if err := configureIamGroupRules(c, &ruleNames); err != nil {
+		return err
+	}
+	if err := configureIamPolicyRules(c, &ruleNames); err != nil {
 		return err
 	}
 	if err := configureServiceQuotaRules(c, &ruleNames); err != nil {
@@ -57,42 +68,424 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 		return err
 	}
 
-	if !c.IamCheck.Enabled && c.Validator.ResultCount() == 0 {
+	if c.Validator.ResultCount() == 0 {
 		return errNoRulesEnabled
 	}
 	return nil
 }
 
-func configureIamRule(c *components.AWSPluginConfig) error {
+func configureIamRoleRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
-	AWS IAM validation ensures that a certain IAM Role has every permission
-	specified in one of Spectro Cloud's predefined IAM policies.
-
-	Different permission sets are required to deploy clusters via Spectro Cloud,
-	depending on placement type (static vs. dynamic) and other factors.
+	AWS IAM Role validation ensures that specified IAM Roles have every permission
+	specified in the provided policy document(s).
 	`)
 
-	var err error
-	c.IamCheck.Enabled, err = prompts.ReadBool("Enable IAM validation", true)
+	validateRoles, err := prompts.ReadBool("Enable Iam Role validation", true)
 	if err != nil {
 		return err
 	}
-	if !c.IamCheck.Enabled {
+	if !validateRoles {
+		c.Validator.IamRoleRules = nil
 		return nil
 	}
-	if c.IamCheck.IamRoleName != "" {
-		iamRole = c.IamCheck.IamRoleName
+	for i, r := range c.Validator.IamRoleRules {
+		r := r
+		if err := readIamRoleRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
 	}
-	c.IamCheck.IamRoleName, err = prompts.ReadText("IAM Role Name", iamRole, false, -1)
-	if err != nil {
-		return err
+	addRules := true
+	if c.Validator.IamRoleRules == nil {
+		c.Validator.IamRoleRules = make([]vpawsapi.IamRoleRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another role rule", false)
+		if err != nil {
+			return err
+		}
 	}
-	checkType, err := prompts.Select("IAM check type", cfg.ValidatorIamCheckTypes())
-	if err != nil {
-		return err
+	if !addRules {
+		return nil
 	}
-	c.IamCheck.Type = cfg.IamCheckType(checkType)
+	for {
+		if err := readIamRoleRule(c, nil, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another role rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
 	return nil
+}
+
+func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx int, ruleNames *[]string) error {
+	if r == nil {
+		r = &vpawsapi.IamRoleRule{
+			IamRoleName: "",
+			Policies:    []vpawsapi.PolicyDocument{},
+		}
+	}
+	err := initAwsRule(r, "IAM role", ruleNames)
+	if err != nil {
+		return err
+	}
+	if r.IamRoleName == "" {
+		roleName, err := prompts.ReadText("IAM Role Name", "", false, -1)
+		if err != nil {
+			return err
+		}
+		r.IamRoleName = roleName
+	}
+
+	addPolicies := true
+	for addPolicies {
+		policyDoc, err := readIamPolicy()
+		if err != nil {
+			return err
+		}
+
+		r.Policies = append(r.Policies, policyDoc)
+		addPolicies, err = prompts.ReadBool("Add another policy document", false)
+		if err != nil {
+			return err
+		}
+	}
+	if idx == -1 {
+		c.Validator.IamRoleRules = append(c.Validator.IamRoleRules, *r)
+	} else {
+		c.Validator.IamRoleRules[idx] = *r
+	}
+	return nil
+}
+
+func configureIamUserRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
+	log.InfoCLI(`
+	AWS IAM User validation ensures that specified IAM Users have every permission
+	specified in the provided policy document(s).
+	`)
+
+	validateUsers, err := prompts.ReadBool("Enable Iam User validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateUsers {
+		c.Validator.IamUserRules = nil
+		return nil
+	}
+	for i, r := range c.Validator.IamUserRules {
+		r := r
+		if err := readIamUserRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.Validator.IamUserRules == nil {
+		c.Validator.IamUserRules = make([]vpawsapi.IamUserRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another user rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readIamUserRule(c, nil, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another user rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readIamUserRule(c *components.AWSPluginConfig, r *vpawsapi.IamUserRule, idx int, ruleNames *[]string) error {
+	if r == nil {
+		r = &vpawsapi.IamUserRule{
+			IamUserName: "",
+			Policies:    []vpawsapi.PolicyDocument{},
+		}
+	}
+	err := initAwsRule(r, "IAM user", ruleNames)
+	if err != nil {
+		return err
+	}
+	if r.IamUserName == "" {
+		userName, err := prompts.ReadText("IAM User Name", "", false, -1)
+		if err != nil {
+			return err
+		}
+		r.IamUserName = userName
+	}
+
+	addPolicies := true
+	for addPolicies {
+		policyDoc, err := readIamPolicy()
+		if err != nil {
+			return err
+		}
+
+		r.Policies = append(r.Policies, policyDoc)
+		addPolicies, err = prompts.ReadBool("Add another policy document", false)
+		if err != nil {
+			return err
+		}
+	}
+	if idx == -1 {
+		c.Validator.IamUserRules = append(c.Validator.IamUserRules, *r)
+	} else {
+		c.Validator.IamUserRules[idx] = *r
+	}
+	return nil
+}
+
+func configureIamGroupRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
+	log.InfoCLI(`
+	AWS IAM Group validation ensures that specified IAM Groups have every permission
+	specified in the provided policy document(s).
+	`)
+
+	validateGroups, err := prompts.ReadBool("Enable Iam Group validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateGroups {
+		c.Validator.IamGroupRules = nil
+		return nil
+	}
+	for i, r := range c.Validator.IamGroupRules {
+		r := r
+		if err := readIamGroupRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.Validator.IamGroupRules == nil {
+		c.Validator.IamGroupRules = make([]vpawsapi.IamGroupRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another group rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readIamGroupRule(c, nil, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another group rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readIamGroupRule(c *components.AWSPluginConfig, r *vpawsapi.IamGroupRule, idx int, ruleNames *[]string) error {
+	if r == nil {
+		r = &vpawsapi.IamGroupRule{
+			IamGroupName: "",
+			Policies:     []vpawsapi.PolicyDocument{},
+		}
+	}
+	err := initAwsRule(r, "IAM group", ruleNames)
+	if err != nil {
+		return err
+	}
+	if r.IamGroupName == "" {
+		groupName, err := prompts.ReadText("IAM Group Name", "", false, -1)
+		if err != nil {
+			return err
+		}
+		r.IamGroupName = groupName
+	}
+
+	addPolicies := true
+	for addPolicies {
+		policyDoc, err := readIamPolicy()
+		if err != nil {
+			return err
+		}
+
+		r.Policies = append(r.Policies, policyDoc)
+		addPolicies, err = prompts.ReadBool("Add another policy document", false)
+		if err != nil {
+			return err
+		}
+	}
+	if idx == -1 {
+		c.Validator.IamGroupRules = append(c.Validator.IamGroupRules, *r)
+	} else {
+		c.Validator.IamGroupRules[idx] = *r
+	}
+	return nil
+}
+
+func configureIamPolicyRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
+	log.InfoCLI(`
+	AWS IAM Policy validation ensures that specified IAM Policies have every permission
+	specified in the provided policy document(s).
+	`)
+
+	validatePolicies, err := prompts.ReadBool("Enable Iam Policy validation", true)
+	if err != nil {
+		return err
+	}
+	if !validatePolicies {
+		c.Validator.IamPolicyRules = nil
+		return nil
+	}
+	for i, r := range c.Validator.IamPolicyRules {
+		r := r
+		if err := readIamPolicyRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.Validator.IamPolicyRules == nil {
+		c.Validator.IamPolicyRules = make([]vpawsapi.IamPolicyRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another policy rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readIamPolicyRule(c, nil, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another policy rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readIamPolicyRule(c *components.AWSPluginConfig, r *vpawsapi.IamPolicyRule, idx int, ruleNames *[]string) error {
+	if r == nil {
+		r = &vpawsapi.IamPolicyRule{
+			IamPolicyARN: "",
+			Policies:     []vpawsapi.PolicyDocument{},
+		}
+	}
+	err := initAwsRule(r, "IAM policy", ruleNames)
+	if err != nil {
+		return err
+	}
+	if r.IamPolicyARN == "" {
+		policyArn, err := prompts.ReadTextRegex("IAM Policy ARN", "", "Invalid Policy ARN", cfg.PolicyArnRegex)
+		if err != nil {
+			return err
+		}
+		r.IamPolicyARN = policyArn
+	}
+
+	addPolicies := true
+	for addPolicies {
+		policyDoc, err := readIamPolicy()
+		if err != nil {
+			return err
+		}
+
+		r.Policies = append(r.Policies, policyDoc)
+		addPolicies, err = prompts.ReadBool("Add another policy document", false)
+		if err != nil {
+			return err
+		}
+	}
+	if idx == -1 {
+		c.Validator.IamPolicyRules = append(c.Validator.IamPolicyRules, *r)
+	} else {
+		c.Validator.IamPolicyRules[idx] = *r
+	}
+	return nil
+}
+
+func readIamPolicy() (vpawsapi.PolicyDocument, error) {
+	policyDoc := vpawsapi.PolicyDocument{}
+	inputType, err := prompts.Select("Add policy document via", []string{"Local Filepath", "File Editor"})
+	if err != nil {
+		return policyDoc, err
+	}
+
+	for {
+		var policyBytes []byte
+		if inputType == "Local Filepath" {
+			policyFile, err := prompts.ReadFilePath("Policy Document Filepath", "", "Invalid policy document path", false)
+			if err != nil {
+				return policyDoc, err
+			}
+
+			policyBytes, err = os.ReadFile(policyFile) //#nosec
+			if err != nil {
+				return policyDoc, err
+			}
+		} else {
+			log.InfoCLI("Configure Policy Document")
+			time.Sleep(2 * time.Second)
+			policyFile, err := prompts.EditFileValidatedByFullContent(cfg.AWSPolicyDocumentPrompt, "", prompts.ValidateJson, 1)
+			if err != nil {
+				return policyDoc, err
+			}
+			policyBytes = []byte(policyFile)
+		}
+
+		var policy awspolicy.Policy
+		errUnmarshal := policy.UnmarshalJSON(policyBytes)
+		if errUnmarshal != nil {
+			log.ErrorCLI("Failed to unmarshal the provided policy document", "err", errUnmarshal)
+			retry, err := prompts.ReadBool("Reconfigure policy document", true)
+			if err != nil {
+				return policyDoc, err
+			}
+
+			if retry {
+				continue
+			}
+			return policyDoc, errUnmarshal
+		}
+
+		policyDoc.Name = policy.ID
+		policyDoc.Version = policy.Version
+		policyDoc.Statements = convertStatements(policy.Statements)
+
+		return policyDoc, nil
+	}
+}
+
+// Convert statements from awspolicy to v1alpha1
+func convertStatements(statements []awspolicy.Statement) []vpawsapi.StatementEntry {
+	var result []vpawsapi.StatementEntry
+	for _, s := range statements {
+		result = append(result, vpawsapi.StatementEntry{
+			Condition: vpawsapi.Condition(s.Condition),
+			Effect:    s.Effect,
+			Actions:   s.Action,
+			Resources: s.Resource,
+		})
+	}
+	return result
 }
 
 func configureServiceQuotaRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
@@ -288,6 +681,10 @@ func readAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernetes.Inte
 func initAwsRule[R awsRule](r R, ruleType string, ruleNames *[]string) error {
 	name := reflect.ValueOf(r).Elem().FieldByName("Name").String()
 	if name != "" {
+		// not all awsRules have a Name field, for now we can create a unique name for them
+		if name == "<invalid Value>" {
+			name = ruleType + " - " + time.Now().Format("20060102T150405.000000000")
+		}
 		log.InfoCLI("Reconfiguring %s rule: %s", ruleType, name)
 		*ruleNames = append(*ruleNames, name)
 	} else {

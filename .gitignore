@@ -36,6 +36,7 @@ pkg/utils/embed/bin/*
 
 # hack
 .validator
+tmp/
 
 # test
 tests/unit-test-data/*.tmp

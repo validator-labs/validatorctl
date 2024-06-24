@@ -53,7 +53,6 @@ func NewValidatorConfig() *ValidatorConfig {
 		AWSPlugin: &AWSPluginConfig{
 			Release:       &validator.HelmRelease{},
 			ReleaseSecret: &Secret{},
-			IamCheck:      &IamCheck{},
 			Validator:     &aws.AwsValidatorSpec{},
 		},
 		AzurePlugin: &AzurePluginConfig{
@@ -219,12 +218,6 @@ func (c *SinkConfig) decrypt() error {
 	return nil
 }
 
-type IamCheck struct {
-	Enabled     bool             `yaml:"enabled"`
-	IamRoleName string           `yaml:"iamRoleName"`
-	Type        cfg.IamCheckType `yaml:"type"`
-}
-
 type AWSPluginConfig struct {
 	Enabled            bool                   `yaml:"enabled"`
 	Release            *validator.HelmRelease `yaml:"helmRelease"`
@@ -233,7 +226,6 @@ type AWSPluginConfig struct {
 	SecretAccessKey    string                 `yaml:"secretAccessKey,omitempty"`
 	SessionToken       string                 `yaml:"sessionToken,omitempty"`
 	ServiceAccountName string                 `yaml:"serviceAccountName,omitempty"`
-	IamCheck           *IamCheck              `yaml:"iamCheck"`
 	Validator          *aws.AwsValidatorSpec  `yaml:"validator"`
 }
 
