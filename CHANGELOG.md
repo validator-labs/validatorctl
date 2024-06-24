@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.0.2](https://github.com/validator-labs/validatorctl/compare/v0.0.1...v0.0.2) (2024-06-24)
+
+
+### Features
+
+* add support custom IAM role rules ([#50](https://github.com/validator-labs/validatorctl/issues/50)) ([912c0f3](https://github.com/validator-labs/validatorctl/commit/912c0f3fd491c17949f816552febf4197cc1f80d))
+
+
+### Other
+
+* remove vsphere palette oriented resources ([#34](https://github.com/validator-labs/validatorctl/issues/34)) ([9213c76](https://github.com/validator-labs/validatorctl/commit/9213c76510164d91f284863dd2790a9f9634ed46))
+
+
+### Docs
+
+* update README ([#58](https://github.com/validator-labs/validatorctl/issues/58)) ([38b469e](https://github.com/validator-labs/validatorctl/commit/38b469e0baa0e1c41fb73a8d75913c868667eefa))
+
+
+### Dependency Updates
+
+* **deps:** update github.com/spectrocloud-labs/prompts-tui digest to 3f0e83e ([#51](https://github.com/validator-labs/validatorctl/issues/51)) ([1aa0810](https://github.com/validator-labs/validatorctl/commit/1aa0810cb2ce67148af6e88da635a5e27f87dfbe))
+* **deps:** update module gopkg.in/yaml.v2 to v3 ([#41](https://github.com/validator-labs/validatorctl/issues/41)) ([210f63e](https://github.com/validator-labs/validatorctl/commit/210f63e40d018a0f1e21f50a788c607b10975663))
+* **deps:** update module gopkg.in/yaml.v2 to v3 ([#55](https://github.com/validator-labs/validatorctl/issues/55)) ([a0a13c0](https://github.com/validator-labs/validatorctl/commit/a0a13c038dfaec8cb7135fa23d5194f41240fc0c))
+* **deps:** update module gopkg.in/yaml.v2 to v3 ([#56](https://github.com/validator-labs/validatorctl/issues/56)) ([8dc9ab2](https://github.com/validator-labs/validatorctl/commit/8dc9ab27e432209917ae63553d4f9b4e9fc0c1c2))
+* **deps:** update softprops/action-gh-release digest to a74c6b7 ([#43](https://github.com/validator-labs/validatorctl/issues/43)) ([432891a](https://github.com/validator-labs/validatorctl/commit/432891a9b9232f6c66e88c0cf639913f6197d4f9))
+
 ## [0.0.1](https://github.com/validator-labs/validatorctl/compare/v0.0.1...v0.0.1) (2024-06-19)
 
 
