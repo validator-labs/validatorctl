@@ -77,7 +77,7 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 func configureIamRoleRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	AWS IAM Role validation ensures that specified IAM Roles have every permission
-	specified in the passed in policy documents.
+	specified in the provided policy document(s).
 	`)
 
 	validateRoles, err := prompts.ReadBool("Enable Iam Role validation", true)
@@ -128,7 +128,7 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 			Policies:    []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "iam role", ruleNames)
+	err := initAwsRule(r, "IAM role", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 func configureIamUserRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	AWS IAM User validation ensures that specified IAM Users have every permission
-	specified in the passed in policy documents.
+	specified in the provided policy document(s).
 	`)
 
 	validateUsers, err := prompts.ReadBool("Enable Iam User validation", true)
@@ -215,7 +215,7 @@ func readIamUserRule(c *components.AWSPluginConfig, r *vpawsapi.IamUserRule, idx
 			Policies:    []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "iam user", ruleNames)
+	err := initAwsRule(r, "IAM user", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -251,7 +251,7 @@ func readIamUserRule(c *components.AWSPluginConfig, r *vpawsapi.IamUserRule, idx
 func configureIamGroupRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	AWS IAM Group validation ensures that specified IAM Groups have every permission
-	specified in the passed in policy documents.
+	specified in the provided policy document(s).
 	`)
 
 	validateGroups, err := prompts.ReadBool("Enable Iam Group validation", true)
@@ -302,7 +302,7 @@ func readIamGroupRule(c *components.AWSPluginConfig, r *vpawsapi.IamGroupRule, i
 			Policies:     []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "iam group", ruleNames)
+	err := initAwsRule(r, "IAM group", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -338,7 +338,7 @@ func readIamGroupRule(c *components.AWSPluginConfig, r *vpawsapi.IamGroupRule, i
 func configureIamPolicyRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	AWS IAM Policy validation ensures that specified IAM Policies have every permission
-	specified in the passed in policy documents.
+	specified in the provided policy document(s).
 	`)
 
 	validatePolicies, err := prompts.ReadBool("Enable Iam Policy validation", true)
@@ -389,7 +389,7 @@ func readIamPolicyRule(c *components.AWSPluginConfig, r *vpawsapi.IamPolicyRule,
 			Policies:     []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "iam policy", ruleNames)
+	err := initAwsRule(r, "IAM policy", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -429,44 +429,49 @@ func readIamPolicy() (vpawsapi.PolicyDocument, error) {
 		return policyDoc, err
 	}
 
-	var policyBytes []byte
-	if inputType == "Local Filepath" {
-		policyFile, err := prompts.ReadFilePath("Policy Document Filepath", "", "Invalid policy document path", false)
-		if err != nil {
-			return policyDoc, err
+	for {
+		var policyBytes []byte
+		if inputType == "Local Filepath" {
+			policyFile, err := prompts.ReadFilePath("Policy Document Filepath", "", "Invalid policy document path", false)
+			if err != nil {
+				return policyDoc, err
+			}
+
+			policyBytes, err = os.ReadFile(policyFile) //#nosec
+			if err != nil {
+				return policyDoc, err
+			}
+		} else {
+			log.InfoCLI("Configure Policy Document")
+			time.Sleep(2 * time.Second)
+			policyFile, err := prompts.EditFileValidatedByFullContent(cfg.AWSPolicyDocumentPrompt, "", prompts.ValidateJson, 1)
+			if err != nil {
+				return policyDoc, err
+			}
+			policyBytes = []byte(policyFile)
 		}
 
-		file, err := os.Open(policyFile) //#nosec
-		if err != nil {
-			return policyDoc, err
-		}
-		defer file.Close()
+		var policy awspolicy.Policy
+		errUnmarshal := policy.UnmarshalJSON(policyBytes)
+		if errUnmarshal != nil {
+			log.ErrorCLI("Failed to unmarshal the provided policy document", "err", errUnmarshal)
+			retry, err := prompts.ReadBool("Reconfigure policy document", true)
+			if err != nil {
+				return policyDoc, err
+			}
 
-		policyBytes, err = os.ReadFile(policyFile) //#nosec
-		if err != nil {
-			return policyDoc, err
+			if retry {
+				continue
+			}
+			return policyDoc, errUnmarshal
 		}
-	} else {
-		log.InfoCLI("Configure Policy Document")
-		time.Sleep(2 * time.Second)
-		policyFile, err := prompts.EditFileValidatedByFullContent(cfg.AWSPolicyDocumentPrompt, "", prompts.ValidateJson, 1)
-		if err != nil {
-			return policyDoc, err
-		}
-		policyBytes = []byte(policyFile)
+
+		policyDoc.Name = policy.ID
+		policyDoc.Version = policy.Version
+		policyDoc.Statements = convertStatements(policy.Statements)
+
+		return policyDoc, nil
 	}
-
-	var policy awspolicy.Policy
-	err = policy.UnmarshalJSON(policyBytes)
-	if err != nil {
-		return policyDoc, err
-	}
-
-	policyDoc.Name = policy.ID
-	policyDoc.Version = policy.Version
-	policyDoc.Statements = convertStatements(policy.Statements)
-
-	return policyDoc, nil
 }
 
 // Convert statements from awspolicy to v1alpha1
