@@ -15,7 +15,7 @@ type NetworkConfig struct {
 	TCPConnRules  []network_api.TCPConnRule
 }
 
-func ConfigureNetworkPlugin(vc *ValidatorConfig, config NetworkConfig) error {
+func ConfigureNetworkPlugin(vc *ValidatorConfig, config NetworkConfig) {
 	vc.NetworkPlugin = &NetworkPluginConfig{
 		Enabled: true,
 		Release: &vapi.HelmRelease{
@@ -34,6 +34,4 @@ func ConfigureNetworkPlugin(vc *ValidatorConfig, config NetworkConfig) error {
 			TCPConnRules: config.TCPConnRules,
 		},
 	}
-
-	return nil
 }

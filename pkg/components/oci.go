@@ -14,7 +14,7 @@ type OciConfig struct {
 	HostRefs map[string][]string
 }
 
-func ConfigureOciPlugin(vc *ValidatorConfig, config OciConfig) error {
+func ConfigureOciPlugin(vc *ValidatorConfig, config OciConfig) {
 	vc.OCIPlugin = &OCIPluginConfig{
 		Enabled: true,
 		Release: &vapi.HelmRelease{
@@ -32,8 +32,6 @@ func ConfigureOciPlugin(vc *ValidatorConfig, config OciConfig) error {
 			OciRegistryRules: generateOciRegistryRules(config.HostRefs),
 		},
 	}
-
-	return nil
 }
 
 func generateOciRegistryRules(hostRefs map[string][]string) []oci_api.OciRegistryRule {

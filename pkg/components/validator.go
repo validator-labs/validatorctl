@@ -546,7 +546,7 @@ func SaveValidatorConfig(c *ValidatorConfig, tc *cfg.TaskConfig) error {
 	return nil
 }
 
-func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) error {
+func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) {
 	vc.Release = &validator.HelmRelease{
 		Chart: validator.HelmChart{
 			Name:                  cfg.Validator,
@@ -568,6 +568,4 @@ func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) error {
 		},
 	}
 	vc.UseFixedVersions = true
-
-	return nil
 }

@@ -22,7 +22,7 @@ type VsphereConfig struct {
 	Privileges                   []string
 }
 
-func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) error {
+func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) {
 	vc.VspherePlugin = &VspherePluginConfig{
 		Enabled: true,
 		Release: &vapi.HelmRelease{
@@ -74,5 +74,4 @@ func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) error {
 			TagValidationRules: config.TagValidationRules,
 		},
 	}
-	return nil
 }
