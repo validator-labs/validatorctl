@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ConfigFile   = "validator.yaml"
+	ConfigFile   = "validatorctl.yaml"
 	TimeFormat   = "20060102150405"
 	WorkspaceLoc = ".validator"
 
