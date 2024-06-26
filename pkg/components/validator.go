@@ -1,6 +1,7 @@
 package components
 
 import (
+	"fmt"
 	"os"
 
 	"emperror.dev/errors"
@@ -542,5 +543,31 @@ func SaveValidatorConfig(c *ValidatorConfig, taskConfig *cfg.TaskConfig) error {
 		return errors.Wrap(err, "failed to create validator config file")
 	}
 	log.InfoCLI("validator configuration file saved: %s", taskConfig.ConfigFile)
+	return nil
+}
+
+func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) error {
+	vc.Release = &validator.HelmRelease{
+		Chart: validator.HelmChart{
+			Name:                  cfg.Validator,
+			Repository:            fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, cfg.Validator),
+			Version:               cfg.ValidatorChartVersions[cfg.Validator],
+			InsecureSkipTlsVerify: true,
+		},
+	}
+	vc.ReleaseSecret = &Secret{
+		Name: fmt.Sprintf("validator-helm-release-%s", cfg.Validator),
+	}
+	vc.KindConfig.UseKindCluster = true
+	vc.Kubeconfig = kubeconfig
+	vc.ImageRegistry = cfg.ValidatorImageRegistry
+	vc.ProxyConfig = &ProxyConfig{
+		Env: &env.Env{
+			PodCIDR:        &cfg.DefaultPodCIDR,
+			ServiceIPRange: &cfg.DefaultServiceIPRange,
+		},
+	}
+	vc.UseFixedVersions = true
+
 	return nil
 }
