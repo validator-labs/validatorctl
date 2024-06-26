@@ -528,7 +528,7 @@ func LoadValidatorConfig(taskConfig *cfg.TaskConfig) (*ValidatorConfig, error) {
 }
 
 // SaveValidatorConfig saves a validator configuration file to disk
-func SaveValidatorConfig(c *ValidatorConfig, taskConfig *cfg.TaskConfig) error {
+func SaveValidatorConfig(c *ValidatorConfig, fileName string) error {
 	if err := c.encrypt(); err != nil {
 		return err
 	}
@@ -539,10 +539,10 @@ func SaveValidatorConfig(c *ValidatorConfig, taskConfig *cfg.TaskConfig) error {
 	if err := c.decrypt(); err != nil {
 		return err
 	}
-	if err = os.WriteFile(taskConfig.ConfigFile, b, 0600); err != nil {
+	if err = os.WriteFile(fileName, b, 0600); err != nil {
 		return errors.Wrap(err, "failed to create validator config file")
 	}
-	log.InfoCLI("validator configuration file saved: %s", taskConfig.ConfigFile)
+	log.InfoCLI("validator configuration file saved: %s", fileName)
 	return nil
 }
 

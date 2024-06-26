@@ -80,7 +80,7 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 
 	// save / print validator config file
 	if saveConfig {
-		if err := components.SaveValidatorConfig(vc, tc); err != nil {
+		if err := components.SaveValidatorConfig(vc, tc.ConfigFile); err != nil {
 			return err
 		}
 	} else {
