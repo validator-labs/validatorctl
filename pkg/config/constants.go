@@ -69,7 +69,6 @@ var (
 	HTTPSchemes           = []string{"https://", "http://"}
 
 	// Command dirs
-	BaseDirs         = []string{"bin"}
 	ValidatorSubdirs = []string{"manifests"}
 
 	// Validator
