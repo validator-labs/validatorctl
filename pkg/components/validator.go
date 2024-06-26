@@ -1,21 +1,11 @@
 package components
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
-	"time"
 
 	"emperror.dev/errors"
 	"gopkg.in/yaml.v2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/tools/cache"
-	toolsWatch "k8s.io/client-go/tools/watch"
 
 	aws "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
 	azure "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
@@ -29,8 +19,6 @@ import (
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	env "github.com/validator-labs/validatorctl/pkg/services"
 	"github.com/validator-labs/validatorctl/pkg/utils/crypto"
-	"github.com/validator-labs/validatorctl/pkg/utils/embed"
-	"github.com/validator-labs/validatorctl/pkg/utils/kube"
 )
 
 type ValidatorConfig struct {
@@ -515,8 +503,8 @@ func (s *Secret) decrypt() error {
 }
 
 // NewValidatorFromConfig loads a validator configuration file from disk and decrypts it
-func NewValidatorFromConfig(taskConfig *cfg.TaskConfig) (*ValidatorConfig, error) {
-	c, err := LoadValidatorConfig(taskConfig)
+func NewValidatorFromConfig(tc *cfg.TaskConfig) (*ValidatorConfig, error) {
+	c, err := LoadValidatorConfig(tc)
 	if err != nil {
 		return nil, err
 	}
@@ -527,8 +515,8 @@ func NewValidatorFromConfig(taskConfig *cfg.TaskConfig) (*ValidatorConfig, error
 }
 
 // LoadValidatorConfig loads a validator configuration file from disk
-func LoadValidatorConfig(taskConfig *cfg.TaskConfig) (*ValidatorConfig, error) {
-	bytes, err := os.ReadFile(taskConfig.ConfigFile)
+func LoadValidatorConfig(tc *cfg.TaskConfig) (*ValidatorConfig, error) {
+	bytes, err := os.ReadFile(tc.ConfigFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read validator config file")
 	}
@@ -540,7 +528,7 @@ func LoadValidatorConfig(taskConfig *cfg.TaskConfig) (*ValidatorConfig, error) {
 }
 
 // SaveValidatorConfig saves a validator configuration file to disk
-func SaveValidatorConfig(c *ValidatorConfig, fileName string) error {
+func SaveValidatorConfig(c *ValidatorConfig, tc *cfg.TaskConfig) error {
 	if err := c.encrypt(); err != nil {
 		return err
 	}
@@ -551,10 +539,10 @@ func SaveValidatorConfig(c *ValidatorConfig, fileName string) error {
 	if err := c.decrypt(); err != nil {
 		return err
 	}
-	if err = os.WriteFile(fileName, b, 0600); err != nil {
+	if err = os.WriteFile(tc.ConfigFile, b, 0600); err != nil {
 		return errors.Wrap(err, "failed to create validator config file")
 	}
-	log.InfoCLI("validator configuration file saved: %s", fileName)
+	log.InfoCLI("validator configuration file saved: %s", tc.ConfigFile)
 	return nil
 }
 
@@ -582,162 +570,4 @@ func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) error {
 	vc.UseFixedVersions = true
 
 	return nil
-}
-
-func WatchValidationResults(vc *ValidatorConfig) (bool, error) {
-	log.InfoCLI("\nWatching validation results, waiting for all to succeed")
-	kClient, err := getValidationResultsCRDClient(vc)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get validation result client")
-	}
-
-	watchFunc := func(options metav1.ListOptions) (watch.Interface, error) {
-		return kClient.Watch(context.Background(), metav1.ListOptions{})
-	}
-
-	watcher, err := toolsWatch.NewRetryWatcher("1", &cache.ListWatch{WatchFunc: watchFunc})
-	if err != nil {
-		return false, errors.Wrap(err, "failed to create retry watcher for validation results")
-	}
-
-	var hasValidationSucceeded bool
-	validationStates := make(map[string]validator.ValidationState)
-
-	if os.Getenv("IS_TEST") == "true" {
-		return true, nil
-	}
-
-	for event := range watcher.ResultChan() {
-		vrObj := event.Object.(*unstructured.Unstructured)
-
-		vr := &validator.ValidationResult{}
-		bytes, err := vrObj.MarshalJSON()
-		if err != nil {
-			return false, err
-		}
-		if err := json.Unmarshal(bytes, vr); err != nil {
-			return false, err
-		}
-
-		prevValidationState := validationStates[vr.Name]
-		validationStates[vr.Name] = vr.Status.State
-		if event.Type != watch.Modified {
-			continue
-		}
-
-		hasValidationSucceeded = true
-		if prevValidationState != vr.Status.State {
-			log.InfoCLI("\nValidation result for %s updated:", vr.Name)
-			err = printValidationResults([]unstructured.Unstructured{*vrObj})
-			if err != nil {
-				return false, err
-			}
-
-			finished := true
-			vrWaiting := make([]string, 0)
-			for vName, state := range validationStates {
-				if state == validator.ValidationFailed {
-					hasValidationSucceeded = false
-				}
-				if state != validator.ValidationSucceeded && state != validator.ValidationFailed {
-					vrWaiting = append(vrWaiting, vName)
-					finished = false
-					break
-				}
-			}
-			if finished {
-				break
-			}
-
-			log.InfoCLI("\nWatching for updates to validation results for %s...", vrWaiting)
-		}
-	}
-	log.InfoCLI("\nAll validations have completed.")
-	return hasValidationSucceeded, nil
-}
-
-func getValidationResultsCRDClient(vc *ValidatorConfig) (dynamic.NamespaceableResourceInterface, error) {
-	if err := os.Setenv("KUBECONFIG", vc.Kubeconfig); err != nil {
-		return nil, err
-	}
-	log.InfoCLI("Using kubeconfig from validator configuration file: %s", vc.Kubeconfig)
-
-	gv := kube.GetGroupVersion("validation.spectrocloud.labs", "v1alpha1")
-	kClient, err := kube.GetCRDClient(gv, "validationresults")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get validation result client")
-	}
-
-	return kClient, nil
-}
-
-func printValidationResults(validationResults []unstructured.Unstructured) error {
-	for _, vrObj := range validationResults {
-		vrStr, err := buildValidationResultString(vrObj)
-		if err != nil {
-			return err
-		}
-		log.InfoCLI(vrStr)
-	}
-
-	return nil
-}
-
-func buildValidationResultString(vrObj unstructured.Unstructured) (string, error) {
-	vr := &validator.ValidationResult{}
-	bytes, err := vrObj.MarshalJSON()
-	if err != nil {
-		return "", err
-	}
-	if err := json.Unmarshal(bytes, vr); err != nil {
-		return "", err
-	}
-
-	sb := &strings.Builder{}
-	sb.WriteString("\n=================\nValidation Result\n=================\n")
-	keys := []string{"Plugin", "Name", "Namespace", "State"}
-	vals := []string{vr.Spec.Plugin, vr.Name, vr.Namespace, string(vr.Status.State)}
-
-	for _, c := range vr.Status.Conditions {
-		if c.Type == validator.SinkEmission {
-			keys = append(keys, "Sink State")
-			vals = append(vals, string(c.Reason))
-			break
-		}
-	}
-
-	args := map[string]interface{}{
-		"Keys":   keys,
-		"Values": vals,
-	}
-
-	if err := embed.PrintTableTemplate(sb, args, cfg.Validator, "validation-result.tmpl"); err != nil {
-		return "", err
-	}
-
-	sb.WriteString("\n------------\nRule Results\n------------\n")
-	for _, c := range vr.Status.ValidationConditions {
-		args := map[string]interface{}{
-			"Keys":   []string{"Validation Rule", "Validation Type", "Status", "Last Validated", "Message"},
-			"Values": []string{c.ValidationRule, c.ValidationType, string(c.Status), c.LastValidationTime.Format(time.RFC3339), strings.TrimSpace(c.Message)},
-		}
-
-		if err := embed.PrintTableTemplate(sb, args, cfg.Validator, "validation-result.tmpl"); err != nil {
-			return "", err
-		}
-
-		for i, d := range c.Details {
-			if i == 0 {
-				sb.WriteString("\n-------\nDetails\n-------\n")
-			}
-			sb.WriteString(fmt.Sprintf("- %s\n", d))
-		}
-		for i, f := range c.Failures {
-			if i == 0 {
-				sb.WriteString("\n--------\nFailures\n--------\n")
-			}
-			sb.WriteString(fmt.Sprintf("- %s\n", f))
-		}
-	}
-	return sb.String(), nil
 }

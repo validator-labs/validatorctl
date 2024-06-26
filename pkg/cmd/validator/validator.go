@@ -15,7 +15,10 @@ import (
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/tools/cache"
+	toolsWatch "k8s.io/client-go/tools/watch"
 
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
 	"github.com/validator-labs/validator/pkg/helm"
@@ -80,7 +83,7 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 
 	// save / print validator config file
 	if saveConfig {
-		if err := components.SaveValidatorConfig(vc, tc.ConfigFile); err != nil {
+		if err := components.SaveValidatorConfig(vc, tc); err != nil {
 			return err
 		}
 	} else {
@@ -100,8 +103,8 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 	return applyValidatorAndPlugins(c, vc)
 }
 
-func UpgradeValidatorCommand(c *cfg.Config, taskConfig *cfg.TaskConfig) error {
-	vc, err := components.NewValidatorFromConfig(taskConfig)
+func UpgradeValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
+	vc, err := components.NewValidatorFromConfig(tc)
 	if err != nil {
 		return errors.Wrap(err, "failed to load validator configuration file")
 	}
@@ -111,8 +114,8 @@ func UpgradeValidatorCommand(c *cfg.Config, taskConfig *cfg.TaskConfig) error {
 	return applyValidatorAndPlugins(c, vc)
 }
 
-func UndeployValidatorCommand(taskConfig *cfg.TaskConfig, deleteCluster bool) error {
-	vc, err := components.NewValidatorFromConfig(taskConfig)
+func UndeployValidatorCommand(tc *cfg.TaskConfig, deleteCluster bool) error {
+	vc, err := components.NewValidatorFromConfig(tc)
 	if err != nil {
 		return errors.Wrap(err, "failed to load validator configuration file")
 	}
@@ -134,8 +137,8 @@ func UndeployValidatorCommand(taskConfig *cfg.TaskConfig, deleteCluster bool) er
 	return nil
 }
 
-func DescribeValidationResultsCommand(taskConfig *cfg.TaskConfig) error {
-	kClient, err := getValidationResultsCRDClient(taskConfig)
+func DescribeValidationResultsCommand(tc *cfg.TaskConfig) error {
+	kClient, err := getValidationResultsCRDClient(tc)
 	if err != nil {
 		return errors.Wrap(err, "failed to get validation result client")
 	}
@@ -151,9 +154,82 @@ func DescribeValidationResultsCommand(taskConfig *cfg.TaskConfig) error {
 
 	return nil
 }
-func getValidationResultsCRDClient(taskConfig *cfg.TaskConfig) (dynamic.NamespaceableResourceInterface, error) {
-	if taskConfig.ConfigFile != "" {
-		vc, err := components.NewValidatorFromConfig(taskConfig)
+
+func WatchValidationResults(tc *cfg.TaskConfig) (bool, error) {
+	log.InfoCLI("\nWatching validation results, waiting for all to succeed")
+	kClient, err := getValidationResultsCRDClient(tc)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get validation result client")
+	}
+
+	watchFunc := func(options metav1.ListOptions) (watch.Interface, error) {
+		return kClient.Watch(context.Background(), metav1.ListOptions{})
+	}
+
+	watcher, err := toolsWatch.NewRetryWatcher("1", &cache.ListWatch{WatchFunc: watchFunc})
+	if err != nil {
+		return false, errors.Wrap(err, "failed to create retry watcher for validation results")
+	}
+
+	var hasValidationSucceeded bool
+	validationStates := make(map[string]vapi.ValidationState)
+
+	if os.Getenv("IS_TEST") == "true" {
+		return true, nil
+	}
+
+	for event := range watcher.ResultChan() {
+		vrObj := event.Object.(*unstructured.Unstructured)
+
+		vr := &vapi.ValidationResult{}
+		bytes, err := vrObj.MarshalJSON()
+		if err != nil {
+			return false, err
+		}
+		if err := json.Unmarshal(bytes, vr); err != nil {
+			return false, err
+		}
+
+		prevValidationState := validationStates[vr.Name]
+		validationStates[vr.Name] = vr.Status.State
+		if event.Type != watch.Modified {
+			continue
+		}
+
+		hasValidationSucceeded = true
+		if prevValidationState != vr.Status.State {
+			log.InfoCLI("\nValidation result for %s updated:", vr.Name)
+			err = printValidationResults([]unstructured.Unstructured{*vrObj})
+			if err != nil {
+				return false, err
+			}
+
+			finished := true
+			vrWaiting := make([]string, 0)
+			for vName, state := range validationStates {
+				if state == vapi.ValidationFailed {
+					hasValidationSucceeded = false
+				}
+				if state != vapi.ValidationSucceeded && state != vapi.ValidationFailed {
+					vrWaiting = append(vrWaiting, vName)
+					finished = false
+					break
+				}
+			}
+			if finished {
+				break
+			}
+
+			log.InfoCLI("\nWatching for updates to validation results for %s...", vrWaiting)
+		}
+	}
+	log.InfoCLI("\nAll validations have completed.")
+	return hasValidationSucceeded, nil
+}
+
+func getValidationResultsCRDClient(tc *cfg.TaskConfig) (dynamic.NamespaceableResourceInterface, error) {
+	if tc.ConfigFile != "" {
+		vc, err := components.NewValidatorFromConfig(tc)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to load validator configuration file")
 		}
