@@ -5,12 +5,14 @@
 .PHONY: docker kind kubectl helm build test
 .DEFAULT_GOAL:=help
 
-# Dependency Versions
-DOCKER_VERSION ?= 24.0.6
-HELM_VERSION ?= 3.14.0
-GOLANGCI_VERSION ?= 1.54.2
-KIND_VERSION ?= 0.20.0
-KUBECTL_VERSION ?= 1.24.10
+# Format output
+TIME   = `date +%H:%M:%S`
+RED    := $(shell printf "\033[31m")
+GREEN  := $(shell printf "\033[32m")
+CNone  := $(shell printf "\033[0m")
+
+OK   = echo ${TIME} ${GREEN}[ OK ]${CNone}
+ERR  = echo ${TIME} ${RED}[ ERR ]${CNone} "error:"
 
 # Product Version
 VERSION_SUFFIX ?= -dev
@@ -19,7 +21,6 @@ VERSION ?= 0.0.2${VERSION_SUFFIX} # x-release-please-version
 # Common vars
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
-BIN_DIR ?= ./bin
 export PATH := $(PATH):$(RUNNER_TOOL_CACHE)
 
 # Go env vars
@@ -66,6 +67,15 @@ build-release:  ## Build CLI for multiple platforms
 		sha256sum bin/validator-$(GOOS)-$(GOARCH) > bin/validator-$(GOOS)-$(GOARCH).sha256;)
 
 ##@ Static Analysis Targets
+
+reviewable: fmt vet lint ## Ensure code is ready for review
+	go mod tidy
+
+check-diff: reviewable ## Execute auto-gen code commands and ensure branch is clean
+	git --no-pager diff
+	git diff --quiet || ($(ERR) please run 'make reviewable' to include all changes && false)
+	@$(OK) branch is clean
+
 fmt:  ## Run go fmt
 	go fmt  ./...
 
@@ -120,6 +130,22 @@ coverage-integration-html: ## Open integration test coverage report in your brow
 	go tool cover -html $(COVER_DIR)/integration/integration.out
 
 ##@ Tools Targets
+
+## Location to install dependencies to
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+## Tool versions
+DOCKER_VERSION ?= 24.0.6
+HELM_VERSION ?= 3.14.0
+GOLANGCI_LINT_VERSION ?= v1.59.1
+KIND_VERSION ?= 0.20.0
+KUBECTL_VERSION ?= 1.24.10
+
+## Tool binaries
+GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
+
 binaries: docker helm kind kubectl
 
 docker:
@@ -162,22 +188,10 @@ helm:
 		} \
 	fi
 
-golangci-lint:
-	if ! test -f $(BIN_DIR)/golangci-lint-linux-amd64; then \
-		curl -LOs https://github.com/golangci/golangci-lint/releases/download/v$(GOLANGCI_VERSION)/golangci-lint-$(GOLANGCI_VERSION)-linux-amd64.tar.gz; \
-		tar -zxf golangci-lint-$(GOLANGCI_VERSION)-linux-amd64.tar.gz; \
-		mv golangci-lint-$(GOLANGCI_VERSION)-*/golangci-lint $(BIN_DIR)/golangci-lint-linux-amd64; \
-		chmod +x $(BIN_DIR)/golangci-lint-linux-amd64; \
-		rm -rf ./golangci-lint-$(GOLANGCI_VERSION)-linux-amd64*; \
-	fi
-	if ! test -f $(BIN_DIR)/golangci-lint-$(GOOS)-$(GOARCH); then \
-		curl -LOs https://github.com/golangci/golangci-lint/releases/download/v$(GOLANGCI_VERSION)/golangci-lint-$(GOLANGCI_VERSION)-$(GOOS)-$(GOARCH).tar.gz; \
-		tar -zxf golangci-lint-$(GOLANGCI_VERSION)-$(GOOS)-$(GOARCH).tar.gz; \
-		mv golangci-lint-$(GOLANGCI_VERSION)-*/golangci-lint $(BIN_DIR)/golangci-lint-$(GOOS)-$(GOARCH); \
-		chmod +x $(BIN_DIR)/golangci-lint-$(GOOS)-$(GOARCH); \
-		rm -rf ./golangci-lint-$(GOLANGCI_VERSION)-$(GOOS)-$(GOARCH)*; \
-	fi
-GOLANGCI_LINT=$(BIN_DIR)/golangci-lint-$(GOOS)-$(GOARCH)
+.PHONY: golangci-lint
+golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
+$(GOLANGCI_LINT): $(LOCALBIN)
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
 
 gocovmerge:
 ifeq (, $(shell which gocovmerge))
@@ -188,3 +202,17 @@ GOCOVMERGE=$(GOBIN)/gocovmerge
 else
 GOCOVMERGE=$(shell which gocovmerge)
 endif
+
+# go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
+# $1 - target path with name of binary (ideally with version)
+# $2 - package url which can be installed
+# $3 - specific version of package
+define go-install-tool
+@[ -f $(1) ] || { \
+set -e; \
+package=$(2)@$(3) ;\
+echo "Downloading $${package}" ;\
+GOBIN=$(LOCALBIN) go install $${package} ;\
+mv -f "$$(echo "$(1)" | sed "s/-$(3)$$//")" $(1) ;\
+}
+endef

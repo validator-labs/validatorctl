@@ -20,17 +20,19 @@ type Env struct {
 	ServiceIPRange  *string `yaml:"serviceIPRange"`
 }
 
-func ReadProxyProps(e *Env) (err error) {
+func ReadProxyProps(e *Env) error {
+	var err error
+
 	// https_proxy
 	e.HTTPSProxy, err = prompts.ReadURL("HTTPS Proxy", e.HTTPSProxy, "HTTPS Proxy should be a valid URL", true)
 	if err != nil {
-		return
+		return err
 	}
 
 	// http_proxy
 	e.HTTPProxy, err = prompts.ReadURL("HTTP Proxy", e.HTTPProxy, "HTTP Proxy should be a valid URL", true)
 	if err != nil {
-		return
+		return err
 	}
 
 	if e.HTTPProxy != "" || e.HTTPSProxy != "" {
@@ -39,7 +41,7 @@ func ReadProxyProps(e *Env) (err error) {
 		time.Sleep(2 * time.Second)
 		e.NoProxy, err = prompts.EditFileValidatedByLine(cfg.NoProxyPrompt, e.NoProxy, ",", prompts.ValidateNoProxy, -1)
 		if err != nil {
-			return
+			return err
 		}
 
 		// Proxy CA certificate
@@ -52,5 +54,5 @@ func ReadProxyProps(e *Env) (err error) {
 		e.ProxyCaCertPath = caCertPath
 	}
 
-	return
+	return nil
 }

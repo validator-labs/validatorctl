@@ -35,7 +35,7 @@ func ConfigureOciPlugin(vc *ValidatorConfig, config OciConfig) {
 }
 
 func generateOciRegistryRules(hostRefs map[string][]string) []oci_api.OciRegistryRule {
-	var rules []oci_api.OciRegistryRule
+	rules := make([]oci_api.OciRegistryRule, 0, len(hostRefs))
 	for host, refs := range hostRefs {
 		rule := oci_api.OciRegistryRule{
 			RuleName: fmt.Sprintf("artifacts on %s", host),

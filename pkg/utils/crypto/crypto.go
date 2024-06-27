@@ -16,12 +16,11 @@ func DecryptB64(cipherstringB64 string) (*[]byte, error) {
 		return new([]byte), nil
 	}
 
-	encrypted, err := base64.StdEncoding.DecodeString(cipherstringB64)
+	ciphertext, err := base64.StdEncoding.DecodeString(cipherstringB64)
 	if err != nil {
 		return nil, err
 	}
 
-	ciphertext := []byte(encrypted)
 	key := []byte(k)
 
 	block, err := aes.NewCipher(key)

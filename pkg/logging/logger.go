@@ -110,9 +110,9 @@ func ptermLog(f func(string, ...[]pterm.LoggerArgument), entry *logrus.Entry, ms
 
 func printToConsole(format string, v ...interface{}) {
 	s := fmt.Sprintf(format, v...)
-	fmt.Fprint(os.Stdout, strings.TrimSuffix(s, "\n"))
+	fmt.Fprint(os.Stdout, strings.TrimSuffix(s, "\n")) // nolint:errcheck
 	if Newline {
-		fmt.Fprintf(os.Stdout, "\n")
+		fmt.Fprintf(os.Stdout, "\n") // nolint:errcheck
 	}
 }
 
@@ -121,12 +121,12 @@ func Header(s string) {
 }
 
 func HeaderCustom(s string, bgColor, textColor pterm.Color) {
-	fmt.Fprintf(os.Stdout, "\n")
+	fmt.Fprintf(os.Stdout, "\n") // nolint:errcheck
 	pterm.DefaultHeader.
 		WithMargin(15).
 		WithBackgroundStyle(pterm.NewStyle(bgColor)).
 		WithTextStyle(pterm.NewStyle(textColor)).
 		WithFullWidth(true).
 		Println(s)
-	fmt.Fprintf(os.Stdout, "\n")
+	fmt.Fprintf(os.Stdout, "\n") // nolint:errcheck
 }

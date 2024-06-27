@@ -43,6 +43,7 @@ func readOciPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 	return nil
 }
 
+// nolint:dupl
 // configureAuthSecrets prompts the user to configure credentials for OCI registries.
 func configureAuthSecrets(c *components.OCIPluginConfig, k8sClient kubernetes.Interface) ([]string, error) {
 	log.InfoCLI("Optionally configure secret(s) for private OCI registry authentication.")
@@ -64,7 +65,7 @@ func configureAuthSecrets(c *components.OCIPluginConfig, k8sClient kubernetes.In
 	if c.Secrets == nil {
 		c.Secrets = make([]*components.Secret, 0)
 	} else {
-		addSecrets, err = prompts.ReadBool("Add another private OCI registry", false)
+		addSecrets, err = prompts.ReadBool("Add another private OCI registry secret", false)
 		if err != nil {
 			return nil, err
 		}
@@ -106,6 +107,7 @@ func configureAuthSecrets(c *components.OCIPluginConfig, k8sClient kubernetes.In
 	return secretNames, nil
 }
 
+// nolint:dupl
 // configureSigVerificationSecrets prompts the user to configure secrets containing public keys for use in signature verification.
 func configureSigVerificationSecrets(c *components.OCIPluginConfig, k8sClient kubernetes.Interface) ([]string, error) {
 	log.InfoCLI("Optionally configure secret(s) for OCI artifact signature verification.")

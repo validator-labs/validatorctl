@@ -16,20 +16,6 @@ import (
 	kube_utils "github.com/validator-labs/validatorctl/pkg/utils/kube"
 )
 
-func readConfigMap(k8sClient kubernetes.Interface, prompt, namespace string) (string, error) {
-	cm, err := prompt_utils.ReadK8sName(prompt, "", true)
-	if err != nil {
-		return "", err
-	}
-	if cm != "" {
-		if _, err := k8sClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), cm, metav1.GetOptions{}); err != nil {
-			log.InfoCLI("ConfigMap %s does not exist in the %s namespace. Please try again.", cm, namespace)
-			return readConfigMap(k8sClient, prompt, namespace)
-		}
-	}
-	return cm, nil
-}
-
 func GetSecretsWithKeys(k8sClient kubernetes.Interface, namespace string, keys []string) ([]corev1.Secret, error) {
 	secrets := make([]corev1.Secret, 0)
 	secretList, err := k8sClient.CoreV1().Secrets(namespace).List(context.TODO(), metav1.ListOptions{})
@@ -139,16 +125,4 @@ func ReadKubeconfig() (kubernetes.Interface, string, error) {
 		return nil, "", err
 	}
 	return k8sClient, kubeconfigPath, nil
-}
-
-func readNamespace(k8sClient kubernetes.Interface, prompt, defaultVal string) (string, error) {
-	namespace, err := prompt_utils.ReadK8sName(prompt, defaultVal, false)
-	if err != nil {
-		return "", err
-	}
-	if _, err := k8sClient.CoreV1().Namespaces().Get(context.TODO(), namespace, metav1.GetOptions{}); err != nil {
-		log.InfoCLI("Namespace %s does not exist. Please try again.", namespace)
-		return readNamespace(k8sClient, prompt, defaultVal)
-	}
-	return namespace, nil
 }
