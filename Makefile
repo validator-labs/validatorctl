@@ -16,7 +16,7 @@ ERR  = echo ${TIME} ${RED}[ ERR ]${CNone} "error:"
 
 # Product Version
 VERSION_SUFFIX ?= -dev
-VERSION ?= 0.0.2${VERSION_SUFFIX} # x-release-please-version
+VERSION ?= 0.0.3${VERSION_SUFFIX} # x-release-please-version
 
 # Common vars
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))

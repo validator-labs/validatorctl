@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.0.3](https://github.com/validator-labs/validatorctl/compare/v0.0.2...v0.0.3) (2024-06-27)
+
+
+### Features
+
+* add helpers to easily configure validator plugins ([#62](https://github.com/validator-labs/validatorctl/issues/62)) ([ae596d3](https://github.com/validator-labs/validatorctl/commit/ae596d349e755fed660373736498622e557ee051))
+
+
+### Dependency Updates
+
+* **deps:** update module github.com/vmware/govmomi to v0.38.0 ([#59](https://github.com/validator-labs/validatorctl/issues/59)) ([4e6ad15](https://github.com/validator-labs/validatorctl/commit/4e6ad1553b995ddf5b90e13e1d109d3b355d26c3))
+* **deps:** update module gopkg.in/yaml.v2 to v3 ([#57](https://github.com/validator-labs/validatorctl/issues/57)) ([9698478](https://github.com/validator-labs/validatorctl/commit/96984785e059f2f35fe8aee7fe2d1ea7819d84fe))
+
 ## [0.0.2](https://github.com/validator-labs/validatorctl/compare/v0.0.1...v0.0.2) (2024-06-24)
 
 
