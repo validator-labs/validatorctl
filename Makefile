@@ -5,7 +5,7 @@ VERSION_SUFFIX ?= -dev
 VERSION ?= 0.0.3${VERSION_SUFFIX} # x-release-please-version
 
 ##@ Build Targets
-.PHONY: build
+.PHONY: build-cli
 build-cli: ## Build CLI
 	@echo "Building CLI binary..."
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags " \
