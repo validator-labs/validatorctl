@@ -480,7 +480,7 @@ func readIamPolicy() (vpawsapi.PolicyDocument, error) {
 
 // Convert statements from awspolicy to v1alpha1
 func convertStatements(statements []awspolicy.Statement) []vpawsapi.StatementEntry {
-	result := make([]vpawsapi.StatementEntry, 0)
+	result := make([]vpawsapi.StatementEntry, 0, len(statements))
 	for _, s := range statements {
 		result = append(result, vpawsapi.StatementEntry{
 			Condition: vpawsapi.Condition(s.Condition),

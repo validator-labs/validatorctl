@@ -240,8 +240,8 @@ func selectEsxiHosts(ctx context.Context, datacenter string, clusterName string,
 		return nil, errors.Wrap(err, "failed to list vSphere ESXi hosts")
 	}
 
-	hostList := make([]string, 0)
-	selectedHosts := make([]string, 0)
+	hostList := make([]string, 0, len(hosts))
+	selectedHosts := make([]string, 0, len(hosts))
 
 	for _, host := range hosts {
 		hostList = append(hostList, host.Name)
@@ -842,7 +842,7 @@ func handleHostEntity(ctx context.Context, driver vsphere.VsphereDriver, datacen
 	if err != nil {
 		return "", "", err
 	}
-	hostList := make([]string, 0)
+	hostList := make([]string, 0, len(hosts))
 	for _, host := range hosts {
 		hostList = append(hostList, host.Name)
 	}
@@ -855,8 +855,6 @@ func handleHostEntity(ctx context.Context, driver vsphere.VsphereDriver, datacen
 
 func handleResourcePoolEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string, entityType string) (string, string, error) {
 	allResourcePools := make([]*object.ResourcePool, 0)
-	rpChoiceList := make([]prompts.ChoiceItem, 0)
-	rpClusterMapping := make(map[string]string)
 
 	clusterScoped, clusterName, err := getClusterScopedInfo(ctx, datacenter, entityType, driver)
 	if err != nil {
@@ -877,6 +875,8 @@ func handleResourcePoolEntity(ctx context.Context, driver vsphere.VsphereDriver,
 	}
 	allResourcePools = append(allResourcePools, defaultRPs...)
 
+	rpChoiceList := make([]prompts.ChoiceItem, 0, len(allResourcePools))
+	rpClusterMapping := make(map[string]string)
 	for _, rp := range allResourcePools {
 		rpCluster := strings.Split(rp.InventoryPath, "/")[3]
 		rpChoiceName := rp.Name()
@@ -908,7 +908,7 @@ func handleVAppEntity(ctx context.Context, driver vsphere.VsphereDriver) (string
 	if err != nil {
 		return "", err
 	}
-	vAppList := make([]string, 0)
+	vAppList := make([]string, 0, len(vApps))
 	for _, vapp := range vApps {
 		vAppList = append(vAppList, vapp.Name)
 	}
@@ -920,13 +920,12 @@ func handleVAppEntity(ctx context.Context, driver vsphere.VsphereDriver) (string
 }
 
 func handleVMEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string, entityType string) (string, string, error) {
-	vmList := make([]string, 0)
-	var hostClusterMapping = make(map[string]string)
-
 	clusterScoped, clusterName, err := getClusterScopedInfo(ctx, datacenter, entityType, driver)
 	if err != nil {
 		return "", "", err
 	}
+
+	hostClusterMapping := make(map[string]string)
 	if clusterScoped {
 		// This way because govmomi just doesn't have a way to cheaply determine what cluster a VM belongs to :')
 		hostClusterMapping, err = driver.GetHostClusterMapping(ctx)
@@ -939,6 +938,8 @@ func handleVMEntity(ctx context.Context, driver vsphere.VsphereDriver, datacente
 	if err != nil {
 		return "", "", err
 	}
+
+	vmList := make([]string, 0, len(vms))
 	for _, vm := range vms {
 		if clusterScoped {
 			hostLookupKey := vm.Host
