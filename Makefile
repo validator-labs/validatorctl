@@ -5,6 +5,15 @@
 .PHONY: docker kind kubectl helm build test
 .DEFAULT_GOAL:=help
 
+# Format output
+TIME   = `date +%H:%M:%S`
+RED    := $(shell printf "\033[31m")
+GREEN  := $(shell printf "\033[32m")
+CNone  := $(shell printf "\033[0m")
+
+OK   = echo ${TIME} ${GREEN}[ OK ]${CNone}
+ERR  = echo ${TIME} ${RED}[ ERR ]${CNone} "error:"
+
 # Product Version
 VERSION_SUFFIX ?= -dev
 VERSION ?= 0.0.2${VERSION_SUFFIX} # x-release-please-version
