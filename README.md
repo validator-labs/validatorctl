@@ -45,7 +45,7 @@ To build `validatorctl` from source, you'll need to ensure you're running `go1.2
 You can then build `validatorctl` and run it with the following commands:
 
 ```sh
-make build
+make build-cli
 ./bin/validator help
 ```
 
