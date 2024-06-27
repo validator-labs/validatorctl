@@ -23,6 +23,9 @@ build-release:  ## Build CLI for multiple platforms
 			-a -o bin/validator-$(GOOS)-$(GOARCH) validator.go; \
 		sha256sum bin/validator-$(GOOS)-$(GOARCH) > bin/validator-$(GOOS)-$(GOARCH).sha256;)
 
+manifests:
+	@$(INFO) manifests: no-op
+
 ##@ Test Targets
 
 COVER_DIR=_build/cov
