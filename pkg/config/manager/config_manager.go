@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"github.com/validator-labs/validatorctl/pkg/cmd/common"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 )
 
@@ -12,10 +11,7 @@ func init() {
 }
 
 func Init() error {
-	if err := c.Load(); err != nil {
-		return err
-	}
-	return common.InitWorkspace(c, "", cfg.BaseDirs, false)
+	return c.Load()
 }
 
 func Config() *cfg.Config {

@@ -1,6 +1,7 @@
 package components
 
 import (
+	"fmt"
 	"os"
 
 	"emperror.dev/errors"
@@ -502,8 +503,8 @@ func (s *Secret) decrypt() error {
 }
 
 // NewValidatorFromConfig loads a validator configuration file from disk and decrypts it
-func NewValidatorFromConfig(taskConfig *cfg.TaskConfig) (*ValidatorConfig, error) {
-	c, err := LoadValidatorConfig(taskConfig)
+func NewValidatorFromConfig(tc *cfg.TaskConfig) (*ValidatorConfig, error) {
+	c, err := LoadValidatorConfig(tc)
 	if err != nil {
 		return nil, err
 	}
@@ -514,8 +515,8 @@ func NewValidatorFromConfig(taskConfig *cfg.TaskConfig) (*ValidatorConfig, error
 }
 
 // LoadValidatorConfig loads a validator configuration file from disk
-func LoadValidatorConfig(taskConfig *cfg.TaskConfig) (*ValidatorConfig, error) {
-	bytes, err := os.ReadFile(taskConfig.ConfigFile)
+func LoadValidatorConfig(tc *cfg.TaskConfig) (*ValidatorConfig, error) {
+	bytes, err := os.ReadFile(tc.ConfigFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read validator config file")
 	}
@@ -527,7 +528,7 @@ func LoadValidatorConfig(taskConfig *cfg.TaskConfig) (*ValidatorConfig, error) {
 }
 
 // SaveValidatorConfig saves a validator configuration file to disk
-func SaveValidatorConfig(c *ValidatorConfig, taskConfig *cfg.TaskConfig) error {
+func SaveValidatorConfig(c *ValidatorConfig, tc *cfg.TaskConfig) error {
 	if err := c.encrypt(); err != nil {
 		return err
 	}
@@ -538,9 +539,33 @@ func SaveValidatorConfig(c *ValidatorConfig, taskConfig *cfg.TaskConfig) error {
 	if err := c.decrypt(); err != nil {
 		return err
 	}
-	if err = os.WriteFile(taskConfig.ConfigFile, b, 0600); err != nil {
+	if err = os.WriteFile(tc.ConfigFile, b, 0600); err != nil {
 		return errors.Wrap(err, "failed to create validator config file")
 	}
-	log.InfoCLI("validator configuration file saved: %s", taskConfig.ConfigFile)
+	log.InfoCLI("validator configuration file saved: %s", tc.ConfigFile)
 	return nil
+}
+
+func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) {
+	vc.Release = &validator.HelmRelease{
+		Chart: validator.HelmChart{
+			Name:                  cfg.Validator,
+			Repository:            fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, cfg.Validator),
+			Version:               cfg.ValidatorChartVersions[cfg.Validator],
+			InsecureSkipTlsVerify: true,
+		},
+	}
+	vc.ReleaseSecret = &Secret{
+		Name: fmt.Sprintf("validator-helm-release-%s", cfg.Validator),
+	}
+	vc.KindConfig.UseKindCluster = true
+	vc.Kubeconfig = kubeconfig
+	vc.ImageRegistry = cfg.ValidatorImageRegistry
+	vc.ProxyConfig = &ProxyConfig{
+		Env: &env.Env{
+			PodCIDR:        &cfg.DefaultPodCIDR,
+			ServiceIPRange: &cfg.DefaultServiceIPRange,
+		},
+	}
+	vc.UseFixedVersions = true
 }
