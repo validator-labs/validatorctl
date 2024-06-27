@@ -89,6 +89,7 @@ func (c *ValidatorConfig) AnyPluginEnabled() bool {
 	return c.AWSPlugin.Enabled || c.NetworkPlugin.Enabled || c.VspherePlugin.Enabled || c.OCIPlugin.Enabled || c.AzurePlugin.Enabled
 }
 
+// nolint:dupl
 func (c *ValidatorConfig) decrypt() error {
 	if c.ReleaseSecret != nil {
 		if err := c.ReleaseSecret.decrypt(); err != nil {
@@ -128,6 +129,7 @@ func (c *ValidatorConfig) decrypt() error {
 	return nil
 }
 
+// nolint:dupl
 func (c *ValidatorConfig) encrypt() error {
 	if c.ReleaseSecret != nil {
 		if err := c.ReleaseSecret.encrypt(); err != nil {

@@ -164,7 +164,7 @@ func getReleasesFromHelmRepo(repoUrl string) ([]string, error) {
 	if err != nil {
 		return nil, err // can happen in air-gapped scenarios
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck
 
 	// if there is a failure in fetching the index.yaml, return err so the version can be picked manually
 	// Don't have to worry about resp being nil as http.Get documentation mentions - When err is nil, resp always contains a non-nil resp.Body.

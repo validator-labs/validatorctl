@@ -48,6 +48,7 @@ func readNetworkPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 	return nil
 }
 
+// nolint:dupl
 func configureDnsRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	DNS validation rules ensure that DNS lookups succeed for the specified host(s).
@@ -94,6 +95,7 @@ func configureDnsRules(c *components.NetworkPluginConfig, ruleNames *[]string) e
 	return nil
 }
 
+// nolint:dupl
 func configureIcmpRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	ICMP validation rules ensure that ICMP pings succeed for the specified host(s).
@@ -140,6 +142,7 @@ func configureIcmpRules(c *components.NetworkPluginConfig, ruleNames *[]string) 
 	return nil
 }
 
+// nolint:dupl
 func configureIpRangeRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	IP range validation rules ensure that a specific range of
@@ -187,6 +190,7 @@ func configureIpRangeRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 	return nil
 }
 
+// nolint:dupl
 func configureMtuRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	MTU validation rules ensure that the default NIC has an
@@ -234,6 +238,7 @@ func configureMtuRules(c *components.NetworkPluginConfig, ruleNames *[]string) e
 	return nil
 }
 
+// nolint:dupl
 func configureTcpConnRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	TCP connection validation rules ensure that TCP connections

@@ -163,6 +163,7 @@ func initVsphereRule[R vSphereRule](r R, ruleType, message string, ruleNames *[]
 	return nil
 }
 
+// nolint:dupl
 func configureNtpRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
 	log.InfoCLI(`
 	NTP validation ensures that ntpd is enabled and running on a set of ESXi hosts.
@@ -239,7 +240,9 @@ func selectEsxiHosts(ctx context.Context, datacenter string, clusterName string,
 		return nil, errors.Wrap(err, "failed to list vSphere ESXi hosts")
 	}
 
-	var hostList, selectedHosts []string
+	hostList := make([]string, 0)
+	selectedHosts := make([]string, 0)
+
 	for _, host := range hosts {
 		hostList = append(hostList, host.Name)
 	}
@@ -492,6 +495,7 @@ func readCustomEntityPrivileges(ctx context.Context, c *components.VspherePlugin
 	return nil
 }
 
+// nolint:dupl
 func configureResourceRequirementRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.VsphereDriver, ruleNames *[]string) error {
 	log.InfoCLI(`
 	Resource requirement validation ensures that sufficient capacity is available within
@@ -838,7 +842,7 @@ func handleHostEntity(ctx context.Context, driver vsphere.VsphereDriver, datacen
 	if err != nil {
 		return "", "", err
 	}
-	var hostList []string
+	hostList := make([]string, 0)
 	for _, host := range hosts {
 		hostList = append(hostList, host.Name)
 	}
@@ -850,9 +854,9 @@ func handleHostEntity(ctx context.Context, driver vsphere.VsphereDriver, datacen
 }
 
 func handleResourcePoolEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string, entityType string) (string, string, error) {
-	var allResourcePools []*object.ResourcePool
-	var rpChoiceList []prompts.ChoiceItem
-	var rpClusterMapping = make(map[string]string)
+	allResourcePools := make([]*object.ResourcePool, 0)
+	rpChoiceList := make([]prompts.ChoiceItem, 0)
+	rpClusterMapping := make(map[string]string)
 
 	clusterScoped, clusterName, err := getClusterScopedInfo(ctx, datacenter, entityType, driver)
 	if err != nil {
@@ -904,7 +908,7 @@ func handleVAppEntity(ctx context.Context, driver vsphere.VsphereDriver) (string
 	if err != nil {
 		return "", err
 	}
-	var vAppList []string
+	vAppList := make([]string, 0)
 	for _, vapp := range vApps {
 		vAppList = append(vAppList, vapp.Name)
 	}
@@ -916,7 +920,7 @@ func handleVAppEntity(ctx context.Context, driver vsphere.VsphereDriver) (string
 }
 
 func handleVMEntity(ctx context.Context, driver vsphere.VsphereDriver, datacenter string, entityType string) (string, string, error) {
-	var vmList []string
+	vmList := make([]string, 0)
 	var hostClusterMapping = make(map[string]string)
 
 	clusterScoped, clusterName, err := getClusterScopedInfo(ctx, datacenter, entityType, driver)

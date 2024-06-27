@@ -40,6 +40,7 @@ func init() {
 	slices.Sort(plugins)
 }
 
+// nolint:gocyclo
 func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
 	log.Header("Enter Validator Configuration")
 

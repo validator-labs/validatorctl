@@ -74,6 +74,7 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 	return nil
 }
 
+// nolint:dupl
 func configureIamRoleRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	AWS IAM Role validation ensures that specified IAM Roles have every permission
@@ -161,6 +162,7 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 	return nil
 }
 
+// nolint:dupl
 func configureIamUserRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	AWS IAM User validation ensures that specified IAM Users have every permission
@@ -248,6 +250,7 @@ func readIamUserRule(c *components.AWSPluginConfig, r *vpawsapi.IamUserRule, idx
 	return nil
 }
 
+// nolint:dupl
 func configureIamGroupRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	AWS IAM Group validation ensures that specified IAM Groups have every permission
@@ -335,6 +338,7 @@ func readIamGroupRule(c *components.AWSPluginConfig, r *vpawsapi.IamGroupRule, i
 	return nil
 }
 
+// nolint:dupl
 func configureIamPolicyRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	AWS IAM Policy validation ensures that specified IAM Policies have every permission
@@ -476,7 +480,7 @@ func readIamPolicy() (vpawsapi.PolicyDocument, error) {
 
 // Convert statements from awspolicy to v1alpha1
 func convertStatements(statements []awspolicy.Statement) []vpawsapi.StatementEntry {
-	var result []vpawsapi.StatementEntry
+	result := make([]vpawsapi.StatementEntry, 0)
 	for _, s := range statements {
 		result = append(result, vpawsapi.StatementEntry{
 			Condition: vpawsapi.Condition(s.Condition),
@@ -488,6 +492,7 @@ func convertStatements(statements []awspolicy.Statement) []vpawsapi.StatementEnt
 	return result
 }
 
+// nolint:dupl
 func configureServiceQuotaRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	AWS service quota validation ensures that the usage for specific AWS resource quotas

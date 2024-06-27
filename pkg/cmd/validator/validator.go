@@ -278,7 +278,7 @@ func buildValidationResultString(vrObj unstructured.Unstructured) (string, error
 	for _, c := range vr.Status.Conditions {
 		if c.Type == vapi.SinkEmission {
 			keys = append(keys, "Sink State")
-			vals = append(vals, string(c.Reason))
+			vals = append(vals, c.Reason)
 			break
 		}
 	}
@@ -355,6 +355,7 @@ func createReleaseSecretCmd(secret *components.Secret) []string {
 	return args
 }
 
+// nolint:gocyclo
 func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	kubecommands, kubecommandsPre := [][]string{}, [][]string{}
 	kClient, err := kube.GetKubeClientset(vc.Kubeconfig)
@@ -593,7 +594,7 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if vc.AWSPlugin.Enabled {
 		log.InfoCLI("\n==== Applying AWS plugin validator(s) ====")
 		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginAwsTemplate, *vc.AWSPlugin.Validator,
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginAws, cfg.ValidatorPluginAwsTemplate, *vc.AWSPlugin.Validator,
 		); err != nil {
 			return err
 		}
@@ -602,7 +603,7 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if vc.VspherePlugin.Enabled {
 		log.InfoCLI("\n==== Applying vSphere plugin validator(s) ====")
 		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginVsphereTemplate, *vc.VspherePlugin.Validator,
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginVsphere, cfg.ValidatorPluginVsphereTemplate, *vc.VspherePlugin.Validator,
 		); err != nil {
 			return err
 		}
@@ -611,7 +612,7 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if vc.NetworkPlugin.Enabled {
 		log.InfoCLI("\n==== Applying Network plugin validator(s) ====")
 		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginNetworkTemplate, *vc.NetworkPlugin.Validator,
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginNetwork, cfg.ValidatorPluginNetworkTemplate, *vc.NetworkPlugin.Validator,
 		); err != nil {
 			return err
 		}
@@ -620,7 +621,7 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if vc.OCIPlugin.Enabled {
 		log.InfoCLI("\n==== Applying OCI plugin validator(s) ====")
 		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginOciTemplate, *vc.OCIPlugin.Validator,
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginOci, cfg.ValidatorPluginOciTemplate, *vc.OCIPlugin.Validator,
 		); err != nil {
 			return err
 		}
@@ -629,7 +630,7 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if vc.AzurePlugin.Enabled {
 		log.InfoCLI("\n==== Applying Azure plugin validator(s) ====")
 		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, "rules", cfg.ValidatorPluginAzureTemplate, *vc.AzurePlugin.Validator,
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginAzure, cfg.ValidatorPluginAzureTemplate, *vc.AzurePlugin.Validator,
 		); err != nil {
 			return err
 		}
