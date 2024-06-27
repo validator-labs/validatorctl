@@ -5,8 +5,8 @@ VERSION_SUFFIX ?= -dev
 VERSION ?= 0.0.3${VERSION_SUFFIX} # x-release-please-version
 
 ##@ Build Targets
-.PHONY: build-cli
-build-cli: ## Build CLI
+.PHONY: build
+build: ## Build CLI
 	@echo "Building CLI binary..."
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags " \
 	  -X github.com/validator-labs/validatorctl/cmd.Version=$(VERSION)" \
@@ -22,12 +22,6 @@ build-release:  ## Build CLI for multiple platforms
 			-X github.com/validator-labs/validatorctl/cmd.Version=$(VERSION)" \
 			-a -o bin/validator-$(GOOS)-$(GOARCH) validator.go; \
 		sha256sum bin/validator-$(GOOS)-$(GOARCH) > bin/validator-$(GOOS)-$(GOARCH).sha256;)
-
-manifests:
-	@$(INFO) manifests: no-op
-
-generate:
-	@$(INFO) generate: no-op
 
 ##@ Test Targets
 
