@@ -42,7 +42,7 @@ test-unit: ## Run unit tests
 test-integration: ## Run integration tests
 	@mkdir -p $(COVER_DIR)/integration
 	rm -rf $(COVER_DIR)/integration/*
-	IS_TEST=true CLI_VERSION=$(VERSION) KUBECONFIG= DISABLE_KIND_CLUSTER_CHECK=true \
+	PATH=$(PATH) IS_TEST=true CLI_VERSION=$(VERSION) KUBECONFIG= DISABLE_KIND_CLUSTER_CHECK=true \
 		go test -v -parallel 6 -timeout 30m \
 		-covermode=atomic -coverpkg=./... -coverprofile=$(COVER_DIR)/integration/integration.out ./tests/...
 
