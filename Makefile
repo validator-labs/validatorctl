@@ -47,7 +47,7 @@ test-integration: ## Run integration tests
 		-covermode=atomic -coverpkg=./... -coverprofile=$(COVER_DIR)/integration/integration.out ./tests/...
 
 .PHONY: test
-test: kind kubectl gocovmerge test-unit test-integration ## Run unit tests, integration test
+test: binaries gocovmerge test-unit test-integration ## Run unit tests, integration test
 	$(GOCOVMERGE) $(COVER_DIR)/unit/*.out $(COVER_DIR)/integration/*.out > $(COVER_DIR)/coverage.out.tmp
 	# Omit test code from coverage report
 	cat $(COVER_DIR)/coverage.out.tmp | grep -vE 'tests' > $(COVER_DIR)/coverage.out
@@ -55,6 +55,8 @@ test: kind kubectl gocovmerge test-unit test-integration ## Run unit tests, inte
 	go tool cover -html=$(COVER_DIR)/coverage.out -o $(COVER_DIR)/cover.html
 	go tool cover -func $(COVER_DIR)/coverage.out | grep total
 	cp $(COVER_DIR)/coverage.out cover.out
+
+binaries: kind kubectl helm
 
 coverage: ## Show global test coverage
 	go tool cover -func $(COVER_DIR)/coverage.out
