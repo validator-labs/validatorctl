@@ -47,7 +47,7 @@ test-integration: ## Run integration tests
 		-covermode=atomic -coverpkg=./... -coverprofile=$(COVER_DIR)/integration/integration.out ./tests/...
 
 .PHONY: test
-test: binaries gocovmerge test-unit test-integration ## Run unit tests, integration test
+test: kind kubectl gocovmerge test-unit test-integration ## Run unit tests, integration test
 	$(GOCOVMERGE) $(COVER_DIR)/unit/*.out $(COVER_DIR)/integration/*.out > $(COVER_DIR)/coverage.out.tmp
 	# Omit test code from coverage report
 	cat $(COVER_DIR)/coverage.out.tmp | grep -vE 'tests' > $(COVER_DIR)/coverage.out
@@ -73,54 +73,3 @@ coverage-integration: ## Show integration test coverage
 
 coverage-integration-html: ## Open integration test coverage report in your browser
 	go tool cover -html $(COVER_DIR)/integration/integration.out
-
-##@ Tools Targets
-
-## Tool versions
-DOCKER_VERSION ?= 24.0.6
-KIND_VERSION ?= 0.20.0
-KUBECTL_VERSION ?= 1.24.10
-
-## Tool binaries
-binaries: docker kind kubectl
-
-PLATFORM=$(GOOS)
-ifeq ("$(GOOS)", "darwin")
-PLATFORM=mac
-else ifeq ("$(GOOS)", "windows")
-PLATFORM=win
-endif
-
-export PATH := $(PATH):$(RUNNER_TOOL_CACHE)
-
-.PHONY: docker
-docker:
-	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
-		@command -v docker >/dev/null 2>&1 || { \
-			echo "Docker not found, downloading..."; \
-			curl -L https://download.docker.com/$(PLATFORM)/static/stable/x86_64/docker-$(DOCKER_VERSION).tgz | tar xz docker/docker; \
-			mv docker/docker $(RUNNER_TOOL_CACHE)/docker; \
-			chmod +x $(RUNNER_TOOL_CACHE)/docker; \
-			rm -rf ./docker; \
-		} \
-	fi
-
-.PHONY: kind
-kind:
-	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
-		@command -v kind >/dev/null 2>&1 || { \
-			echo "Kind not found, downloading..."; \
-			curl -Lo $(RUNNER_TOOL_CACHE)/kind https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(GOOS)-$(GOARCH); \
-			chmod +x $(RUNNER_TOOL_CACHE)/kind; \
-		} \
-	fi
-
-.PHONY: kubectl
-kubectl:
-	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
-		@command -v kubectl >/dev/null 2>&1 || { \
-			echo "Kubectl not found, downloading..."; \
-			curl -Lo $(RUNNER_TOOL_CACHE)/kubectl https://dl.k8s.io/release/v$(KUBECTL_VERSION)/bin/$(GOOS)/$(GOARCH)/kubectl; \
-			chmod +x $(RUNNER_TOOL_CACHE)/kubectl; \
-		} \
-	fi
