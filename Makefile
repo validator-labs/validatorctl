@@ -1,54 +1,11 @@
-# If you update this file, please follow:
-# https://www.thapaliya.com/en/writings/well-documented-makefiles/
+include build/makelib/common.mk
 
-# Meta
-.PHONY: docker kind kubectl helm build test
-.DEFAULT_GOAL:=help
-
-# Format output
-TIME   = `date +%H:%M:%S`
-RED    := $(shell printf "\033[31m")
-GREEN  := $(shell printf "\033[32m")
-CNone  := $(shell printf "\033[0m")
-
-OK   = echo ${TIME} ${GREEN}[ OK ]${CNone}
-ERR  = echo ${TIME} ${RED}[ ERR ]${CNone} "error:"
-
-# Product Version
+# CLI version
 VERSION_SUFFIX ?= -dev
 VERSION ?= 0.0.3${VERSION_SUFFIX} # x-release-please-version
 
-# Common vars
-MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-CURRENT_DIR := $(dir $(MAKEFILE_PATH))
-export PATH := $(PATH):$(RUNNER_TOOL_CACHE)
-
-# Go env vars
-GOOS ?= $(shell go env GOOS)
-GOARCH ?= $(shell go env GOARCH)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
-
-PLATFORM=$(GOOS)
-ifeq ("$(GOOS)", "darwin")
-PLATFORM=mac
-else ifeq ("$(GOOS)", "windows")
-PLATFORM=win
-endif
-TARGETARCH ?= amd64
-
-# Test vars
-COVER_DIR=_build/cov
-COVER_PKGS=$(shell go list ./... | grep -v /tests/) # omit integration tests
-
-##@ Help Targets
-help:  ## Display this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[0m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
-
 ##@ Build Targets
+.PHONY: build
 build: ## Build CLI
 	@echo "Building CLI binary..."
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags " \
@@ -66,26 +23,14 @@ build-release:  ## Build CLI for multiple platforms
 			-a -o bin/validator-$(GOOS)-$(GOARCH) validator.go; \
 		sha256sum bin/validator-$(GOOS)-$(GOARCH) > bin/validator-$(GOOS)-$(GOARCH).sha256;)
 
-##@ Static Analysis Targets
-
-reviewable: fmt vet lint ## Ensure code is ready for review
-	go mod tidy
-
-check-diff: reviewable ## Execute auto-gen code commands and ensure branch is clean
-	git --no-pager diff
-	git diff --quiet || ($(ERR) please run 'make reviewable' to include all changes && false)
-	@$(OK) branch is clean
-
-fmt:  ## Run go fmt
-	go fmt  ./...
-
-lint: golangci-lint ## Run golangci-lint
-	$(GOLANGCI_LINT) run
-
-vet: ## Run go vet
-	go vet ./...
+manifests:
+	@$(INFO) manifests: no-op
 
 ##@ Test Targets
+
+COVER_DIR=_build/cov
+COVER_PKGS=$(shell go list ./... | grep -v /tests/) # omit integration tests
+
 test-unit: ## Run unit tests
 	@mkdir -p $(COVER_DIR)/unit
 	rm -rf $(COVER_DIR)/unit/*
@@ -111,6 +56,8 @@ test: binaries gocovmerge test-unit test-integration ## Run unit tests, integrat
 	go tool cover -func $(COVER_DIR)/coverage.out | grep total
 	cp $(COVER_DIR)/coverage.out cover.out
 
+binaries: kind kubectl helm
+
 coverage: ## Show global test coverage
 	go tool cover -func $(COVER_DIR)/coverage.out
 
@@ -128,91 +75,3 @@ coverage-integration: ## Show integration test coverage
 
 coverage-integration-html: ## Open integration test coverage report in your browser
 	go tool cover -html $(COVER_DIR)/integration/integration.out
-
-##@ Tools Targets
-
-## Location to install dependencies to
-LOCALBIN ?= $(shell pwd)/bin
-$(LOCALBIN):
-	mkdir -p $(LOCALBIN)
-
-## Tool versions
-DOCKER_VERSION ?= 24.0.6
-HELM_VERSION ?= 3.14.0
-GOLANGCI_LINT_VERSION ?= v1.59.1
-KIND_VERSION ?= 0.20.0
-KUBECTL_VERSION ?= 1.24.10
-
-## Tool binaries
-GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
-
-binaries: docker helm kind kubectl
-
-docker:
-	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
-		@command -v docker >/dev/null 2>&1 || { \
-			echo "Docker not found, downloading..."; \
-			curl -L https://download.docker.com/$(PLATFORM)/static/stable/x86_64/docker-$(DOCKER_VERSION).tgz | tar xz docker/docker; \
-			mv docker/docker $(RUNNER_TOOL_CACHE)/docker; \
-			chmod +x $(RUNNER_TOOL_CACHE)/docker; \
-			rm -rf ./docker; \
-		} \
-	fi
-
-kind:
-	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
-		@command -v kind >/dev/null 2>&1 || { \
-			echo "Kind not found, downloading..."; \
-			curl -Lo $(RUNNER_TOOL_CACHE)/kind https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(GOOS)-$(GOARCH); \
-			chmod +x $(RUNNER_TOOL_CACHE)/kind; \
-		} \
-	fi
-
-kubectl:
-	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
-		@command -v kubectl >/dev/null 2>&1 || { \
-			echo "Kubectl not found, downloading..."; \
-			curl -Lo $(RUNNER_TOOL_CACHE)/kubectl https://dl.k8s.io/release/v$(KUBECTL_VERSION)/bin/$(GOOS)/$(GOARCH)/kubectl; \
-			chmod +x $(RUNNER_TOOL_CACHE)/kubectl; \
-		} \
-	fi
-
-helm:
-	@if [ "$(GITHUB_ACTIONS)" = "true" ]; then \
-		@command -v helm >/dev/null 2>&1 || { \
-			echo "Helm not found, downloading..."; \
-			curl -L https://get.helm.sh/helm-v$(HELM_VERSION)-$(GOOS)-$(GOARCH).tar.gz | tar xz; \
-			mv $(GOOS)-$(GOARCH)/helm $(RUNNER_TOOL_CACHE)/helm; \
-			rm -rf ./$(GOOS)-$(GOARCH); \
-			chmod +x $(RUNNER_TOOL_CACHE)/helm; \
-		} \
-	fi
-
-.PHONY: golangci-lint
-golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
-$(GOLANGCI_LINT): $(LOCALBIN)
-	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
-
-gocovmerge:
-ifeq (, $(shell which gocovmerge))
-	go version
-	go install github.com/wadey/gocovmerge@latest
-	go mod tidy
-GOCOVMERGE=$(GOBIN)/gocovmerge
-else
-GOCOVMERGE=$(shell which gocovmerge)
-endif
-
-# go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
-# $1 - target path with name of binary (ideally with version)
-# $2 - package url which can be installed
-# $3 - specific version of package
-define go-install-tool
-@[ -f $(1) ] || { \
-set -e; \
-package=$(2)@$(3) ;\
-echo "Downloading $${package}" ;\
-GOBIN=$(LOCALBIN) go install $${package} ;\
-mv -f "$$(echo "$(1)" | sed "s/-$(3)$$//")" $(1) ;\
-}
-endef

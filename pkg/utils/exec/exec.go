@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 
 	log "github.com/validator-labs/validatorctl/pkg/logging"
@@ -32,7 +33,10 @@ func CheckBinaries() error {
 		path, err := exec.LookPath(binary.name)
 		if err != nil {
 			hasAllBinaries = false
-			log.ErrorCLI(fmt.Sprintf("%s is not installed.\nPlease install the missing dependency and ensure it's available on your PATH.", binary.name))
+			log.ErrorCLI(
+				fmt.Sprintf("%s is not installed.\nPlease install the missing dependency and ensure it's available on your PATH.", binary.name),
+				"PATH", os.Getenv("PATH"),
+			)
 		}
 		*binary.path = path
 	}
