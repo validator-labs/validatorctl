@@ -56,6 +56,8 @@ test: binaries gocovmerge test-unit test-integration ## Run unit tests, integrat
 	go tool cover -func $(COVER_DIR)/coverage.out | grep total
 	cp $(COVER_DIR)/coverage.out cover.out
 
+export PATH := $(PATH):$(RUNNER_TOOL_CACHE):$(LOCALBIN)
+
 binaries: kind kubectl helm
 
 coverage: ## Show global test coverage
