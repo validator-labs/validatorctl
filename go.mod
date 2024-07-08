@@ -22,7 +22,7 @@ require (
 	github.com/validator-labs/validator-plugin-oci v0.0.10
 	github.com/validator-labs/validator-plugin-vsphere v0.0.26
 	github.com/vmware/govmomi v0.38.0
-	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
+	golang.org/x/exp v0.0.0-20240707233637-46b078467d37
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.30.2
 	k8s.io/apimachinery v0.30.2
