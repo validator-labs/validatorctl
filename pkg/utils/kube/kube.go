@@ -1,3 +1,4 @@
+// Package kube provides functions to interact with Kubernetes clusters
 package kube
 
 import (
@@ -20,14 +21,17 @@ import (
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 )
 
+// KubectlCmd represents a kubectl command
 type KubectlCmd struct {
 	Cmd      []string
 	Delay    *time.Duration
 	DelayMsg string
 }
 
+// Crd represents a custom resource definition
 type Crd string
 
+// KubectlCommand executes a kubectl command with the given parameters
 func KubectlCommand(params []string, kConfig string) (out, stderr string, err error) {
 	params = append(params, fmt.Sprintf("--kubeconfig=%s", kConfig))
 	cmd := exec.Command(exec_utils.Kubectl, params...) //#nosec
@@ -43,6 +47,7 @@ func KubectlCommand(params []string, kConfig string) (out, stderr string, err er
 	return
 }
 
+// GetKubeClientset returns a Kubernetes clientset
 func GetKubeClientset(kubeconfigPath string) (kubernetes.Interface, error) {
 	config, err := getConfigFromKubeconfig(kubeconfigPath, "")
 	if err != nil {
@@ -57,10 +62,12 @@ func GetKubeClientset(kubeconfigPath string) (kubernetes.Interface, error) {
 	return clientset, nil
 }
 
+// GetGroupVersion returns a GroupVersion object
 func GetGroupVersion(group, version string) schema.GroupVersion {
 	return schema.GroupVersion{Group: group, Version: version}
 }
 
+// GetCRDClient returns a dynamic client for the given CRD
 func GetCRDClient(groupVersion schema.GroupVersion, crd Crd) (dynamic.NamespaceableResourceInterface, error) {
 	dynClient, err := getDynamicClient()
 	if err != nil {
@@ -76,6 +83,7 @@ func GetCRDClient(groupVersion schema.GroupVersion, crd Crd) (dynamic.Namespacea
 	return dynClient.Resource(version), nil
 }
 
+// GetAPIConfig returns the API configuration from the kubeconfig file
 func GetAPIConfig(kubeconfig string) (*clientcmdapi.Config, error) {
 	bytes, err := os.ReadFile(kubeconfig) //#nosec
 	if err != nil {

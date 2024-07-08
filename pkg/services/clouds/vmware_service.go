@@ -1,3 +1,4 @@
+// Package clouds provides utility functions for interacting with clouds.
 package clouds
 
 import (
@@ -16,6 +17,7 @@ import (
 // GetVSphereDriver enables monkey-patching the vSphere driver for integration tests
 var GetVSphereDriver = getVSphereDriver
 
+// ReadVsphereAccountProps prompts the user to configure vSphere account properties
 func ReadVsphereAccountProps(account *vsphere.VsphereCloudAccount) error {
 	vcenterServer := account.VcenterServer
 	username := account.Username
@@ -62,9 +64,9 @@ func ReadVsphereAccountProps(account *vsphere.VsphereCloudAccount) error {
 		}
 		if val == "Continue" {
 			return ReadVsphereAccountProps(account)
-		} else {
-			os.Exit(0)
 		}
+
+		os.Exit(0)
 	}
 
 	return nil
@@ -74,6 +76,7 @@ func getVSphereDriver(account *vsphere.VsphereCloudAccount) (vsphere.VsphereDriv
 	return vsphere.NewVSphereDriver(account.VcenterServer, account.Username, account.Password, "")
 }
 
+// ValidateCloudAccountVsphere validates that the provided vSphere cloud account is valid
 func ValidateCloudAccountVsphere(account *vsphere.VsphereCloudAccount) error {
 	driver, err := GetVSphereDriver(account)
 	if err != nil {

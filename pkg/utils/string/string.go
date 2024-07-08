@@ -1,3 +1,4 @@
+// Package string contains utility functions for string manipulation.
 package string
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Capitalize capitalizes the first letter of a string.
 func Capitalize(s string) string {
 	if len(s) == 1 {
 		return strings.ToUpper(s)
@@ -13,6 +15,7 @@ func Capitalize(s string) string {
 	return strings.ToUpper(s[0:1]) + s[1:]
 }
 
+// MultiTrim trims a string of multiple prefixes and suffixes.
 func MultiTrim(str string, prefixes, suffixes []string) string {
 	for _, p := range prefixes {
 		str = strings.TrimPrefix(str, p)

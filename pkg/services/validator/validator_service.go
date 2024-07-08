@@ -1,3 +1,4 @@
+// Package validator provides functions for interacting with the validator and its plugins.
 package validator
 
 import (
@@ -40,6 +41,7 @@ func init() {
 	slices.Sort(plugins)
 }
 
+// ReadValidatorConfig prompts the user to configure the validator and its plugins
 // nolint:gocyclo
 func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
 	log.Header("Enter Validator Configuration")
@@ -162,6 +164,7 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	return nil
 }
 
+// UpdateValidatorCredentials updates the validator credentials
 func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 	var err error
 	var k8sClient kubernetes.Interface
@@ -333,7 +336,7 @@ func readSinkConfig(vc *components.ValidatorConfig, k8sClient kubernetes.Interfa
 		if vc.SinkConfig.Values == nil {
 			vc.SinkConfig.Values = map[string]string{
 				"apiToken":  "",
-				"channelId": "",
+				"channelID": "",
 			}
 		}
 
@@ -343,11 +346,11 @@ func readSinkConfig(vc *components.ValidatorConfig, k8sClient kubernetes.Interfa
 		}
 		vc.SinkConfig.Values["apiToken"] = botToken
 
-		channelId, err := prompts.ReadText("Channel ID", vc.SinkConfig.Values["channelId"], false, -1)
+		channelID, err := prompts.ReadText("Channel ID", vc.SinkConfig.Values["channelID"], false, -1)
 		if err != nil {
 			return err
 		}
-		vc.SinkConfig.Values["channelId"] = channelId
+		vc.SinkConfig.Values["channelID"] = channelID
 	}
 
 	return nil

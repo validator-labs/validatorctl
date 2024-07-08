@@ -1,3 +1,4 @@
+// Package logging provides a structured logging interface for the CLI.
 package logging
 
 import (
@@ -16,8 +17,10 @@ import (
 // through an interactive TUI experience.
 
 var (
-	log     *logrus.Logger
-	cliLog  = pterm.DefaultLogger
+	log    *logrus.Logger
+	cliLog = pterm.DefaultLogger
+
+	// Newline determines whether a newline character is appended to the end of each log message.
 	Newline = true
 )
 
@@ -30,6 +33,7 @@ func init() {
 	}
 }
 
+// SetLevel sets the log level for the logger
 func SetLevel(logLevel string) {
 	level, err := logrus.ParseLevel(logLevel)
 	if err != nil {
@@ -116,10 +120,12 @@ func printToConsole(format string, v ...interface{}) {
 	}
 }
 
+// Header prints a header to the console
 func Header(s string) {
 	HeaderCustom(s, pterm.BgCyan, pterm.FgBlack)
 }
 
+// HeaderCustom prints a header to the console with custom colors
 func HeaderCustom(s string, bgColor, textColor pterm.Color) {
 	fmt.Fprintf(os.Stdout, "\n") // nolint:errcheck
 	pterm.DefaultHeader.

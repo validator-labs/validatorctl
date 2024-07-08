@@ -5,13 +5,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/validator-labs/validatorctl/pkg/cmd/common"
 	"github.com/validator-labs/validatorctl/pkg/cmd/validator"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	cfgmanager "github.com/validator-labs/validatorctl/pkg/config/manager"
 	cmdutils "github.com/validator-labs/validatorctl/pkg/utils/cmd"
 )
 
+// NewDeployValidatorCmd returns a new cobra command for deploying the validator
 func NewDeployValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var configFile string
@@ -26,10 +26,10 @@ For more information about validator, see: https://github.com/validator-labs/val
 `,
 		Args:         cobra.NoArgs,
 		SilenceUsage: false,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return common.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			taskConfig := cfg.NewTaskConfig(
 				Version, configFile, configOnly, false, updatePasswords, false,
 			)
@@ -55,6 +55,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 	return cmd
 }
 
+// NewUpgradeValidatorCmd returns a new cobra command for upgrading the validator
 func NewUpgradeValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var configFile string
@@ -68,10 +69,10 @@ For more information about validator, see: https://github.com/validator-labs/val
 `,
 		Args:         cobra.NoArgs,
 		SilenceUsage: false,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return common.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			taskConfig := cfg.NewTaskConfig(
 				Version, configFile, false, false, false, false,
 			)
@@ -90,6 +91,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 	return cmd
 }
 
+// NewUndeployValidatorCmd returns a new cobra command for undeploying the validator
 func NewUndeployValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var configFile string
@@ -101,10 +103,10 @@ func NewUndeployValidatorCmd() *cobra.Command {
 		Long:         "Uninstall validator & all validator plugin(s)",
 		Args:         cobra.NoArgs,
 		SilenceUsage: false,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return common.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			taskConfig := cfg.NewTaskConfig(
 				Version, configFile, false, false, false, false,
 			)
@@ -124,6 +126,7 @@ func NewUndeployValidatorCmd() *cobra.Command {
 	return cmd
 }
 
+// NewDescribeValidationResultsCmd returns a new cobra command for describing validation results
 func NewDescribeValidationResultsCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var configFile string
@@ -138,10 +141,10 @@ If the --config-file flag is specified, the KUBECONFIG specified in the validato
 `,
 		Args:         cobra.NoArgs,
 		SilenceUsage: false,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return common.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			taskConfig := cfg.NewTaskConfig(
 				Version, configFile, false, false, false, false,
 			)

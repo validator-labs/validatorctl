@@ -12,7 +12,7 @@ func NewVersionCmd() *cobra.Command {
 		Use:   "version",
 		Args:  cobra.NoArgs,
 		Short: "Prints the Validator CLI version",
-		Run: func(cobraCmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			fmt.Printf("Validator CLI version: %s\n", Version)
 		},
 	}

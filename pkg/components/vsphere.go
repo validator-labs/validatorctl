@@ -10,6 +10,7 @@ import (
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 )
 
+// VsphereConfig represents the vSphere plugin configuration.
 type VsphereConfig struct {
 	Username                     string
 	Password                     string
@@ -22,6 +23,7 @@ type VsphereConfig struct {
 	Privileges                   []string
 }
 
+// ConfigureVspherePlugin configures the vSphere plugin.
 func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) {
 	vc.VspherePlugin = &VspherePluginConfig{
 		Enabled: true,

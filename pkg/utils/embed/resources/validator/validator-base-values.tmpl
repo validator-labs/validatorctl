@@ -97,7 +97,7 @@ sink:
   {{- if eq .SinkConfig.Type "slack" }}
   type: slack
   apiToken: {{ index .SinkConfig.Values "apiToken" }}
-  channelId: {{ index .SinkConfig.Values "channelId" }}
+  channelID: {{ index .SinkConfig.Values "channelID" }}
   {{- end }}
 {{- else }}
 sink: {}
@@ -117,7 +117,7 @@ pluginSecrets:
   aws:
     secretName: {{ .AWSPlugin.Validator.Auth.SecretName }}
     env:
-      AWS_ACCESS_KEY_ID: {{ .AWSPlugin.AccessKeyId }}
+      AWS_ACCESS_KEY_ID: {{ .AWSPlugin.AccessKeyID }}
       AWS_SECRET_ACCESS_KEY: {{ .AWSPlugin.SecretAccessKey }}
       AWS_SESSION_TOKEN: {{ .AWSPlugin.SessionToken }}
   {{- end }}

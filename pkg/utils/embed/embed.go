@@ -1,3 +1,4 @@
+// Package embed provides utility functions for the embedded file system.
 package embed
 
 import (
