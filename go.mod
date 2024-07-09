@@ -1,6 +1,6 @@
 module github.com/validator-labs/validatorctl
 
-go 1.22.4
+go 1.22.5
 
 require (
 	emperror.dev/errors v0.8.1
@@ -17,7 +17,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/validator-labs/validator v0.0.43
 	github.com/validator-labs/validator-plugin-aws v0.1.1
-	github.com/validator-labs/validator-plugin-azure v0.0.11
+	github.com/validator-labs/validator-plugin-azure v0.0.12
 	github.com/validator-labs/validator-plugin-network v0.0.17
 	github.com/validator-labs/validator-plugin-oci v0.0.10
 	github.com/validator-labs/validator-plugin-vsphere v0.0.26
