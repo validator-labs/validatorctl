@@ -233,8 +233,8 @@ github.com/validator-labs/validator v0.0.43 h1:cFyV/gV1R5lhVpijlqZzE2Dz63fMo7Z8C
 github.com/validator-labs/validator v0.0.43/go.mod h1:cAlwTHNMNu5MUKh3qSa9EUSk2kUmWtzRY9tOrCylwpc=
 github.com/validator-labs/validator-plugin-aws v0.1.1 h1:GPWSk1hSRBV+NgOBKKn0q6f2iH3+ZikHYuSD6S41Ybk=
 github.com/validator-labs/validator-plugin-aws v0.1.1/go.mod h1:GGFVx01t77XomgrPZFmF5Dkre+iqmtBOBjThuWgB/jI=
-github.com/validator-labs/validator-plugin-azure v0.0.11 h1:Yl1y0N1rVKPcMHkhdhNPPoRe4sARYNVdOWh7av0lcRY=
-github.com/validator-labs/validator-plugin-azure v0.0.11/go.mod h1:0AxIXWZF+8SHHefkeb8nyA96OXcW+kYvK9kaGRQ1CY8=
+github.com/validator-labs/validator-plugin-azure v0.0.12 h1:zlsXvu/jud58aH9FA3I5U0haANbLLQe1N/gAf093LLg=
+github.com/validator-labs/validator-plugin-azure v0.0.12/go.mod h1:n+RO3qutGLFeIkFutPnS3FY8OEgpa2bL6voj8jxOzSE=
 github.com/validator-labs/validator-plugin-network v0.0.17 h1:j2K02tL7pv6Ltzc3tk/3qZnF2Fl3nAvULZocLujxCjo=
 github.com/validator-labs/validator-plugin-network v0.0.17/go.mod h1:t7mAowf/3C41zZVio5zlXIdnc8iEPS6MbIMB+w49WgU=
 github.com/validator-labs/validator-plugin-oci v0.0.10 h1:Qd6zgS9gN/RjZ+EV3z8LhCBUinhe02w5G1IuHR4u6f8=
