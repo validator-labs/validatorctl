@@ -16,6 +16,7 @@ import (
 	kube_utils "github.com/validator-labs/validatorctl/pkg/utils/kube"
 )
 
+// GetSecretsWithKeys returns a list of secrets in the given namespace that contain all the specified keys
 func GetSecretsWithKeys(k8sClient kubernetes.Interface, namespace string, keys []string) ([]corev1.Secret, error) {
 	secrets := make([]corev1.Secret, 0)
 	secretList, err := k8sClient.CoreV1().Secrets(namespace).List(context.TODO(), metav1.ListOptions{})
@@ -38,6 +39,7 @@ func GetSecretsWithKeys(k8sClient kubernetes.Interface, namespace string, keys [
 	return secrets, nil
 }
 
+// GetSecretsWithRegexKeys returns a list of secrets in the given namespace that contain keys matching the specified regex
 func GetSecretsWithRegexKeys(k8sClient kubernetes.Interface, namespace string, keyExpr string) ([]corev1.Secret, error) {
 	pattern, err := regexp.Compile(keyExpr)
 	if err != nil {
@@ -61,6 +63,7 @@ func GetSecretsWithRegexKeys(k8sClient kubernetes.Interface, namespace string, k
 	return secrets, nil
 }
 
+// ReadSecret prompts the user to select a secret from the given namespace that contains the specified keys
 func ReadSecret(k8sClient kubernetes.Interface, namespace string, optional bool, keys []string) (*corev1.Secret, error) {
 	name, err := prompt_utils.ReadK8sName("Secret Name", "", optional)
 	if err != nil {
@@ -83,6 +86,7 @@ func ReadSecret(k8sClient kubernetes.Interface, namespace string, optional bool,
 	return secret, nil
 }
 
+// ReadServiceAccount prompts the user to select a service account from the given namespace
 func ReadServiceAccount(k8sClient kubernetes.Interface, namespace string) (string, error) {
 	serviceAccount, err := prompt_utils.ReadK8sName("ServiceAccount Name", "", true)
 	if err != nil {
@@ -97,6 +101,7 @@ func ReadServiceAccount(k8sClient kubernetes.Interface, namespace string) (strin
 	return serviceAccount, nil
 }
 
+// ReadKubeconfig returns a Kubernetes client for the kubeconfig path provided by the user
 func ReadKubeconfig() (kubernetes.Interface, string, error) {
 	var err error
 	kubeconfigPath := os.Getenv("KUBECONFIG")

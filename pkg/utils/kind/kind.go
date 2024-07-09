@@ -1,3 +1,4 @@
+// Package kind provides functions to manage Kind clusters
 package kind
 
 import (
@@ -21,6 +22,7 @@ import (
 
 var caCertRegex = regexp.MustCompile("/usr/local/share/ca-certificates")
 
+// ValidateClusters checks for existing Kind clusters and prompts the user to proceed or abort
 func ValidateClusters(action string) error {
 	if os.Getenv("DISABLE_KIND_CLUSTER_CHECK") != "" {
 		return nil
@@ -45,6 +47,7 @@ func ValidateClusters(action string) error {
 	return nil
 }
 
+// StartCluster creates a new Kind cluster with the given name and configuration
 func StartCluster(name, kindConfig, kubeconfig string) error {
 	args := []string{
 		"create", "cluster", "--name", name,
@@ -65,6 +68,7 @@ func StartCluster(name, kindConfig, kubeconfig string) error {
 	return nil
 }
 
+// DeleteCluster deletes the Kind cluster with the given name
 func DeleteCluster(name string) error {
 	args := []string{"delete", "cluster", "--name", name}
 	cmd := exec.Command(exec_utils.Kind, args...) //#nosec G204
@@ -76,6 +80,7 @@ func DeleteCluster(name string) error {
 	return nil
 }
 
+// DefaultKindArgs returns the default arguments for a Kind cluster configuration
 func DefaultKindArgs() map[string]interface{} {
 	return map[string]interface{}{
 		"Env": env.Env{

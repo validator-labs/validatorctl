@@ -1,3 +1,4 @@
+// Package cmd provides the CLI commands for valdatorctl.
 package cmd
 
 import (
@@ -19,7 +20,9 @@ var (
 	logLevel     string
 	workspaceLoc string
 	rootCmd      *cobra.Command
-	Version      string
+
+	// Version is the version validatorctl
+	Version string
 )
 
 func init() {

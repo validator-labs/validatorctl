@@ -1,3 +1,4 @@
+// Package components provides functions for managing the validator components.
 package components
 
 import (
@@ -21,6 +22,7 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/utils/crypto"
 )
 
+// ValidatorConfig represents the validator configuration.
 type ValidatorConfig struct {
 	Release          *validator.HelmRelease `yaml:"helmRelease"`
 	ReleaseSecret    *Secret                `yaml:"helmReleaseSecret"`
@@ -38,6 +40,7 @@ type ValidatorConfig struct {
 	AzurePlugin   *AzurePluginConfig   `yaml:"azurePlugin,omitempty"`
 }
 
+// NewValidatorConfig creates a new ValidatorConfig object.
 func NewValidatorConfig() *ValidatorConfig {
 	return &ValidatorConfig{
 		// Base config
@@ -85,6 +88,7 @@ func NewValidatorConfig() *ValidatorConfig {
 	}
 }
 
+// AnyPluginEnabled returns true if any plugin is enabled.
 func (c *ValidatorConfig) AnyPluginEnabled() bool {
 	return c.AWSPlugin.Enabled || c.NetworkPlugin.Enabled || c.VspherePlugin.Enabled || c.OCIPlugin.Enabled || c.AzurePlugin.Enabled
 }
@@ -169,16 +173,19 @@ func (c *ValidatorConfig) encrypt() error {
 	return nil
 }
 
+// KindConfig represents the kind configuration.
 type KindConfig struct {
 	UseKindCluster  bool   `yaml:"useKindCluster"`
 	KindClusterName string `yaml:"kindClusterName"`
 }
 
+// ProxyConfig represents the proxy configuration.
 type ProxyConfig struct {
 	Enabled bool     `yaml:"enabled"`
 	Env     *env.Env `yaml:"env"`
 }
 
+// SinkConfig represents the sink configuration.
 type SinkConfig struct {
 	Enabled      bool              `yaml:"enabled"`
 	CreateSecret bool              `yaml:"createSecret"`
@@ -221,11 +228,12 @@ func (c *SinkConfig) decrypt() error {
 	return nil
 }
 
+// AWSPluginConfig represents the AWS plugin configuration.
 type AWSPluginConfig struct {
 	Enabled            bool                   `yaml:"enabled"`
 	Release            *validator.HelmRelease `yaml:"helmRelease"`
 	ReleaseSecret      *Secret                `yaml:"helmReleaseSecret"`
-	AccessKeyId        string                 `yaml:"accessKeyId,omitempty"`
+	AccessKeyID        string                 `yaml:"accessKeyId,omitempty"`
 	SecretAccessKey    string                 `yaml:"secretAccessKey,omitempty"`
 	SessionToken       string                 `yaml:"sessionToken,omitempty"`
 	ServiceAccountName string                 `yaml:"serviceAccountName,omitempty"`
@@ -239,11 +247,11 @@ func (c *AWSPluginConfig) encrypt() error {
 		}
 	}
 
-	accessKey, err := crypto.EncryptB64([]byte(c.AccessKeyId))
+	accessKey, err := crypto.EncryptB64([]byte(c.AccessKeyID))
 	if err != nil {
 		return errors.Wrap(err, "failed to encrypt access key id")
 	}
-	c.AccessKeyId = accessKey
+	c.AccessKeyID = accessKey
 
 	secretKey, err := crypto.EncryptB64([]byte(c.SecretAccessKey))
 	if err != nil {
@@ -267,11 +275,11 @@ func (c *AWSPluginConfig) decrypt() error {
 		}
 	}
 
-	bytes, err := crypto.DecryptB64(c.AccessKeyId)
+	bytes, err := crypto.DecryptB64(c.AccessKeyID)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt access key id")
 	}
-	c.AccessKeyId = string(*bytes)
+	c.AccessKeyID = string(*bytes)
 
 	bytes, err = crypto.DecryptB64(c.SecretAccessKey)
 	if err != nil {
@@ -288,6 +296,7 @@ func (c *AWSPluginConfig) decrypt() error {
 	return nil
 }
 
+// AzurePluginConfig represents the Azure plugin configuration.
 type AzurePluginConfig struct {
 	Enabled                bool                                 `yaml:"enabled"`
 	Release                *validator.HelmRelease               `yaml:"helmRelease"`
@@ -335,6 +344,7 @@ func (c *AzurePluginConfig) decrypt() error {
 	return nil
 }
 
+// AzureStaticDeploymentValues represents the static deployment values for Azure.
 type AzureStaticDeploymentValues struct {
 	Subscription   string `yaml:"subscriptionUuid"`
 	ResourceGroup  string `yaml:"resourceGroupUuid"`
@@ -343,6 +353,7 @@ type AzureStaticDeploymentValues struct {
 	ComputeGallery string `yaml:"computeGalleryUuid"`
 }
 
+// NetworkPluginConfig represents the network plugin configuration.
 type NetworkPluginConfig struct {
 	Enabled       bool                          `yaml:"enabled"`
 	Release       *validator.HelmRelease        `yaml:"helmRelease"`
@@ -368,6 +379,7 @@ func (c *NetworkPluginConfig) decrypt() error {
 	return nil
 }
 
+// OCIPluginConfig represents the OCI plugin configuration.
 type OCIPluginConfig struct {
 	Enabled          bool                   `yaml:"enabled"`
 	Release          *validator.HelmRelease `yaml:"helmRelease"`
@@ -410,6 +422,7 @@ func (c *OCIPluginConfig) decrypt() error {
 	return nil
 }
 
+// VspherePluginConfig represents the vSphere plugin configuration.
 type VspherePluginConfig struct {
 	Enabled                     bool                               `yaml:"enabled"`
 	Release                     *validator.HelmRelease             `yaml:"helmRelease"`
@@ -453,25 +466,30 @@ func (c *VspherePluginConfig) decrypt() error {
 	return nil
 }
 
+// VsphereEntityPrivilegeRule represents a vSphere entity privilege rule.
 type VsphereEntityPrivilegeRule struct {
 	vsphere.EntityPrivilegeValidationRule `yaml:",inline"`
 	ClusterScoped                         bool `yaml:"clusterScoped"`
 }
 
+// VsphereRolePrivilegeRule represents a vSphere role privilege rule.
 type VsphereRolePrivilegeRule struct {
 	vsphere.GenericRolePrivilegeValidationRule `yaml:",inline"`
 	Name                                       string `yaml:"name"`
 }
 
+// VsphereTagRule represents a vSphere tag rule.
 type VsphereTagRule struct {
 	vsphere.TagValidationRule `yaml:",inline"`
 }
 
+// PublicKeySecret represents a public key secret.
 type PublicKeySecret struct {
 	Name string   `yaml:"name"`
 	Keys []string `yaml:"keys"`
 }
 
+// Secret represents a k8s secret.
 type Secret struct {
 	Name       string `yaml:"name"`
 	Username   string `yaml:"username"`
@@ -480,6 +498,7 @@ type Secret struct {
 	Exists     bool   `yaml:"exists"`
 }
 
+// ShouldCreate returns true if the secret should be created.
 func (s *Secret) ShouldCreate() bool {
 	return !s.Exists && (s.Username != "" || s.Password != "" || s.CaCertFile != "")
 }
@@ -548,6 +567,7 @@ func SaveValidatorConfig(c *ValidatorConfig, tc *cfg.TaskConfig) error {
 	return nil
 }
 
+// ConfigureBaseValidator configures the base validator configuration
 func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) {
 	vc.Release = &validator.HelmRelease{
 		Chart: validator.HelmChart{

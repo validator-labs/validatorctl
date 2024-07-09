@@ -26,19 +26,19 @@ func readNetworkPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 
 	ruleNames := make([]string, 0)
 
-	if err := configureDnsRules(c, &ruleNames); err != nil {
+	if err := configureDNSRules(c, &ruleNames); err != nil {
 		return err
 	}
 	if err := configureIcmpRules(c, &ruleNames); err != nil {
 		return err
 	}
-	if err := configureIpRangeRules(c, &ruleNames); err != nil {
+	if err := configureIPRangeRules(c, &ruleNames); err != nil {
 		return err
 	}
 	if err := configureMtuRules(c, &ruleNames); err != nil {
 		return err
 	}
-	if err := configureTcpConnRules(c, &ruleNames); err != nil {
+	if err := configureTCPConnRules(c, &ruleNames); err != nil {
 		return err
 	}
 
@@ -49,22 +49,22 @@ func readNetworkPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 }
 
 // nolint:dupl
-func configureDnsRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
+func configureDNSRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	DNS validation rules ensure that DNS lookups succeed for the specified host(s).
 	`)
 
-	validateDns, err := prompts.ReadBool("Enable DNS validation", true)
+	validateDNS, err := prompts.ReadBool("Enable DNS validation", true)
 	if err != nil {
 		return err
 	}
-	if !validateDns {
+	if !validateDNS {
 		c.Validator.DNSRules = nil
 		return nil
 	}
 	for i, r := range c.Validator.DNSRules {
 		r := r
-		if err := readDnsRule(c, &r, i, ruleNames); err != nil {
+		if err := readDNSRule(c, &r, i, ruleNames); err != nil {
 			return err
 		}
 	}
@@ -81,7 +81,7 @@ func configureDnsRules(c *components.NetworkPluginConfig, ruleNames *[]string) e
 		return nil
 	}
 	for {
-		if err := readDnsRule(c, &vpnetworkapi.DNSRule{}, -1, ruleNames); err != nil {
+		if err := readDNSRule(c, &vpnetworkapi.DNSRule{}, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another DNS rule", false)
@@ -143,7 +143,7 @@ func configureIcmpRules(c *components.NetworkPluginConfig, ruleNames *[]string) 
 }
 
 // nolint:dupl
-func configureIpRangeRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
+func configureIPRangeRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	IP range validation rules ensure that a specific range of
 	IP addresses (starting IP + next N IPs) are unallocated.
@@ -159,7 +159,7 @@ func configureIpRangeRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 	}
 	for i, r := range c.Validator.IPRangeRules {
 		r := r
-		if err := readIpRangeRule(c, &r, i, ruleNames); err != nil {
+		if err := readIPRangeRule(c, &r, i, ruleNames); err != nil {
 			return err
 		}
 	}
@@ -176,7 +176,7 @@ func configureIpRangeRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 		return nil
 	}
 	for {
-		if err := readIpRangeRule(c, &vpnetworkapi.IPRangeRule{}, -1, ruleNames); err != nil {
+		if err := readIPRangeRule(c, &vpnetworkapi.IPRangeRule{}, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another IP range rule", false)
@@ -239,7 +239,7 @@ func configureMtuRules(c *components.NetworkPluginConfig, ruleNames *[]string) e
 }
 
 // nolint:dupl
-func configureTcpConnRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
+func configureTCPConnRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	TCP connection validation rules ensure that TCP connections
 	to the specified host(s) and port(s) are successful.
@@ -255,7 +255,7 @@ func configureTcpConnRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 	}
 	for i, r := range c.Validator.TCPConnRules {
 		r := r
-		if err := readTcpConnRule(c, &r, i, ruleNames); err != nil {
+		if err := readTCPConnRule(c, &r, i, ruleNames); err != nil {
 			return err
 		}
 	}
@@ -272,7 +272,7 @@ func configureTcpConnRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 		return nil
 	}
 	for {
-		if err := readTcpConnRule(c, &vpnetworkapi.TCPConnRule{}, -1, ruleNames); err != nil {
+		if err := readTCPConnRule(c, &vpnetworkapi.TCPConnRule{}, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another TCP connection rule", false)
@@ -301,7 +301,7 @@ func initNetworkRule[R networkRule](r R, ruleType string, ruleNames *[]string) e
 	return nil
 }
 
-func readDnsRule(c *components.NetworkPluginConfig, r *vpnetworkapi.DNSRule, idx int, ruleNames *[]string) error {
+func readDNSRule(c *components.NetworkPluginConfig, r *vpnetworkapi.DNSRule, idx int, ruleNames *[]string) error {
 	err := initNetworkRule(r, "DNS", ruleNames)
 	if err != nil {
 		return err
@@ -339,7 +339,7 @@ func readIcmpRule(c *components.NetworkPluginConfig, r *vpnetworkapi.ICMPRule, i
 	return nil
 }
 
-func readIpRangeRule(c *components.NetworkPluginConfig, r *vpnetworkapi.IPRangeRule, idx int, ruleNames *[]string) error {
+func readIPRangeRule(c *components.NetworkPluginConfig, r *vpnetworkapi.IPRangeRule, idx int, ruleNames *[]string) error {
 	err := initNetworkRule(r, "IP range", ruleNames)
 	if err != nil {
 		return err
@@ -381,7 +381,7 @@ func readMtuRule(c *components.NetworkPluginConfig, r *vpnetworkapi.MTURule, idx
 	return nil
 }
 
-func readTcpConnRule(c *components.NetworkPluginConfig, r *vpnetworkapi.TCPConnRule, idx int, ruleNames *[]string) error {
+func readTCPConnRule(c *components.NetworkPluginConfig, r *vpnetworkapi.TCPConnRule, idx int, ruleNames *[]string) error {
 	err := initNetworkRule(r, "TCP connection", ruleNames)
 	if err != nil {
 		return err

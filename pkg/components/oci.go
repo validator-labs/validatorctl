@@ -9,11 +9,13 @@ import (
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 )
 
+// OciConfig represents the OCI plugin configuration.
 type OciConfig struct {
 	// HostRefs is a map of hostnames to a list of artifact references
 	HostRefs map[string][]string
 }
 
+// ConfigureOciPlugin configures the OCI plugin.
 func ConfigureOciPlugin(vc *ValidatorConfig, config OciConfig) {
 	vc.OCIPlugin = &OCIPluginConfig{
 		Enabled: true,

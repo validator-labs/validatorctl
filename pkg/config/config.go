@@ -1,3 +1,4 @@
+// Package config provides utility functions for managing the validator config.
 package config
 
 import (
@@ -11,17 +12,20 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// NewConfig creates a new Config object.
 func NewConfig() *Config {
 	return &Config{
 		WorkspaceLoc: "",
 	}
 }
 
+// Config represents the validator config.
 type Config struct {
 	RunLoc       string `yaml:"runLoc"`
 	WorkspaceLoc string `yaml:"workspaceLoc"`
 }
 
+// TaskConfig represents the validator task config.
 type TaskConfig struct {
 	CliVersion       string
 	ConfigFile       string
@@ -31,6 +35,7 @@ type TaskConfig struct {
 	UpdateTokens     bool
 }
 
+// NewTaskConfig creates a new TaskConfig object.
 func NewTaskConfig(cliVersion, configFile string, configOnly, silent, updatePasswords, updateTokens bool) *TaskConfig {
 	return &TaskConfig{
 		CliVersion:       cliVersion,
@@ -42,6 +47,7 @@ func NewTaskConfig(cliVersion, configFile string, configOnly, silent, updatePass
 	}
 }
 
+// DefaultWorkspaceLoc returns the default workspace location.
 func DefaultWorkspaceLoc() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -60,6 +66,7 @@ func (c *Config) initWorkspaceLoc() (err error) {
 	return
 }
 
+// CreateWorkspace creates a new workspace with the specified folder and subdirs.
 func (c *Config) CreateWorkspace(folder string, subdirs []string, timestamped bool) error {
 	// Derive base dir
 	if err := c.initWorkspaceLoc(); err != nil {
@@ -91,14 +98,17 @@ func (c *Config) restoreGlobalDefaults() (err error) {
 	return
 }
 
+// Decrypt decrypts the config.
 func (c *Config) Decrypt() error {
 	return nil
 }
 
+// Encrypt encrypts the config.
 func (c *Config) Encrypt() error {
 	return nil
 }
 
+// Save saves the config to the specified path.
 func (c *Config) Save(path string) error {
 	if err := c.restoreGlobalDefaults(); err != nil {
 		return err
@@ -122,6 +132,7 @@ func (c *Config) Save(path string) error {
 	return nil
 }
 
+// Load loads the decrypted config file.
 func (c *Config) Load() error {
 	if err := viper.Unmarshal(&c); err != nil {
 		return err

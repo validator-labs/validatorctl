@@ -1,3 +1,4 @@
+// Package crypto contains utility functions for encryption and decryption.
 package crypto
 
 import (
@@ -11,6 +12,7 @@ import (
 
 const k = "dJsv0hrLaXowK81xA2bEjfoubfkmDwIL"
 
+// DecryptB64 decrypts a base64-encoded string.
 func DecryptB64(cipherstringB64 string) (*[]byte, error) {
 	if cipherstringB64 == "" {
 		return new([]byte), nil
@@ -40,6 +42,7 @@ func DecryptB64(cipherstringB64 string) (*[]byte, error) {
 	return &ciphertext, nil
 }
 
+// EncryptB64 encrypts a byte slice and returns a base64-encoded string.
 func EncryptB64(plainbytes []byte) (string, error) {
 	if len(plainbytes) == 0 {
 		return "", nil

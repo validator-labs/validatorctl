@@ -153,14 +153,14 @@ type indexFile struct {
 	repo.IndexFile `yaml:",inline"`
 }
 
-func getReleasesFromHelmRepo(repoUrl string) ([]string, error) {
+func getReleasesFromHelmRepo(repoURL string) ([]string, error) {
 	var helmIndexFile indexFile
 	var versions []string
 
-	indexUrl := fmt.Sprintf("%s/index.yaml", repoUrl)
-	log.Debug("Fetching releases from Helm repository index: %s", indexUrl)
+	indexURL := fmt.Sprintf("%s/index.yaml", repoURL)
+	log.Debug("Fetching releases from Helm repository index: %s", indexURL)
 
-	resp, err := http.Get(indexUrl) //#nosec G107
+	resp, err := http.Get(indexURL) //#nosec G107
 	if err != nil {
 		return nil, err // can happen in air-gapped scenarios
 	}

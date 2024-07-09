@@ -633,7 +633,7 @@ func readAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernetes.Inte
 		if err != nil {
 			return err
 		}
-		c.AccessKeyId, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyId, false, -1)
+		c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
 		if err != nil {
 			return err
 		}
@@ -651,7 +651,7 @@ func readAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernetes.Inte
 			return err
 		}
 		c.Validator.Auth.SecretName = secret.Name
-		c.AccessKeyId = string(secret.Data["AWS_ACCESS_KEY_ID"])
+		c.AccessKeyID = string(secret.Data["AWS_ACCESS_KEY_ID"])
 		c.SecretAccessKey = string(secret.Data["AWS_SECRET_ACCESS_KEY"])
 		c.SessionToken = string(secret.Data["AWS_SESSION_TOKEN"])
 	}

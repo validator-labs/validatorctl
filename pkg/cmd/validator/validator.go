@@ -1,3 +1,4 @@
+// Package validator provides functions to manage the validator and its plugins
 package validator
 
 import (
@@ -34,6 +35,16 @@ import (
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 )
 
+// InitWorkspace initializes a workspace directory with subdirectories
+func InitWorkspace(c *cfg.Config, workspaceDir string, subdirs []string, timestamped bool) error {
+	// Create workspace
+	if err := c.CreateWorkspace(workspaceDir, subdirs, timestamped); err != nil {
+		return fmt.Errorf("failed to initialize workspace: %v", err)
+	}
+	return nil
+}
+
+// DeployValidatorCommand deploys the validator and its plugins
 func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool) error {
 	var vc *components.ValidatorConfig
 	var err error
@@ -103,6 +114,7 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 	return applyValidatorAndPlugins(c, vc)
 }
 
+// UpgradeValidatorCommand upgrades the validator and its plugins
 func UpgradeValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	vc, err := components.NewValidatorFromConfig(tc)
 	if err != nil {
@@ -114,6 +126,7 @@ func UpgradeValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	return applyValidatorAndPlugins(c, vc)
 }
 
+// UndeployValidatorCommand undeploys the validator and its plugins
 func UndeployValidatorCommand(tc *cfg.TaskConfig, deleteCluster bool) error {
 	vc, err := components.NewValidatorFromConfig(tc)
 	if err != nil {
@@ -137,6 +150,7 @@ func UndeployValidatorCommand(tc *cfg.TaskConfig, deleteCluster bool) error {
 	return nil
 }
 
+// DescribeValidationResultsCommand prints the validation results
 func DescribeValidationResultsCommand(tc *cfg.TaskConfig) error {
 	kClient, err := getValidationResultsCRDClient(tc)
 	if err != nil {
@@ -155,6 +169,7 @@ func DescribeValidationResultsCommand(tc *cfg.TaskConfig) error {
 	return nil
 }
 
+// WatchValidationResults watches the validation results until all have either succeeded or failed
 func WatchValidationResults(tc *cfg.TaskConfig) (bool, error) {
 	log.InfoCLI("\nWatching validation results, waiting for all to succeed")
 	kClient, err := getValidationResultsCRDClient(tc)
@@ -162,7 +177,7 @@ func WatchValidationResults(tc *cfg.TaskConfig) (bool, error) {
 		return false, errors.Wrap(err, "failed to get validation result client")
 	}
 
-	watchFunc := func(options metav1.ListOptions) (watch.Interface, error) {
+	watchFunc := func(_ metav1.ListOptions) (watch.Interface, error) {
 		return kClient.Watch(context.Background(), metav1.ListOptions{})
 	}
 

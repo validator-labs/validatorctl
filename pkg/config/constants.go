@@ -1,3 +1,5 @@
+//revive:disable
+
 package config
 
 import (
@@ -52,7 +54,7 @@ const (
 	Kind      string = "kind"
 	Validator string = "validator"
 
-	// regex
+	// Regex
 	DomainRegex          = "([a-zA-Z0-9]{1,63}|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.[a-zA-Z0-9]{1,63}|\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]){0,10}\\.([a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,30}[a-zA-Z0-9]\\.[a-zA-Z]{2,})"
 	UsernameRegex        = "[a-zA-Z0-9]+(?:\\.[a-zA-Z0-9]+)*(?:-[a-zA-Z0-9]+)*(?:_[a-zA-Z0-9]+)*"
 	VSphereUsernameRegex = "^" + UsernameRegex + "@" + DomainRegex + "$"
@@ -95,7 +97,7 @@ var (
 	ValidatorBasicAuthKeys = []string{"username", "password"}
 	ValidatorSinkKeys      = map[vtypes.SinkType][]string{
 		vtypes.SinkTypeAlertmanager: {"endpoint", "insecureSkipVerify", "username", "password", "caCert"},
-		vtypes.SinkTypeSlack:        {"apiToken", "channelId"},
+		vtypes.SinkTypeSlack:        {"apiToken", "channelID"},
 	}
 	ValidatorPluginAwsKeys                     = []string{"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"}
 	ValidatorPluginAzureKeys                   = []string{"AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET"}

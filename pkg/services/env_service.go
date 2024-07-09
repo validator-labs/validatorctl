@@ -1,3 +1,4 @@
+// Package services provides utility functions for interacting with various services.
 package services
 
 import (
@@ -9,6 +10,7 @@ import (
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 )
 
+// Env represents the environment configuration
 type Env struct {
 	HTTPProxy       string  `yaml:"httpProxy,omitempty"`
 	HTTPSProxy      string  `yaml:"httpsProxy,omitempty"`
@@ -20,6 +22,7 @@ type Env struct {
 	ServiceIPRange  *string `yaml:"serviceIPRange"`
 }
 
+// ReadProxyProps prompts the user to configure proxy settings
 func ReadProxyProps(e *Env) error {
 	var err error
 

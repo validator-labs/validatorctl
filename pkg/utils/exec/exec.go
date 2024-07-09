@@ -1,3 +1,4 @@
+// Package exec provides utility functions for executing shell commands.
 package exec
 
 import (
@@ -12,10 +13,19 @@ import (
 
 var (
 	// Execute enables monkey-patching cmd execution for integration tests
-	Execute                     = execute
-	Docker, Helm, Kind, Kubectl string
+	Execute = execute
+
+	// Docker references to the docker binary
+	Docker string
+	// Helm references to the helm binary
+	Helm string
+	// Kind references to the kind binary
+	Kind string
+	// Kubectl references to the kubectl binary
+	Kubectl string
 )
 
+// CheckBinaries checks if the required binaries are installed and available on the PATH and returns an error if any are missing.
 func CheckBinaries() error {
 	binaries := []struct {
 		name string
@@ -48,6 +58,7 @@ func CheckBinaries() error {
 	return nil
 }
 
+// WriterStringer is an interface that combines the io.Writer and fmt.Stringer interfaces
 type WriterStringer interface {
 	String() string
 	Write(p []byte) (n int, err error)
@@ -68,30 +79,30 @@ func (l *logWriter) String() string {
 }
 
 func execute(logStdout bool, stack ...*exec.Cmd) (stdout, stderr string, err error) {
-	var stdout_buffer WriterStringer
+	var stdoutBuffer WriterStringer
 	if !logStdout {
-		stdout_buffer = &bytes.Buffer{}
+		stdoutBuffer = &bytes.Buffer{}
 	} else {
-		stdout_buffer = &logWriter{}
+		stdoutBuffer = &logWriter{}
 	}
-	stderr_buffer := logWriter{}
+	stderrBuffer := logWriter{}
 
-	pipe_stack := make([]*io.PipeWriter, len(stack)-1)
+	pipeStack := make([]*io.PipeWriter, len(stack)-1)
 	i := 0
 	for ; i < len(stack)-1; i++ {
-		stdin_pipe, stdout_pipe := io.Pipe()
-		stack[i].Stdout = stdout_pipe
-		stack[i].Stderr = &stderr_buffer
-		stack[i+1].Stdin = stdin_pipe
-		pipe_stack[i] = stdout_pipe
+		stdinPipe, stdoutPipe := io.Pipe()
+		stack[i].Stdout = stdoutPipe
+		stack[i].Stderr = &stderrBuffer
+		stack[i+1].Stdin = stdinPipe
+		pipeStack[i] = stdoutPipe
 	}
-	stack[i].Stdout = stdout_buffer
-	stack[i].Stderr = &stderr_buffer
+	stack[i].Stdout = stdoutBuffer
+	stack[i].Stderr = &stderrBuffer
 
-	if err := call(stack, pipe_stack); err != nil {
-		return "", stderr_buffer.String(), err
+	if err := call(stack, pipeStack); err != nil {
+		return "", stderrBuffer.String(), err
 	}
-	return stdout_buffer.String(), stderr_buffer.String(), err
+	return stdoutBuffer.String(), stderrBuffer.String(), err
 }
 
 func call(stack []*exec.Cmd, pipes []*io.PipeWriter) (err error) {
