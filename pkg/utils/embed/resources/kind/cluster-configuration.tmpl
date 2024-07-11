@@ -8,7 +8,8 @@ networking:
 nodes:
 - role: control-plane
   image: {{ .Image }}
-{{- if or .Env.ProxyCaCertPath (and .RegistryEndpoint (eq .RegistryInsecure "false")) }}
+{{- $insecure := .RegistryInsecure }}
+{{- if or .Env.ProxyCaCertPath (and .RegistryEndpoint (eq $insecure "false")) }}
   extraMounts:
 {{- end }}
 {{- if .Env.ProxyCaCertPath }}
@@ -16,10 +17,9 @@ nodes:
     containerPath: {{ printf "%s/%s" $cert_location .Env.ProxyCaCertName }}
 {{- end }}
 {{- if .RegistryEndpoint }}
-{{- $mirrorEndpoint := .RegistryMirrorEndpoint }}
-{{- if and (eq .RegistryInsecure "false") (not .ReusedProxyCACert) }}
-  - hostPath: /etc/docker/certs.d/{{ .RegistryEndpoint }}/{{ .RegistryCaCertName }}
-    containerPath: {{ printf "%s/%s" $cert_location .RegistryCaCertName }}
+{{- if and (eq $insecure "false") (not .ReusedProxyCACert) }}
+  - hostPath: /etc/docker/certs.d/{{ .RegistryEndpoint }}/{{ .RegistryCACertName }}
+    containerPath: {{ printf "%s/%s" $cert_location .RegistryCACertName }}
 {{- end }}
 containerdConfigPatches:
   - |-
@@ -29,14 +29,18 @@ containerdConfigPatches:
       username = "{{ .RegistryUsername }}"
     {{- end }}
     [plugins."io.containerd.grpc.v1.cri".registry.configs."{{ .RegistryEndpoint }}".tls]
-    {{- if eq .RegistryInsecure "true" }}
-      insecure_skip_verify = {{ .RegistryInsecure }}
+    {{- if eq $insecure "true" }}
+      insecure_skip_verify = {{ $insecure }}
     {{- else }}
-      ca_file = "{{ printf "%s/%s" $cert_location .RegistryCaCertName }}"
+      ca_file = "{{ printf "%s/%s" $cert_location .RegistryCACertName }}"
     {{- end }}
     {{- range .RegistryMirrors }}
     {{- $registryMirror := split "::" . }}
     [plugins."io.containerd.grpc.v1.cri".registry.mirrors."{{ $registryMirror._0 }}"]
+      {{- if eq $insecure "true" }}
+      endpoint = ["http://{{ $registryMirror._1 }}"]
+      {{- else }}
       endpoint = ["{{ $registryMirror._1 }}"]
+      {{- end }}
     {{- end }}
 {{- end }}

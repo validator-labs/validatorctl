@@ -31,7 +31,7 @@ var (
 	}
 	plugins = make([]string, 0, len(pluginFuncs))
 
-	imageRegistry = cfg.ValidatorImageRegistry
+	imageRegistry = cfg.ValidatorImagePath()
 )
 
 func init() {
@@ -65,12 +65,19 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
-	if vc.ImageRegistry != "" {
-		imageRegistry = vc.ImageRegistry
-	}
-	vc.ImageRegistry, err = prompts.ReadText("Validator image registry", imageRegistry, false, -1)
-	if err != nil {
+	if err := readAirgapConfig(vc); err != nil {
 		return err
+	}
+	if vc.AirgapConfig.Enabled {
+		vc.ImageRegistry = vc.AirgapConfig.Hauler.ImageEndpoint()
+	} else {
+		if vc.ImageRegistry != "" {
+			imageRegistry = vc.ImageRegistry
+		}
+		vc.ImageRegistry, err = prompts.ReadText("Validator image registry", imageRegistry, false, -1)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := readProxyConfig(vc); err != nil {
@@ -223,6 +230,14 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 	return nil
 }
 
+func readAirgapConfig(vc *components.ValidatorConfig) (err error) {
+	vc.AirgapConfig.Enabled, err = prompts.ReadBool("Configure Hauler for air-gapped installation", false)
+	if err != nil || !vc.AirgapConfig.Enabled {
+		return
+	}
+	return services.ReadHaulerProps(vc.AirgapConfig.Hauler, vc.ProxyConfig.Env)
+}
+
 func readProxyConfig(vc *components.ValidatorConfig) error {
 	vc.ProxyConfig.Env.PodCIDR = &cfg.DefaultPodCIDR
 	vc.ProxyConfig.Env.ServiceIPRange = &cfg.DefaultServiceIPRange
@@ -238,7 +253,7 @@ func readProxyConfig(vc *components.ValidatorConfig) error {
 	if err := services.ReadProxyProps(vc.ProxyConfig.Env); err != nil {
 		return err
 	}
-	vc.ProxyConfig.Enabled = vc.ProxyConfig.Env.ProxyCaCertPath != ""
+	vc.ProxyConfig.Enabled = vc.ProxyConfig.Env.ProxyCACert.Path != ""
 
 	return nil
 }

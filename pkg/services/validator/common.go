@@ -37,15 +37,19 @@ func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components
 	r.Chart.Name = name
 	rs.Name = fmt.Sprintf("validator-helm-release-%s", name)
 
-	r.Chart.Repository, err = prompts.ReadText(fmt.Sprintf("%s Helm repository", name), defaultRepo, false, -1)
-	if err != nil {
-		return err
+	if vc.AirgapConfig.Enabled {
+		r.Chart.Repository = vc.AirgapConfig.Hauler.ChartEndpoint()
+	} else {
+		r.Chart.Repository, err = prompts.ReadText(fmt.Sprintf("%s Helm repository", name), defaultRepo, false, -1)
+		if err != nil {
+			return err
+		}
 	}
 
-	versionPrompt := fmt.Sprintf("%s version", name)
-	if vc.UseFixedVersions {
+	if vc.UseFixedVersions || vc.AirgapConfig.Enabled {
 		r.Chart.Version = cfg.ValidatorChartVersions[name]
 	} else {
+		versionPrompt := fmt.Sprintf("%s version", name)
 		availableVersions, err := getReleasesFromHelmRepo(r.Chart.Repository)
 		// Ignore error and fall back to reading version from the command line.
 		// Errors may occur in air-gapped environments or misconfigured helm repos.
@@ -86,8 +90,8 @@ func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient k
 		rsCp := deepcopy.Copy(vc.ReleaseSecret).(*components.Secret)
 		*rs = *rsCp
 		r.Chart.AuthSecretName = vc.Release.Chart.AuthSecretName
-		r.Chart.CaFile = vc.Release.Chart.CaFile
-		r.Chart.InsecureSkipTlsVerify = vc.Release.Chart.InsecureSkipTlsVerify
+		r.Chart.CAFile = vc.Release.Chart.CAFile
+		r.Chart.InsecureSkipTLSVerify = vc.Release.Chart.InsecureSkipTLSVerify
 		return nil
 	}
 
@@ -100,9 +104,9 @@ func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient k
 		if err != nil {
 			return err
 		}
-		r.Chart.CaFile = rs.CaCertFile
+		r.Chart.CAFile = rs.CaCertFile
 	}
-	r.Chart.InsecureSkipTlsVerify = insecure
+	r.Chart.InsecureSkipTLSVerify = insecure
 
 	useBasicAuth, err := prompts.ReadBool("Configure Helm basic authentication", false)
 	if err != nil {

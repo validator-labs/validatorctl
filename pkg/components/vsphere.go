@@ -25,6 +25,7 @@ type VsphereConfig struct {
 
 // ConfigureVspherePlugin configures the vSphere plugin.
 func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) {
+	// TODO: properly handle TLS, helm, and air-gap config
 	vc.VspherePlugin = &VspherePluginConfig{
 		Enabled: true,
 		Release: &vapi.HelmRelease{
@@ -32,7 +33,7 @@ func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) {
 				Name:                  cfg.ValidatorPluginVsphere,
 				Repository:            fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, cfg.ValidatorPluginVsphere),
 				Version:               cfg.ValidatorChartVersions[cfg.ValidatorPluginVsphere],
-				InsecureSkipTlsVerify: true,
+				InsecureSkipTLSVerify: true,
 			},
 		},
 		ReleaseSecret: &Secret{

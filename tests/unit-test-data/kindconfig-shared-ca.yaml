@@ -6,7 +6,7 @@ networking:
   disableDefaultCNI: false
 nodes:
 - role: control-plane
-  image: kindest/node:v1.27.11
+  image: kindest/node:v1.30.2
   extraMounts:
   - hostPath: /etc/hosts
     containerPath: /usr/local/share/ca-certificates/hosts

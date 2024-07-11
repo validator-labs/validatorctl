@@ -23,6 +23,7 @@ import (
 
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
 	"github.com/validator-labs/validator/pkg/helm"
+	"github.com/validator-labs/validator/pkg/oci"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -494,7 +495,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		"AzurePlugin":   vc.AzurePlugin,
 	}
 	if vc.ProxyConfig.Enabled {
-		args["ProxyCaCertData"] = strings.Split(vc.ProxyConfig.Env.ProxyCaCertData, "\n")
+		args["ProxyCaCertData"] = strings.Split(vc.ProxyConfig.Env.ProxyCACert.Data, "\n")
 	}
 
 	values, err := embed_utils.RenderTemplateBytes(args, cfg.Validator, "validator-base-values.tmpl")
@@ -536,8 +537,8 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	opts := helm.Options{
 		Chart:                 vc.Release.Chart.Name,
 		Repo:                  vc.Release.Chart.Repository,
-		CaFile:                vc.Release.Chart.CaFile,
-		InsecureSkipTlsVerify: vc.Release.Chart.InsecureSkipTlsVerify,
+		CaFile:                vc.Release.Chart.CAFile,
+		InsecureSkipTLSVerify: vc.Release.Chart.InsecureSkipTLSVerify,
 		Version:               vc.Release.Chart.Version,
 		Values:                finalValues,
 		CreateNamespace:       true,
@@ -548,19 +549,26 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	}
 
 	var cleanupLocalChart bool
-	if strings.HasPrefix(opts.Repo, "oci://") {
+	if strings.HasPrefix(opts.Repo, oci.Scheme) {
 		log.InfoCLI("\n==== Pulling validator Helm chart from OCI repository %s ====", opts.Repo)
 
-		opts.Untar = true
-		opts.UntarDir = c.RunLoc
+		opts.Path = fmt.Sprintf("%s/%s", c.RunLoc, opts.Chart)
 		opts.Version = strings.TrimPrefix(opts.Version, "v")
 
-		if err := helmClient.Pull(opts); err != nil {
-			return err
+		ociClient := oci.NewOCIClient(
+			oci.WithMultiAuth(),
+			oci.WithTLSConfig(opts.InsecureSkipTLSVerify, opts.CaFile),
+		)
+		ociOpts := oci.ImageOptions{
+			Ref:     fmt.Sprintf("%s/%s:%s", strings.TrimPrefix(opts.Repo, oci.Scheme), opts.Chart, opts.Version),
+			OutDir:  opts.Path,
+			OutFile: opts.Chart,
 		}
-		log.InfoCLI("Pulled plugin Helm chart %s from OCI repository", opts.Chart)
+		if err := ociClient.PullChart(ociOpts); err != nil {
+			return fmt.Errorf("failed to pull Helm chart from OCI registry: %w", err)
+		}
 
-		opts.Path = fmt.Sprintf("%s/%s", c.RunLoc, opts.Chart)
+		opts.Path = fmt.Sprintf("%s/%s.tgz", opts.Path, opts.Chart)
 		opts.Chart = ""
 		cleanupLocalChart = true
 		log.InfoCLI("Reconfigured Helm options to deploy local chart")
@@ -595,7 +603,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 }
 
 // getHelmClient gets a helm client w/ a monkey-patched path to the embedded kind binary
-func getHelmClient(vc *components.ValidatorConfig) (helm.HelmClient, error) {
+func getHelmClient(vc *components.ValidatorConfig) (helm.Client, error) {
 	apiCfg, err := kube.GetAPIConfig(vc.Kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get API config from kubeconfig")
@@ -693,7 +701,7 @@ func applyValidatorManifest(kubeconfig, name, path string) error {
 
 func createKindCluster(c *cfg.Config, vc *components.ValidatorConfig) error {
 	clusterConfig := filepath.Join(c.RunLoc, "kind-cluster-config.yaml")
-	if err := kind.AdvancedConfig(vc.ProxyConfig.Env, clusterConfig); err != nil {
+	if err := kind.RenderKindConfig(vc.ProxyConfig.Env, vc.AirgapConfig.Hauler, clusterConfig); err != nil {
 		return err
 	}
 	kindClusterName := vc.KindConfig.KindClusterName
