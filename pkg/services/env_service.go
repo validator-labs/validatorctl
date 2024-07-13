@@ -127,7 +127,7 @@ func ReadHaulerProps(h *Hauler, e *Env) error {
 		h.BasicAuth = &BasicAuth{}
 	}
 	h.BasicAuth.Username, h.BasicAuth.Password, err = prompts.ReadBasicCreds(
-		"Username", "Password", h.BasicAuth.Username, h.BasicAuth.Password, false, false,
+		"Username", "Password", h.BasicAuth.Username, h.BasicAuth.Password, true, false,
 	)
 	if err != nil {
 		return err
