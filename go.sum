@@ -288,6 +288,8 @@ github.com/sourcegraph/conc v0.3.0 h1:OQTbbt6P72L20UqAkXXuLOj79LfEanQ+YQFNpLA9yS
 github.com/sourcegraph/conc v0.3.0/go.mod h1:Sdozi7LEKbFPqYX2/J+iBAM6HpqSLTASQIKqDmF7Mt0=
 github.com/spectrocloud-labs/prompts-tui v0.0.0-20240621222805-66ae32c882c2 h1:Z7oNUfC3aGVXztA7RRFEQih4R7PL/LCwn+GiBhmMjwk=
 github.com/spectrocloud-labs/prompts-tui v0.0.0-20240621222805-66ae32c882c2/go.mod h1:XCvyEc3OLxKVXNLbOGZJOR6PiktfWqjYdrwU+ymCmLQ=
+github.com/spectrocloud-labs/prompts-tui v0.0.0-20240715203051-ec46421ba5c0 h1:YdN7sgQxRemJ/EPnVpIGH9Io5yUrSMHKHrcaY8ItO18=
+github.com/spectrocloud-labs/prompts-tui v0.0.0-20240715203051-ec46421ba5c0/go.mod h1:XCvyEc3OLxKVXNLbOGZJOR6PiktfWqjYdrwU+ymCmLQ=
 github.com/spf13/afero v1.11.0 h1:WJQKhtpdm3v2IzqG8VMqrr6Rf3UYpEF239Jy9wNepM8=
 github.com/spf13/afero v1.11.0/go.mod h1:GH9Y3pIexgf1MTIWtNGyogA5MwRIDXGUr+hbWNoBjkY=
 github.com/spf13/cast v1.3.1/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkUJE=
