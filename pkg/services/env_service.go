@@ -164,7 +164,7 @@ func ReadHaulerProps(h *Hauler, e *Env) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if caCertPath == "" {
 		h = nil
 	} else {
