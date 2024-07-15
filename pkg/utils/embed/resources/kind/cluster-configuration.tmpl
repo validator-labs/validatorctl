@@ -9,12 +9,12 @@ nodes:
 - role: control-plane
   image: {{ .Image }}
 {{- $insecure := .RegistryInsecure }}
-{{- if or .Env.ProxyCaCertPath (and .RegistryEndpoint (eq $insecure "false")) }}
+{{- if or .Env.ProxyCACert.Path (and .RegistryEndpoint (eq $insecure "false")) }}
   extraMounts:
 {{- end }}
-{{- if .Env.ProxyCaCertPath }}
-  - hostPath: {{ .Env.ProxyCaCertPath }}
-    containerPath: {{ printf "%s/%s" $cert_location .Env.ProxyCaCertName }}
+{{- if .Env.ProxyCACert.Path }}
+  - hostPath: {{ .Env.ProxyCACert.Path }}
+    containerPath: {{ printf "%s/%s" $cert_location .Env.ProxyCACert.Name }}
 {{- end }}
 {{- if .RegistryEndpoint }}
 {{- if and (eq $insecure "false") (not .ReusedProxyCACert) }}

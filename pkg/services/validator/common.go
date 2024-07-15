@@ -46,7 +46,7 @@ func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components
 		}
 	}
 
-	if vc.UseFixedVersions || vc.AirgapConfig.Enabled {
+	if vc.UseFixedVersions {
 		r.Chart.Version = cfg.ValidatorChartVersions[name]
 	} else {
 		versionPrompt := fmt.Sprintf("%s version", name)

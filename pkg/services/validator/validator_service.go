@@ -49,6 +49,7 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	var err error
 	var k8sClient kubernetes.Interface
 
+	log.Header("Kind Configuration")
 	vc.KindConfig.UseKindCluster, err = prompts.ReadBool("Provision & use kind cluster", true)
 	if err != nil {
 		return err
@@ -65,6 +66,7 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
+	log.Header("Air-gapped Configuration")
 	if err := readAirgapConfig(vc); err != nil {
 		return err
 	}
@@ -80,17 +82,22 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
+	log.Header("Proxy Configuration")
 	if err := readProxyConfig(vc); err != nil {
 		return err
 	}
+
+	log.Header("Sink Configuration")
 	if err := readSinkConfig(vc, k8sClient); err != nil {
 		return err
 	}
+
+	log.Header("Validator Helm Chart Configuration")
 	if err := readHelmRelease(cfg.Validator, k8sClient, vc, vc.Release, vc.ReleaseSecret); err != nil {
 		return err
 	}
 
-	log.Header("Enter Validator Plugin Configuration")
+	log.Header("Validator Plugin Configuration")
 
 	vc.AWSPlugin.Enabled, err = prompts.ReadBool("Enable AWS plugin", true)
 	if err != nil {
@@ -142,6 +149,7 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
+	log.Header("Finalize Configuration")
 	restart, err := prompts.ReadBool("Restart configuration", false)
 	if err != nil {
 		return err
