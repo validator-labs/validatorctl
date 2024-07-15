@@ -17,6 +17,7 @@ type OciConfig struct {
 
 // ConfigureOciPlugin configures the OCI plugin.
 func ConfigureOciPlugin(vc *ValidatorConfig, config OciConfig) {
+	// TODO: properly handle TLS, helm, and air-gap config
 	vc.OCIPlugin = &OCIPluginConfig{
 		Enabled: true,
 		Release: &vapi.HelmRelease{
@@ -24,7 +25,7 @@ func ConfigureOciPlugin(vc *ValidatorConfig, config OciConfig) {
 				Name:                  cfg.ValidatorPluginOci,
 				Repository:            fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, cfg.ValidatorPluginOci),
 				Version:               cfg.ValidatorChartVersions[cfg.ValidatorPluginOci],
-				InsecureSkipTlsVerify: true,
+				InsecureSkipTLSVerify: true,
 			},
 		},
 		ReleaseSecret: &Secret{

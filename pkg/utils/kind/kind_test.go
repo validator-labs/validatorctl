@@ -11,38 +11,42 @@ import (
 )
 
 func TestRenderKindConfig(t *testing.T) {
-	subtests := []struct {
+	tests := []struct {
 		name     string
 		env      *env.Env
+		hauler   *env.Hauler
 		expected string
 	}{
 		{
 			name: "Kind config w/ proxy CA cert",
 			env: &env.Env{
-				PodCIDR:         &cfg.DefaultPodCIDR,
-				ServiceIPRange:  &cfg.DefaultServiceIPRange,
-				ProxyCaCertName: "hosts",
-				ProxyCaCertPath: "/etc/hosts",
+				PodCIDR:        &cfg.DefaultPodCIDR,
+				ServiceIPRange: &cfg.DefaultServiceIPRange,
+				ProxyCACert: &env.CACert{
+					Name: "hosts",
+					Path: "/etc/hosts",
+				},
 			},
 			expected: "kindconfig-shared-ca.yaml",
 		},
 		{
 			name: "Kind config basic",
 			env: &env.Env{
+				ProxyCACert:    &env.CACert{},
 				PodCIDR:        &cfg.DefaultPodCIDR,
 				ServiceIPRange: &cfg.DefaultServiceIPRange,
 			},
 			expected: "kindconfig-basic.yaml",
 		},
 	}
-	for _, subtest := range subtests {
+	for _, tt := range tests {
 		kindConfig := file.UnitTestFile("kindconfig.tmp")
-		if err := AdvancedConfig(subtest.env, kindConfig); err != nil {
+		if err := RenderKindConfig(tt.env, tt.hauler, kindConfig); err != nil {
 			t.Fatalf("Command Execution Failed. %v", err)
 		}
-		expectedBytes, err := os.ReadFile(file.UnitTestFile(subtest.expected))
+		expectedBytes, err := os.ReadFile(file.UnitTestFile(tt.expected))
 		if err != nil {
-			t.Fatalf("failed to read expected file: %s: %v", subtest.expected, err)
+			t.Fatalf("failed to read expected file: %s: %v", tt.expected, err)
 		}
 		renderedBytes, err := os.ReadFile(kindConfig)
 		if err != nil {

@@ -2,7 +2,7 @@ include build/makelib/common.mk
 
 # CLI version
 VERSION_SUFFIX ?= -dev
-VERSION ?= 0.0.3${VERSION_SUFFIX} # x-release-please-version
+VERSION ?= 0.0.4${VERSION_SUFFIX} # x-release-please-version
 
 ##@ Build Targets
 .PHONY: build

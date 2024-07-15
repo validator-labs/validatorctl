@@ -24,6 +24,7 @@ func readNetworkPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 		return err
 	}
 
+	log.Header("Network Configuration")
 	ruleNames := make([]string, 0)
 
 	if err := configureDNSRules(c, &ruleNames); err != nil {

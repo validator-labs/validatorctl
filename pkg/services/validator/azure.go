@@ -49,6 +49,9 @@ func readAzurePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interf
 	if err := readHelmRelease(cfg.ValidatorPluginAzure, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
 		return fmt.Errorf("failed to read Helm release: %w", err)
 	}
+
+	log.Header("Azure Configuration")
+
 	if err := readAzureCredentials(c, k8sClient); err != nil {
 		return errors.Wrap(err, "failed to read Azure credentials")
 	}

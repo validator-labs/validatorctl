@@ -52,6 +52,9 @@ func readVspherePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 	if err := readHelmRelease(cfg.ValidatorPluginVsphere, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
 		return err
 	}
+
+	log.Header("vSphere Configuration")
+
 	if err := readVsphereCredentials(c, k8sClient); err != nil {
 		return errors.Wrap(err, "failed to read vSphere credentials")
 	}
@@ -252,6 +255,9 @@ func selectEsxiHosts(ctx context.Context, datacenter string, clusterName string,
 			return nil, err
 		}
 		selectedHosts = append(selectedHosts, hostName)
+		hostList = slices.DeleteFunc(hostList, func(s string) bool {
+			return s == hostName
+		})
 
 		add, err := prompts.ReadBool("Add another ESXi Host", false)
 		if err != nil {
@@ -320,8 +326,20 @@ func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[
 }
 
 func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.VsphereRolePrivilegeRule, idx int, ruleNames *[]string, isAdmin bool) error {
-	err := initVsphereRule(r, "role privilege", "The rule's vSphere privilege set will be replaced.", ruleNames)
-	if err != nil {
+	var err error
+	var initMsg string
+	reconfigurePrivileges := true
+
+	if r.Name != "" {
+		reconfigurePrivileges, err = prompts.ReadBool("Reconfigure privilege set for role privilege rule", false)
+		if err != nil {
+			return err
+		}
+		if reconfigurePrivileges {
+			initMsg = "The rule's vSphere privilege set will be replaced."
+		}
+	}
+	if err := initVsphereRule(r, "role privilege", initMsg, ruleNames); err != nil {
 		return err
 	}
 
@@ -334,15 +352,19 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 		log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Account.Username)
 		r.Username = c.Account.Username
 	}
-	privileges, err := LoadPrivileges(cfg.ValidatorVspherePrivilegeFile)
-	if err != nil {
-		return err
+
+	if reconfigurePrivileges {
+		privileges, err := LoadPrivileges(cfg.ValidatorVspherePrivilegeFile)
+		if err != nil {
+			return err
+		}
+		privileges, err = selectPrivileges(privileges)
+		if err != nil {
+			return err
+		}
+		r.Privileges = privileges
 	}
-	privileges, err = selectPrivileges(privileges)
-	if err != nil {
-		return err
-	}
-	r.Privileges = privileges
+
 	if idx == -1 {
 		c.VsphereRolePrivilegeRules = append(c.VsphereRolePrivilegeRules, *r)
 		c.Validator.RolePrivilegeValidationRules = append(c.Validator.RolePrivilegeValidationRules, r.GenericRolePrivilegeValidationRule)
@@ -350,6 +372,7 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 		c.VsphereRolePrivilegeRules[idx] = *r
 		c.Validator.RolePrivilegeValidationRules[idx] = r.GenericRolePrivilegeValidationRule
 	}
+
 	return nil
 }
 
@@ -446,12 +469,24 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 }
 
 func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver, idx int, ruleNames *[]string, isAdmin bool) error {
-	err := initVsphereRule(r, "entity privilege", "The rule's vSphere privilege set will be replaced.", ruleNames)
-	if err != nil {
+	var err error
+	var initMsg string
+	reconfigureEntity := true
+
+	if r.Name != "" {
+		reconfigureEntity, err = prompts.ReadBool("Reconfigure entity and privilege set for entity privilege rule", false)
+		if err != nil {
+			return err
+		}
+		if reconfigureEntity {
+			initMsg = "The rule's entity and privilege set will be replaced."
+		}
+	}
+	if err := initVsphereRule(r, "entity privilege", initMsg, ruleNames); err != nil {
 		return err
 	}
 
-	if err := readCustomEntityPrivileges(ctx, c, r, driver, isAdmin); err != nil {
+	if err := readEntityPrivileges(ctx, c, r, driver, isAdmin, reconfigureEntity); err != nil {
 		return err
 	}
 
@@ -466,33 +501,34 @@ func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginCon
 	return nil
 }
 
-func readCustomEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver, isAdmin bool) error {
+func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.VsphereDriver, isAdmin, reconfigureEntity bool) error {
 	var err error
-	if r.Username == "" {
 
-		if isAdmin {
-			r.Username, err = prompts.ReadTextRegex("vSphere username to validate entity privileges for", r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
-			if err != nil {
-				return err
-			}
-		} else {
-			log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Account.Username)
-			r.Username = c.Account.Username
+	if isAdmin {
+		r.Username, err = prompts.ReadTextRegex("vSphere username to validate entity privileges for", r.Username, "Invalid vSphere username", cfg.VSphereUsernameRegex)
+		if err != nil {
+			return err
 		}
+	} else {
+		log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Account.Username)
+		r.Username = c.Account.Username
+	}
 
+	if reconfigureEntity {
 		r.EntityType, r.EntityName, r.ClusterName, err = getEntityInfo(ctx, "", "Entity Type", c.Validator.Datacenter, cfg.ValidatorPluginVsphereEntities, driver)
 		if err != nil {
 			return err
 		}
+		privileges, err := LoadPrivileges(cfg.ValidatorVspherePrivilegeFile)
+		if err != nil {
+			return err
+		}
+		r.Privileges, err = selectPrivileges(privileges)
+		if err != nil {
+			return err
+		}
 	}
-	privileges, err := LoadPrivileges(cfg.ValidatorVspherePrivilegeFile)
-	if err != nil {
-		return err
-	}
-	r.Privileges, err = selectPrivileges(privileges)
-	if err != nil {
-		return err
-	}
+
 	return nil
 }
 

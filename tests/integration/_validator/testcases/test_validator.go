@@ -100,6 +100,9 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 		// Kind
 		"y", // provision & use kind cluster
 
+		// Air-gapped
+		"n", // enable air-gapped mode
+
 		// Image registry
 		"quay.io/validator-labs", // validator image registry
 

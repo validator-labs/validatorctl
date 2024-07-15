@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.0.4](https://github.com/validator-labs/validatorctl/compare/v0.0.3...v0.0.4) (2024-07-15)
+
+
+### Features
+
+* air-gapped support with hauler ([#74](https://github.com/validator-labs/validatorctl/issues/74)) ([aa3fd73](https://github.com/validator-labs/validatorctl/commit/aa3fd733817a7b0d971b5d4adfe1f710f99d7f49))
+
+
+### Dependency Updates
+
+* **deps:** update actions/setup-go digest to 0a12ed9 ([#72](https://github.com/validator-labs/validatorctl/issues/72)) ([7b6f978](https://github.com/validator-labs/validatorctl/commit/7b6f978baaeb496a88c9405d70fb03b5c2b9aa20))
+* **deps:** update anchore/sbom-action action to v0.16.1 ([#71](https://github.com/validator-labs/validatorctl/issues/71)) ([347da36](https://github.com/validator-labs/validatorctl/commit/347da36864738dfe770889679105ba83347f050f))
+* **deps:** update golang.org/x/exp digest to 46b0784 ([#67](https://github.com/validator-labs/validatorctl/issues/67)) ([89caf1c](https://github.com/validator-labs/validatorctl/commit/89caf1c40f1dce2642c17f65d5c4c6ae72653eb3))
+* **deps:** update module github.com/validator-labs/validator to v0.0.46 ([#73](https://github.com/validator-labs/validatorctl/issues/73)) ([72897c2](https://github.com/validator-labs/validatorctl/commit/72897c201eaff04af1a03c2afc8cdff0845c68ad))
+* **deps:** update module github.com/validator-labs/validator-plugin-aws to v0.1.1 ([#68](https://github.com/validator-labs/validatorctl/issues/68)) ([bba7058](https://github.com/validator-labs/validatorctl/commit/bba7058d6c7546bc281ecf5daac3372d694edf38))
+* **deps:** update module github.com/validator-labs/validator-plugin-azure to v0.0.12 ([#70](https://github.com/validator-labs/validatorctl/issues/70)) ([e1bf9fa](https://github.com/validator-labs/validatorctl/commit/e1bf9fa80a38f9ced3b57b46860640cb68e9a6c3))
+* **deps:** update module gopkg.in/yaml.v2 to v3 ([#61](https://github.com/validator-labs/validatorctl/issues/61)) ([8952d08](https://github.com/validator-labs/validatorctl/commit/8952d080157c4e155d1f851d535a542605cc299b))
+
+
+### Refactoring
+
+* enable revive and address all lints ([#69](https://github.com/validator-labs/validatorctl/issues/69)) ([b9c8df8](https://github.com/validator-labs/validatorctl/commit/b9c8df80f2c8c54c0fe10e38239281d05aadb290))
+
 ## [0.0.3](https://github.com/validator-labs/validatorctl/compare/v0.0.2...v0.0.3) (2024-06-27)
 
 

@@ -18,6 +18,7 @@ type NetworkConfig struct {
 
 // ConfigureNetworkPlugin configures the network plugin.
 func ConfigureNetworkPlugin(vc *ValidatorConfig, config NetworkConfig) {
+	// TODO: properly handle TLS, helm, and air-gap config
 	vc.NetworkPlugin = &NetworkPluginConfig{
 		Enabled: true,
 		Release: &vapi.HelmRelease{
@@ -25,7 +26,7 @@ func ConfigureNetworkPlugin(vc *ValidatorConfig, config NetworkConfig) {
 				Name:                  cfg.ValidatorPluginNetwork,
 				Repository:            fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, cfg.ValidatorPluginNetwork),
 				Version:               cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork],
-				InsecureSkipTlsVerify: true,
+				InsecureSkipTLSVerify: true,
 			},
 		},
 		ReleaseSecret: &Secret{
