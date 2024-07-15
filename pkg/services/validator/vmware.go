@@ -474,12 +474,12 @@ func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginCon
 	reconfigureEntity := true
 
 	if r.Name != "" {
-		reconfigureEntity, err = prompts.ReadBool("Reconfigure privilege set for entity privilege rule", false)
+		reconfigureEntity, err = prompts.ReadBool("Reconfigure entity and privilege set for entity privilege rule", false)
 		if err != nil {
 			return err
 		}
 		if reconfigureEntity {
-			initMsg = "The rule's entity privilege set will be replaced."
+			initMsg = "The rule's entity and privilege set will be replaced."
 		}
 	}
 	if err := initVsphereRule(r, "entity privilege", initMsg, ruleNames); err != nil {
