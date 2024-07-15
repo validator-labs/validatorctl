@@ -32,6 +32,7 @@ func TestRenderKindConfig(t *testing.T) {
 		{
 			name: "Kind config basic",
 			env: &env.Env{
+				ProxyCACert:    &env.CACert{},
 				PodCIDR:        &cfg.DefaultPodCIDR,
 				ServiceIPRange: &cfg.DefaultServiceIPRange,
 			},
