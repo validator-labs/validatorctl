@@ -25,6 +25,7 @@ import (
 var errNoRulesEnabled = errors.New("no validation rules enabled")
 
 func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components.ValidatorConfig, r *vapi.HelmRelease, rs *components.Secret) error {
+	log.Header(fmt.Sprintf("%s Helm Chart Configuration", name))
 	var err error
 
 	defaultRepo := fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, name)
@@ -39,6 +40,7 @@ func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components
 
 	if vc.AirgapConfig.Enabled {
 		r.Chart.Repository = vc.AirgapConfig.Hauler.ChartEndpoint()
+		log.InfoCLI("Using local Hauler repository: %s", vc.AirgapConfig.Hauler.ChartEndpoint())
 	} else {
 		r.Chart.Repository, err = prompts.ReadText(fmt.Sprintf("%s Helm repository", name), defaultRepo, false, -1)
 		if err != nil {
@@ -48,6 +50,7 @@ func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components
 
 	if vc.UseFixedVersions {
 		r.Chart.Version = cfg.ValidatorChartVersions[name]
+		log.InfoCLI("Using fixed version: %s for %s chart", r.Chart.Version, r.Chart.Name)
 	} else {
 		versionPrompt := fmt.Sprintf("%s version", name)
 		availableVersions, err := getReleasesFromHelmRepo(r.Chart.Repository)

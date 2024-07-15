@@ -52,6 +52,9 @@ func readVspherePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 	if err := readHelmRelease(cfg.ValidatorPluginVsphere, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
 		return err
 	}
+
+	log.Header("vSphere Configuration")
+
 	if err := readVsphereCredentials(c, k8sClient); err != nil {
 		return errors.Wrap(err, "failed to read vSphere credentials")
 	}
