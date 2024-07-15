@@ -190,13 +190,17 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 
-	log.InfoCLI("Configure Helm release credentials for validator chart")
+	if c.AirgapConfig.Enabled {
+		if err := readAirgapConfig(c); err != nil {
+			return err
+		}
+	}
+
 	if err := readHelmCredentials(c.Release, c.ReleaseSecret, k8sClient, c); err != nil {
 		return err
 	}
 
 	if c.AWSPlugin != nil && c.AWSPlugin.Enabled {
-		log.InfoCLI("Configure Helm release credentials for validator-plugin-aws chart")
 		if err := readHelmCredentials(c.AWSPlugin.Release, c.AWSPlugin.ReleaseSecret, k8sClient, c); err != nil {
 			return err
 		}
@@ -205,7 +209,6 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 	if c.AzurePlugin != nil && c.AzurePlugin.Enabled {
-		log.InfoCLI("Configure Helm release credentials for validator-plugin-azure chart")
 		if err := readHelmCredentials(c.AzurePlugin.Release, c.AzurePlugin.ReleaseSecret, k8sClient, c); err != nil {
 			return err
 		}
@@ -214,7 +217,6 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 	if c.OCIPlugin != nil && c.OCIPlugin.Enabled {
-		log.InfoCLI("Configure Helm release credentials for validator-plugin-oci chart")
 		if err := readHelmCredentials(c.OCIPlugin.Release, c.OCIPlugin.ReleaseSecret, k8sClient, c); err != nil {
 			return err
 		}
@@ -225,7 +227,6 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 	if c.VspherePlugin != nil && c.VspherePlugin.Enabled {
-		log.InfoCLI("Configure Helm release credentials for validator-plugin-vsphere chart")
 		if err = readHelmCredentials(c.VspherePlugin.Release, c.VspherePlugin.ReleaseSecret, k8sClient, c); err != nil {
 			return err
 		}
