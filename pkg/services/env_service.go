@@ -163,7 +163,9 @@ func ReadHaulerProps(h *Hauler, e *Env) error {
 	caCertPath, caCertName, caCertData, err := prompts.ReadCACert("Hauler CA certificate filepath", h.CACert.Path, "")
 	if err != nil {
 		return err
-	} else if caCertPath == "" {
+	}
+	
+	if caCertPath == "" {
 		h = nil
 	} else {
 		h.CACert.Data = string(caCertData)
