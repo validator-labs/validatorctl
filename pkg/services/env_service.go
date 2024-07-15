@@ -9,6 +9,7 @@ import (
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
+	"github.com/validator-labs/validatorctl/pkg/utils/network"
 )
 
 // Env represents the environment configuration.
@@ -110,6 +111,9 @@ func ReadHaulerProps(h *Hauler, e *Env) error {
 	var err error
 
 	// registry
+	if h.Host == "" {
+		h.Host = network.GetDefaultHostAddress()
+	}
 	h.Host, err = prompts.ReadText("Hauler Host (IPv4 address of primary NIC)", h.Host, false, -1)
 	if err != nil {
 		return err
