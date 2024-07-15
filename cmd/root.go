@@ -97,7 +97,7 @@ func InitConfig() {
 	// If a config file is found, read it
 	if err := viper.ReadInConfig(); err == nil {
 		viper.OnConfigChange(func(e fsnotify.Event) {
-			fmt.Println("Config file changed:", e.Name)
+			log.Debug("Config file changed: %s", e.Name)
 			// This is actually a noop - the updated config will be
 			// written to disk separately, but still nice to notify
 			// the user that something changed!
