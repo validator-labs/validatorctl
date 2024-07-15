@@ -243,6 +243,7 @@ func readAirgapConfig(vc *components.ValidatorConfig) (err error) {
 	if err != nil || !vc.AirgapConfig.Enabled {
 		return
 	}
+	vc.UseFixedVersions = true
 	return services.ReadHaulerProps(vc.AirgapConfig.Hauler, vc.ProxyConfig.Env)
 }
 

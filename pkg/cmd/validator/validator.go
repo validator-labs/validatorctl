@@ -85,7 +85,7 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 
 		// for dev build versions, we allow selection of specific validator and plugin versions
 		// for all other builds, we set a fixed version for the validator and plugins
-		vc.UseFixedVersions = !string_utils.IsDevVersion(tc.CliVersion) || vc.AirgapConfig.Enabled
+		vc.UseFixedVersions = !string_utils.IsDevVersion(tc.CliVersion)
 
 		if err := validator.ReadValidatorConfig(c, tc, vc); err != nil {
 			return errors.Wrap(err, "failed to create new validator configuration")
