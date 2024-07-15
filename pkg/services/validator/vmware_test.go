@@ -19,6 +19,9 @@ import (
 )
 
 var vSphereDummyConfig = &components.ValidatorConfig{
+	AirgapConfig: &components.AirgapConfig{
+		Enabled: false,
+	},
 	VspherePlugin: &components.VspherePluginConfig{
 		Release: &v1alpha1.HelmRelease{
 			Chart: v1alpha1.HelmChart{},

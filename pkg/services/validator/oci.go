@@ -24,6 +24,9 @@ func readOciPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 	if err := readHelmRelease(cfg.ValidatorPluginOci, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
 		return err
 	}
+
+	log.Header("OCI Configuration")
+
 	authSecretNames, err := configureAuthSecrets(c, k8sClient)
 	if err != nil {
 		return err

@@ -28,6 +28,7 @@ type ValidatorConfig struct {
 	ReleaseSecret    *Secret                `yaml:"helmReleaseSecret"`
 	KindConfig       KindConfig             `yaml:"kindConfig"`
 	Kubeconfig       string                 `yaml:"kubeconfig"`
+	AirgapConfig     *AirgapConfig          `yaml:"airgapConfig"`
 	SinkConfig       *SinkConfig            `yaml:"sinkConfig"`
 	ProxyConfig      *ProxyConfig           `yaml:"proxyConfig"`
 	ImageRegistry    string                 `yaml:"imageRegistry"`
@@ -49,9 +50,17 @@ func NewValidatorConfig() *ValidatorConfig {
 		KindConfig: KindConfig{
 			UseKindCluster: false,
 		},
+		AirgapConfig: &AirgapConfig{
+			Hauler: &env.Hauler{
+				BasicAuth: &env.BasicAuth{},
+				CACert:    &env.CACert{},
+			},
+		},
 		SinkConfig: &SinkConfig{},
 		ProxyConfig: &ProxyConfig{
-			Env: &env.Env{},
+			Env: &env.Env{
+				ProxyCACert: &env.CACert{},
+			},
 		},
 		// Plugin config
 		AWSPlugin: &AWSPluginConfig{
@@ -171,6 +180,12 @@ func (c *ValidatorConfig) encrypt() error {
 	}
 
 	return nil
+}
+
+// AirgapConfig represents the air-gapped configuration.
+type AirgapConfig struct {
+	Enabled bool        `yaml:"enabled"`
+	Hauler  *env.Hauler `yaml:"hauler"`
 }
 
 // KindConfig represents the kind configuration.
@@ -569,12 +584,13 @@ func SaveValidatorConfig(c *ValidatorConfig, tc *cfg.TaskConfig) error {
 
 // ConfigureBaseValidator configures the base validator configuration
 func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) {
+	// TODO: properly handle TLS, helm, and air-gap config
 	vc.Release = &validator.HelmRelease{
 		Chart: validator.HelmChart{
 			Name:                  cfg.Validator,
 			Repository:            fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, cfg.Validator),
 			Version:               cfg.ValidatorChartVersions[cfg.Validator],
-			InsecureSkipTlsVerify: true,
+			InsecureSkipTLSVerify: true,
 		},
 	}
 	vc.ReleaseSecret = &Secret{
@@ -582,7 +598,7 @@ func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) {
 	}
 	vc.KindConfig.UseKindCluster = true
 	vc.Kubeconfig = kubeconfig
-	vc.ImageRegistry = cfg.ValidatorImageRegistry
+	vc.ImageRegistry = cfg.ValidatorImagePath()
 	vc.ProxyConfig = &ProxyConfig{
 		Env: &env.Env{
 			PodCIDR:        &cfg.DefaultPodCIDR,

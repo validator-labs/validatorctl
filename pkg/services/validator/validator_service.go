@@ -31,7 +31,7 @@ var (
 	}
 	plugins = make([]string, 0, len(pluginFuncs))
 
-	imageRegistry = cfg.ValidatorImageRegistry
+	imageRegistry = cfg.ValidatorImagePath()
 )
 
 func init() {
@@ -49,6 +49,7 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	var err error
 	var k8sClient kubernetes.Interface
 
+	log.Header("Kind Configuration")
 	vc.KindConfig.UseKindCluster, err = prompts.ReadBool("Provision & use kind cluster", true)
 	if err != nil {
 		return err
@@ -65,25 +66,37 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
-	if vc.ImageRegistry != "" {
-		imageRegistry = vc.ImageRegistry
-	}
-	vc.ImageRegistry, err = prompts.ReadText("Validator image registry", imageRegistry, false, -1)
-	if err != nil {
+	log.Header("Air-gapped Configuration")
+	if err := readAirgapConfig(vc); err != nil {
 		return err
 	}
+	if vc.AirgapConfig.Enabled {
+		vc.ImageRegistry = vc.AirgapConfig.Hauler.ImageEndpoint()
+	} else {
+		if vc.ImageRegistry != "" {
+			imageRegistry = vc.ImageRegistry
+		}
+		vc.ImageRegistry, err = prompts.ReadText("Validator image registry", imageRegistry, false, -1)
+		if err != nil {
+			return err
+		}
+	}
 
+	log.Header("Proxy Configuration")
 	if err := readProxyConfig(vc); err != nil {
 		return err
 	}
+
+	log.Header("Sink Configuration")
 	if err := readSinkConfig(vc, k8sClient); err != nil {
 		return err
 	}
+
 	if err := readHelmRelease(cfg.Validator, k8sClient, vc, vc.Release, vc.ReleaseSecret); err != nil {
 		return err
 	}
 
-	log.Header("Enter Validator Plugin Configuration")
+	log.Header("Validator Plugin Configuration")
 
 	vc.AWSPlugin.Enabled, err = prompts.ReadBool("Enable AWS plugin", true)
 	if err != nil {
@@ -135,6 +148,7 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
+	log.Header("Finalize Configuration")
 	restart, err := prompts.ReadBool("Restart configuration", false)
 	if err != nil {
 		return err
@@ -176,13 +190,17 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 
-	log.InfoCLI("Configure Helm release credentials for validator chart")
+	if c.AirgapConfig.Enabled {
+		if err := readAirgapConfig(c); err != nil {
+			return err
+		}
+	}
+
 	if err := readHelmCredentials(c.Release, c.ReleaseSecret, k8sClient, c); err != nil {
 		return err
 	}
 
 	if c.AWSPlugin != nil && c.AWSPlugin.Enabled {
-		log.InfoCLI("Configure Helm release credentials for validator-plugin-aws chart")
 		if err := readHelmCredentials(c.AWSPlugin.Release, c.AWSPlugin.ReleaseSecret, k8sClient, c); err != nil {
 			return err
 		}
@@ -191,7 +209,6 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 	if c.AzurePlugin != nil && c.AzurePlugin.Enabled {
-		log.InfoCLI("Configure Helm release credentials for validator-plugin-azure chart")
 		if err := readHelmCredentials(c.AzurePlugin.Release, c.AzurePlugin.ReleaseSecret, k8sClient, c); err != nil {
 			return err
 		}
@@ -200,7 +217,6 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 	if c.OCIPlugin != nil && c.OCIPlugin.Enabled {
-		log.InfoCLI("Configure Helm release credentials for validator-plugin-oci chart")
 		if err := readHelmCredentials(c.OCIPlugin.Release, c.OCIPlugin.ReleaseSecret, k8sClient, c); err != nil {
 			return err
 		}
@@ -211,7 +227,6 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 	if c.VspherePlugin != nil && c.VspherePlugin.Enabled {
-		log.InfoCLI("Configure Helm release credentials for validator-plugin-vsphere chart")
 		if err = readHelmCredentials(c.VspherePlugin.Release, c.VspherePlugin.ReleaseSecret, k8sClient, c); err != nil {
 			return err
 		}
@@ -221,6 +236,15 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 	}
 
 	return nil
+}
+
+func readAirgapConfig(vc *components.ValidatorConfig) (err error) {
+	vc.AirgapConfig.Enabled, err = prompts.ReadBool("Configure Hauler for air-gapped installation", false)
+	if err != nil || !vc.AirgapConfig.Enabled {
+		return
+	}
+	vc.UseFixedVersions = true
+	return services.ReadHaulerProps(vc.AirgapConfig.Hauler, vc.ProxyConfig.Env)
 }
 
 func readProxyConfig(vc *components.ValidatorConfig) error {
@@ -238,7 +262,7 @@ func readProxyConfig(vc *components.ValidatorConfig) error {
 	if err := services.ReadProxyProps(vc.ProxyConfig.Env); err != nil {
 		return err
 	}
-	vc.ProxyConfig.Enabled = vc.ProxyConfig.Env.ProxyCaCertPath != ""
+	vc.ProxyConfig.Enabled = vc.ProxyConfig.Env.ProxyCACert.Path != ""
 
 	return nil
 }

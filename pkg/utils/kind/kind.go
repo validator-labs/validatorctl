@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -80,19 +81,8 @@ func DeleteCluster(name string) error {
 	return nil
 }
 
-// DefaultKindArgs returns the default arguments for a Kind cluster configuration
-func DefaultKindArgs() map[string]interface{} {
-	return map[string]interface{}{
-		"Env": env.Env{
-			PodCIDR:        &cfg.DefaultPodCIDR,
-			ServiceIPRange: &cfg.DefaultServiceIPRange,
-		},
-		"Image": fmt.Sprintf("%s:%s", cfg.KindImage, cfg.KindImageTag),
-	}
-}
-
-// AdvancedConfig renders a kind cluster configuration file with optional proxy and registry mirror customizations
-func AdvancedConfig(env *env.Env, kindConfig string) error {
+// RenderKindConfig renders a kind cluster configuration file with optional proxy and registry mirror customizations
+func RenderKindConfig(env *env.Env, hauler *env.Hauler, kindConfig string) error {
 	image := fmt.Sprintf("%s:%s", cfg.KindImage, cfg.KindImageTag)
 
 	clusterConfigArgs := map[string]interface{}{
@@ -100,7 +90,41 @@ func AdvancedConfig(env *env.Env, kindConfig string) error {
 		"Image": image,
 	}
 
+	// air-gapped configuration
+	if hauler != nil {
+		ep := hauler.Endpoint()
+		clusterConfigArgs["Image"] = hauler.KindImage(image)
+		clusterConfigArgs["RegistryEndpoint"] = ep
+		clusterConfigArgs["RegistryInsecure"] = strconv.FormatBool(hauler.InsecureSkipTLSVerify)
+		clusterConfigArgs["RegistryMirrors"] = defaultMirrorRegistries(ep)
+		clusterConfigArgs["ReusedProxyCACert"] = hauler.ReuseProxyCACert
+
+		if hauler.CACert != nil {
+			clusterConfigArgs["RegistryCACertName"] = hauler.CACert.Name
+		}
+		if hauler.BasicAuth != nil {
+			clusterConfigArgs["RegistryUsername"] = hauler.BasicAuth.Username
+			clusterConfigArgs["RegistryPassword"] = hauler.BasicAuth.Password
+		}
+	}
+
 	return embed_utils.RenderTemplate(clusterConfigArgs, cfg.Kind, cfg.ClusterConfigTemplate, kindConfig)
+}
+
+// defaultMirrorRegistries returns a comma-separated string of default registry mirrors
+func defaultMirrorRegistries(registryEndpoint string) []string {
+	if registryEndpoint == "" {
+		return nil
+	}
+	mirrorRegistries := make([]string, 0)
+	for _, registry := range cfg.RegistryMirrors {
+		// Add OCI format suffix (/v2)
+		registryMirrorEndpoint := fmt.Sprintf("%s/v2", registryEndpoint)
+		mirrorRegistries = append(mirrorRegistries,
+			fmt.Sprintf("%s%s%s", registry, cfg.RegistryMirrorSeparator, registryMirrorEndpoint),
+		)
+	}
+	return mirrorRegistries
 }
 
 func getClusters() ([]string, error) {

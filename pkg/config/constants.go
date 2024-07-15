@@ -15,14 +15,15 @@ const (
 
 	ClusterConfigTemplate = "cluster-configuration.tmpl"
 	KindImage             = "kindest/node"
-	KindImageTag          = "v1.27.11"
+	KindImageTag          = "v1.30.2"
 	NoProxyPrompt         = "# Default NO_PROXY values are on the lines below.\n# Edit as you see fit (comments are ignored). The file should contain a list of NO_PROXY values, newline separated.\n# Type :wq to save and exit (if using vi).\n\n"
 
 	// Validator constants
 	ValidatorConfigFile      = "validator.yaml"
 	ValidatorKindClusterName = "validator-kind-cluster"
 	ValidatorHelmRepository  = "https://validator-labs.github.io"
-	ValidatorImageRegistry   = "quay.io/validator-labs"
+	ValidatorImageRegistry   = "quay.io"
+	ValidatorImageRepository = "validator-labs"
 
 	ValidatorPluginAws     = "validator-plugin-aws"
 	ValidatorPluginAzure   = "validator-plugin-azure"
@@ -66,22 +67,29 @@ const (
 
 var (
 	// Misc.
-	DefaultPodCIDR        = "192.168.0.0/16"
-	DefaultServiceIPRange = "10.96.0.0/12"
-	HTTPSchemes           = []string{"https://", "http://"}
+	DefaultPodCIDR          = "192.168.0.0/16"
+	DefaultServiceIPRange   = "10.96.0.0/12"
+	HTTPSchemes             = []string{"https://", "http://"}
+	RegistryMirrors         = []string{"docker.io", "gcr.io", "ghcr.io", "k8s.gcr.io", "registry.k8s.io", "quay.io", "*"}
+	RegistryMirrorSeparator = "::"
 
 	// Command dirs
 	ValidatorSubdirs = []string{"manifests"}
 
 	// Validator
+	ValidatorImagePath = func() string {
+		return ValidatorImageRegistry + "/" + ValidatorImageRepository
+	}
+
 	PlacementTypeStatic  = "Static"
 	PlacementTypeDynamic = "Dynamic"
 	PlacementTypes       = []string{PlacementTypeStatic, PlacementTypeDynamic}
 
+	// TODO: centralize these in a single place referenced by validator & validatorctl
 	ValidatorChartVersions = map[string]string{
-		Validator:              "v0.0.43",
-		ValidatorPluginAws:     "v0.1.0",
-		ValidatorPluginAzure:   "v0.0.11",
+		Validator:              "v0.0.46",
+		ValidatorPluginAws:     "v0.1.1",
+		ValidatorPluginAzure:   "v0.0.12",
 		ValidatorPluginNetwork: "v0.0.17",
 		ValidatorPluginOci:     "v0.0.10",
 		ValidatorPluginVsphere: "v0.0.26",

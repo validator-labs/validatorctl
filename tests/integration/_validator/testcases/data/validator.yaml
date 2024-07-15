@@ -13,6 +13,8 @@ helmReleaseSecret:
   exists: false
 imageRegistry: quay.io/validator-labs
 useFixedVersion: false
+airgapConfig:
+  enabled: false
 kindConfig:
   useKindCluster: true
   kindClusterName: "<kind_cluster_name>"
@@ -30,6 +32,10 @@ sinkConfig:
 proxyConfig:
   enabled: false
   env:
+    proxyCaCert:
+      data: ""
+      name: ""
+      path: ""
     podCIDR: 172.16.0.0/20
     serviceIPRange: 10.155.0.0/24
 awsPlugin:

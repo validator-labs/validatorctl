@@ -16,6 +16,9 @@ import (
 )
 
 var awsDummyConfig = &components.ValidatorConfig{
+	AirgapConfig: &components.AirgapConfig{
+		Enabled: false,
+	},
 	AWSPlugin: &components.AWSPluginConfig{
 		Release: &v1alpha1.HelmRelease{
 			Chart: v1alpha1.HelmChart{},

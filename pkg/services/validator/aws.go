@@ -35,6 +35,9 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 	if err := readHelmRelease(cfg.ValidatorPluginAws, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
 		return err
 	}
+
+	log.Header("AWS Configuration")
+
 	if err := readAwsCredentials(c, k8sClient); err != nil {
 		return errors.Wrap(err, "failed to read AWS credentials")
 	}

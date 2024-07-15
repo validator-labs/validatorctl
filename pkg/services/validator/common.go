@@ -25,6 +25,7 @@ import (
 var errNoRulesEnabled = errors.New("no validation rules enabled")
 
 func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components.ValidatorConfig, r *vapi.HelmRelease, rs *components.Secret) error {
+	log.Header(fmt.Sprintf("%s Helm Chart Configuration", name))
 	var err error
 
 	defaultRepo := fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, name)
@@ -37,15 +38,21 @@ func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components
 	r.Chart.Name = name
 	rs.Name = fmt.Sprintf("validator-helm-release-%s", name)
 
-	r.Chart.Repository, err = prompts.ReadText(fmt.Sprintf("%s Helm repository", name), defaultRepo, false, -1)
-	if err != nil {
-		return err
+	if vc.AirgapConfig.Enabled {
+		r.Chart.Repository = vc.AirgapConfig.Hauler.ChartEndpoint()
+		log.InfoCLI("Using local Hauler repository: %s", vc.AirgapConfig.Hauler.ChartEndpoint())
+	} else {
+		r.Chart.Repository, err = prompts.ReadText(fmt.Sprintf("%s Helm repository", name), defaultRepo, false, -1)
+		if err != nil {
+			return err
+		}
 	}
 
-	versionPrompt := fmt.Sprintf("%s version", name)
 	if vc.UseFixedVersions {
 		r.Chart.Version = cfg.ValidatorChartVersions[name]
+		log.InfoCLI("Using fixed version: %s for %s chart", r.Chart.Version, r.Chart.Name)
 	} else {
+		versionPrompt := fmt.Sprintf("%s version", name)
 		availableVersions, err := getReleasesFromHelmRepo(r.Chart.Repository)
 		// Ignore error and fall back to reading version from the command line.
 		// Errors may occur in air-gapped environments or misconfigured helm repos.
@@ -86,8 +93,8 @@ func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient k
 		rsCp := deepcopy.Copy(vc.ReleaseSecret).(*components.Secret)
 		*rs = *rsCp
 		r.Chart.AuthSecretName = vc.Release.Chart.AuthSecretName
-		r.Chart.CaFile = vc.Release.Chart.CaFile
-		r.Chart.InsecureSkipTlsVerify = vc.Release.Chart.InsecureSkipTlsVerify
+		r.Chart.CAFile = vc.Release.Chart.CAFile
+		r.Chart.InsecureSkipTLSVerify = vc.Release.Chart.InsecureSkipTLSVerify
 		return nil
 	}
 
@@ -100,9 +107,9 @@ func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient k
 		if err != nil {
 			return err
 		}
-		r.Chart.CaFile = rs.CaCertFile
+		r.Chart.CAFile = rs.CaCertFile
 	}
-	r.Chart.InsecureSkipTlsVerify = insecure
+	r.Chart.InsecureSkipTLSVerify = insecure
 
 	useBasicAuth, err := prompts.ReadBool("Configure Helm basic authentication", false)
 	if err != nil {
