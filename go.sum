@@ -317,8 +317,8 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8=
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
-github.com/validator-labs/validator v0.0.46-0.20240712145341-827d477b7678 h1:uqcFWickJxhpIp43Lsk42zWpEfhLpD0kQhFYW3p90sA=
-github.com/validator-labs/validator v0.0.46-0.20240712145341-827d477b7678/go.mod h1:J351YCG6U/npAyoH0yJLKqSN1WqLx30A72Std6ME9p0=
+github.com/validator-labs/validator v0.0.46 h1:oRP1+HAG5KJ41Kskv2c9IqPhwlLx9mkCOLWK5w1tNXA=
+github.com/validator-labs/validator v0.0.46/go.mod h1:J351YCG6U/npAyoH0yJLKqSN1WqLx30A72Std6ME9p0=
 github.com/validator-labs/validator-plugin-aws v0.1.1 h1:GPWSk1hSRBV+NgOBKKn0q6f2iH3+ZikHYuSD6S41Ybk=
 github.com/validator-labs/validator-plugin-aws v0.1.1/go.mod h1:GGFVx01t77XomgrPZFmF5Dkre+iqmtBOBjThuWgB/jI=
 github.com/validator-labs/validator-plugin-azure v0.0.12 h1:zlsXvu/jud58aH9FA3I5U0haANbLLQe1N/gAf093LLg=
