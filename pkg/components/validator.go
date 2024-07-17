@@ -18,7 +18,6 @@ import (
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	env "github.com/validator-labs/validatorctl/pkg/services"
 	"github.com/validator-labs/validatorctl/pkg/utils/crypto"
 )
 
@@ -28,7 +27,7 @@ type ValidatorConfig struct {
 	ReleaseSecret    *Secret                `yaml:"helmReleaseSecret"`
 	KindConfig       KindConfig             `yaml:"kindConfig"`
 	Kubeconfig       string                 `yaml:"kubeconfig"`
-	AirgapConfig     *AirgapConfig          `yaml:"airgapConfig"`
+	RegistryConfig   *RegistryConfig        `yaml:"registryConfig"`
 	SinkConfig       *SinkConfig            `yaml:"sinkConfig"`
 	ProxyConfig      *ProxyConfig           `yaml:"proxyConfig"`
 	ImageRegistry    string                 `yaml:"imageRegistry"`
@@ -50,16 +49,16 @@ func NewValidatorConfig() *ValidatorConfig {
 		KindConfig: KindConfig{
 			UseKindCluster: false,
 		},
-		AirgapConfig: &AirgapConfig{
-			Hauler: &env.Hauler{
-				BasicAuth: &env.BasicAuth{},
-				CACert:    &env.CACert{},
+		RegistryConfig: &RegistryConfig{
+			Registry: &Registry{
+				BasicAuth: &BasicAuth{},
+				CACert:    &CACert{},
 			},
 		},
 		SinkConfig: &SinkConfig{},
 		ProxyConfig: &ProxyConfig{
-			Env: &env.Env{
-				ProxyCACert: &env.CACert{},
+			Env: &Env{
+				ProxyCACert: &CACert{},
 			},
 		},
 		// Plugin config
@@ -182,10 +181,10 @@ func (c *ValidatorConfig) encrypt() error {
 	return nil
 }
 
-// AirgapConfig represents the air-gapped configuration.
-type AirgapConfig struct {
-	Enabled bool        `yaml:"enabled"`
-	Hauler  *env.Hauler `yaml:"hauler"`
+// RegistryConfig represents the artifact registry configuration.
+type RegistryConfig struct {
+	Enabled  bool      `yaml:"enabled"`
+	Registry *Registry `yaml:"registry"`
 }
 
 // KindConfig represents the kind configuration.
@@ -196,8 +195,8 @@ type KindConfig struct {
 
 // ProxyConfig represents the proxy configuration.
 type ProxyConfig struct {
-	Enabled bool     `yaml:"enabled"`
-	Env     *env.Env `yaml:"env"`
+	Enabled bool `yaml:"enabled"`
+	Env     *Env `yaml:"env"`
 }
 
 // SinkConfig represents the sink configuration.
@@ -600,7 +599,7 @@ func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) {
 	vc.Kubeconfig = kubeconfig
 	vc.ImageRegistry = cfg.ValidatorImagePath()
 	vc.ProxyConfig = &ProxyConfig{
-		Env: &env.Env{
+		Env: &Env{
 			PodCIDR:        &cfg.DefaultPodCIDR,
 			ServiceIPRange: &cfg.DefaultServiceIPRange,
 		},

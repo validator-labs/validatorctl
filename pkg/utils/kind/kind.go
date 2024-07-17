@@ -14,9 +14,9 @@ import (
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
+	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	env "github.com/validator-labs/validatorctl/pkg/services"
 	embed_utils "github.com/validator-labs/validatorctl/pkg/utils/embed"
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 )
@@ -82,7 +82,7 @@ func DeleteCluster(name string) error {
 }
 
 // RenderKindConfig renders a kind cluster configuration file with optional proxy and registry mirror customizations
-func RenderKindConfig(env *env.Env, hauler *env.Hauler, kindConfig string) error {
+func RenderKindConfig(env *components.Env, r *components.Registry, kindConfig string) error {
 	image := fmt.Sprintf("%s:%s", cfg.KindImage, cfg.KindImageTag)
 
 	clusterConfigArgs := map[string]interface{}{
@@ -90,21 +90,24 @@ func RenderKindConfig(env *env.Env, hauler *env.Hauler, kindConfig string) error
 		"Image": image,
 	}
 
-	// air-gapped configuration
-	if hauler != nil {
-		ep := hauler.Endpoint()
-		clusterConfigArgs["Image"] = hauler.KindImage(image)
+	// registry configuration
+	if r != nil {
+		ep := r.Endpoint()
+		clusterConfigArgs["Image"] = r.KindImage(image)
 		clusterConfigArgs["RegistryEndpoint"] = ep
-		clusterConfigArgs["RegistryInsecure"] = strconv.FormatBool(hauler.InsecureSkipTLSVerify)
-		clusterConfigArgs["RegistryMirrors"] = defaultMirrorRegistries(ep)
-		clusterConfigArgs["ReusedProxyCACert"] = hauler.ReuseProxyCACert
+		clusterConfigArgs["RegistryInsecure"] = strconv.FormatBool(r.InsecureSkipTLSVerify)
+		clusterConfigArgs["RegistryMirrors"] = defaultMirrorRegistries(ep, r.BaseContentPath)
+		clusterConfigArgs["ReusedProxyCACert"] = r.ReuseProxyCACert
 
-		if hauler.CACert != nil {
-			clusterConfigArgs["RegistryCACertName"] = hauler.CACert.Name
+		if r.CACert != nil {
+			clusterConfigArgs["RegistryCACertName"] = r.CACert.Name
 		}
-		if hauler.BasicAuth != nil {
-			clusterConfigArgs["RegistryUsername"] = hauler.BasicAuth.Username
-			clusterConfigArgs["RegistryPassword"] = hauler.BasicAuth.Password
+		if r.BasicAuth != nil {
+			clusterConfigArgs["RegistryUsername"] = r.BasicAuth.Username
+			clusterConfigArgs["RegistryPassword"] = r.BasicAuth.Password
+		}
+		if r.BaseContentPath != "" {
+			clusterConfigArgs["RegistryBaseContentPath"] = r.BaseContentPath
 		}
 	}
 
@@ -112,7 +115,7 @@ func RenderKindConfig(env *env.Env, hauler *env.Hauler, kindConfig string) error
 }
 
 // defaultMirrorRegistries returns a comma-separated string of default registry mirrors
-func defaultMirrorRegistries(registryEndpoint string) []string {
+func defaultMirrorRegistries(registryEndpoint, baseContentPath string) []string {
 	if registryEndpoint == "" {
 		return nil
 	}
@@ -120,6 +123,9 @@ func defaultMirrorRegistries(registryEndpoint string) []string {
 	for _, registry := range cfg.RegistryMirrors {
 		// Add OCI format suffix (/v2)
 		registryMirrorEndpoint := fmt.Sprintf("%s/v2", registryEndpoint)
+		if baseContentPath != "" {
+			registryMirrorEndpoint = fmt.Sprintf("%s/%s", registryMirrorEndpoint, baseContentPath)
+		}
 		mirrorRegistries = append(mirrorRegistries,
 			fmt.Sprintf("%s%s%s", registry, cfg.RegistryMirrorSeparator, registryMirrorEndpoint),
 		)

@@ -5,24 +5,24 @@ import (
 	"os"
 	"testing"
 
+	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
-	env "github.com/validator-labs/validatorctl/pkg/services"
 	"github.com/validator-labs/validatorctl/tests/utils/file"
 )
 
 func TestRenderKindConfig(t *testing.T) {
 	tests := []struct {
 		name     string
-		env      *env.Env
-		hauler   *env.Hauler
+		env      *components.Env
+		hauler   *components.Registry
 		expected string
 	}{
 		{
 			name: "Kind config w/ proxy CA cert",
-			env: &env.Env{
+			env: &components.Env{
 				PodCIDR:        &cfg.DefaultPodCIDR,
 				ServiceIPRange: &cfg.DefaultServiceIPRange,
-				ProxyCACert: &env.CACert{
+				ProxyCACert: &components.CACert{
 					Name: "hosts",
 					Path: "/etc/hosts",
 				},
@@ -31,8 +31,8 @@ func TestRenderKindConfig(t *testing.T) {
 		},
 		{
 			name: "Kind config basic",
-			env: &env.Env{
-				ProxyCACert:    &env.CACert{},
+			env: &components.Env{
+				ProxyCACert:    &components.CACert{},
 				PodCIDR:        &cfg.DefaultPodCIDR,
 				ServiceIPRange: &cfg.DefaultServiceIPRange,
 			},

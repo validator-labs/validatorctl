@@ -702,7 +702,8 @@ func applyValidatorManifest(kubeconfig, name, path string) error {
 
 func createKindCluster(c *cfg.Config, vc *components.ValidatorConfig) error {
 	clusterConfig := filepath.Join(c.RunLoc, "kind-cluster-config.yaml")
-	if err := kind.RenderKindConfig(vc.ProxyConfig.Env, vc.AirgapConfig.Hauler, clusterConfig); err != nil {
+	reg := getRegistry(vc)
+	if err := kind.RenderKindConfig(vc.ProxyConfig.Env, reg, clusterConfig); err != nil {
 		return err
 	}
 	kindClusterName := vc.KindConfig.KindClusterName
@@ -716,5 +717,13 @@ func createKindCluster(c *cfg.Config, vc *components.ValidatorConfig) error {
 		return errors.Wrap(err, "failed to set KUBECONFIG env var")
 	}
 	log.InfoCLI("\nCreated kind cluster. kubeconfig: %s", vc.Kubeconfig)
+	return nil
+}
+
+func getRegistry(vc *components.ValidatorConfig) *components.Registry {
+	if vc.RegistryConfig.Enabled {
+		return vc.RegistryConfig.Registry
+	}
+
 	return nil
 }
