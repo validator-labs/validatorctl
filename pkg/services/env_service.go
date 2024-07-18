@@ -7,66 +7,14 @@ import (
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
+	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/utils/network"
 )
 
-// Env represents the environment configuration.
-type Env struct {
-	HTTPProxy      string  `yaml:"httpProxy,omitempty"`
-	HTTPSProxy     string  `yaml:"httpsProxy,omitempty"`
-	NoProxy        string  `yaml:"noProxy,omitempty"`
-	PodCIDR        *string `yaml:"podCIDR"`
-	ProxyCACert    *CACert `yaml:"proxyCaCert,omitempty"`
-	ServiceIPRange *string `yaml:"serviceIPRange"`
-}
-
-// Hauler represents the hauler configuration for air-gapped installs.
-type Hauler struct {
-	Host                  string     `yaml:"host"`
-	Port                  int        `yaml:"port"`
-	BasicAuth             *BasicAuth `yaml:"basicAuth,omitempty"`
-	InsecureSkipTLSVerify bool       `yaml:"insecureSkipTLSVerify"`
-	CACert                *CACert    `yaml:"caCert,omitempty"`
-	ReuseProxyCACert      bool       `yaml:"reuseProxyCACert,omitempty"`
-}
-
-// Endpoint returns the base hauler registry URL.
-func (h *Hauler) Endpoint() string {
-	return fmt.Sprintf("%s:%d", h.Host, h.Port)
-}
-
-// KindImage returns the image with the local hauler registry endpoint.
-func (h *Hauler) KindImage(image string) string {
-	return fmt.Sprintf("localhost:%d/%s", h.Port, image)
-}
-
-// ChartEndpoint returns the hauler chart repository URL.
-func (h *Hauler) ChartEndpoint() string {
-	return fmt.Sprintf("oci://%s/hauler", h.Endpoint())
-}
-
-// ImageEndpoint returns the hauler image repository URL.
-func (h *Hauler) ImageEndpoint() string {
-	return fmt.Sprintf("%s/%s", h.Endpoint(), cfg.ValidatorImageRepository)
-}
-
-// BasicAuth represents basic authentication credentials.
-type BasicAuth struct {
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-}
-
-// CACert represents a CA certificate.
-type CACert struct {
-	Data string `yaml:"data"`
-	Name string `yaml:"name"`
-	Path string `yaml:"path"`
-}
-
 // ReadProxyProps prompts the user to configure proxy settings.
-func ReadProxyProps(e *Env) error {
+func ReadProxyProps(e *components.Env) error {
 	var err error
 
 	// https_proxy
@@ -92,7 +40,7 @@ func ReadProxyProps(e *Env) error {
 
 		// Proxy CA certificate
 		if e.ProxyCACert == nil {
-			e.ProxyCACert = &CACert{}
+			e.ProxyCACert = &components.CACert{}
 		}
 		caCertPath, caCertName, caCertData, err := prompts.ReadCACert("Proxy CA certificate filepath", e.ProxyCACert.Path, "")
 		if err != nil {
@@ -107,7 +55,7 @@ func ReadProxyProps(e *Env) error {
 }
 
 // ReadHaulerProps prompts the user to configure hauler settings.
-func ReadHaulerProps(h *Hauler, e *Env) error {
+func ReadHaulerProps(h *components.Hauler, e *components.Env) error {
 	var err error
 
 	// registry
@@ -128,7 +76,7 @@ func ReadHaulerProps(h *Hauler, e *Env) error {
 
 	// basic auth
 	if h.BasicAuth == nil {
-		h.BasicAuth = &BasicAuth{}
+		h.BasicAuth = &components.BasicAuth{}
 	}
 	h.BasicAuth.Username, h.BasicAuth.Password, err = prompts.ReadBasicCreds(
 		"Username", "Password", h.BasicAuth.Username, h.BasicAuth.Password, true, false,
@@ -154,7 +102,7 @@ func ReadHaulerProps(h *Hauler, e *Env) error {
 		}
 	}
 	if h.CACert == nil {
-		h.CACert = &CACert{}
+		h.CACert = &components.CACert{}
 	}
 	if h.ReuseProxyCACert {
 		h.CACert = e.ProxyCACert

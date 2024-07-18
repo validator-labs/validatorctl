@@ -330,8 +330,10 @@ func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, tuiVals []string)
 		"y",                         // Re-use validator chart security configuration
 		"y",                         // add registry credentials
 		"oci-creds",                 // secret name
+		"y",                         // configure basic auth
 		"user1",                     // username
 		"pa$$w0rd",                  // password
+		"n",                         // skip adding env vars
 		"n",                         // add another registry credential
 		"y",                         // add signature verification secret
 		"cosign-pubkeys",            // secret name
@@ -496,8 +498,13 @@ func (t *ValidatorTest) testUpdatePasswords() (tr *test.TestResult) {
 			"n",         // Re-use validator chart security configuration
 			"y",         // Allow Insecure Connection (Bypass x509 Verification)
 			"n",         // Use Helm basic auth
+			"y",         // Add basic auth credentials
 			"user2",     // Registry username
 			"password2", // Registry password
+			"y",         // Add an environment variable
+			"FOO",       // Environment variable key
+			"BAR",       // Environment variable value
+			"n",         // Add another environment variable
 
 			// vSphere validator
 			"y",                // Re-use validator chart security configuration

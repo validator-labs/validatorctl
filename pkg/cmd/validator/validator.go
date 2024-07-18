@@ -363,8 +363,8 @@ func createReleaseSecretCmd(secret *components.Secret) []string {
 	args := []string{
 		"create", "secret", "generic", secret.Name, "-n", "validator",
 		// include empty username/password, even if unset, to avoid error in validator
-		fmt.Sprintf("--from-literal=username=%s", secret.Username),
-		fmt.Sprintf("--from-literal=password=%s", secret.Password),
+		fmt.Sprintf("--from-literal=username=%s", secret.BasicAuth.Username),
+		fmt.Sprintf("--from-literal=password=%s", secret.BasicAuth.Password),
 	}
 	if secret.CaCertFile != "" {
 		args = append(args, fmt.Sprintf("--from-file=caCert=%s", secret.CaCertFile))
@@ -544,9 +544,9 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		Values:                finalValues,
 		CreateNamespace:       true,
 	}
-	if vc.ReleaseSecret != nil {
-		opts.Username = vc.ReleaseSecret.Username
-		opts.Password = vc.ReleaseSecret.Password
+	if vc.ReleaseSecret != nil && vc.ReleaseSecret.BasicAuth != nil {
+		opts.Username = vc.ReleaseSecret.BasicAuth.Username
+		opts.Password = vc.ReleaseSecret.BasicAuth.Password
 	}
 
 	var cleanupLocalChart bool

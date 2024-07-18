@@ -140,8 +140,14 @@ pluginSecrets:
     auth:
     {{- range .OCIPlugin.Secrets }}
     - secretName: {{ .Name }}
-      username: {{ .Username }}
-      password: {{ .Password }}
+      env:
+        {{- if .BasicAuth }}
+        username: {{ .BasicAuth.Username }}
+        password: {{ .BasicAuth.Password }}
+        {{- end }}
+        {{- range $k, $v := .Data }}
+        {{ $k }}: {{ $v }}
+        {{- end }}
     {{- end }}
     {{- else }}
     auth: []

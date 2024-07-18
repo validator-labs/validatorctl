@@ -58,7 +58,7 @@ func configureAuthSecrets(c *components.OCIPluginConfig, k8sClient kubernetes.In
 
 	for i, s := range c.Secrets {
 		s := s
-		if err := readSecret(s); err != nil {
+		if err := readOciSecret(s); err != nil {
 			return nil, err
 		}
 		c.Secrets[i] = s
@@ -89,7 +89,7 @@ func configureAuthSecrets(c *components.OCIPluginConfig, k8sClient kubernetes.In
 		adjective = "another"
 
 		s := &components.Secret{}
-		if err := readSecret(s); err != nil {
+		if err := readOciSecret(s); err != nil {
 			return nil, err
 		}
 		c.Secrets = append(c.Secrets, s)
@@ -360,4 +360,81 @@ func readArtifactRef(r *plug.OciRegistryRule, a *plug.Artifact, idx int) error {
 		r.Artifacts[idx] = *a
 	}
 	return nil
+}
+
+func readOciSecret(secret *components.Secret) error {
+	var err error
+	if secret.Name == "" {
+		secret.Name, err = prompts.ReadK8sName("Secret Name", "", false)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.InfoCLI("Reconfiguring secret: %s", secret.Name)
+	}
+
+	// reconfigure and/or add basic auth
+	if secret.BasicAuth == nil {
+		secret.BasicAuth = &components.BasicAuth{}
+	}
+	addBasicAuth, err := prompts.ReadBool("Add basic auth to this secret", false)
+	if err != nil {
+		return err
+	}
+	if addBasicAuth {
+		secret.BasicAuth.Username, secret.BasicAuth.Password, err = prompts.ReadBasicCreds(
+			"Username", "Password", secret.BasicAuth.Username, secret.BasicAuth.Password, false, false,
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		secret.BasicAuth = nil
+	}
+
+	// reconfigure and/or add env vars
+	if secret.Data == nil {
+		secret.Data = make(map[string]string)
+	}
+	for k, v := range secret.Data {
+		secret.Data[k], secret.Data[v], err = readKeyValue(k, v)
+		if err != nil {
+			return err
+		}
+	}
+	addEnvVars, err := prompts.ReadBool("Add environment variables to this secret", false)
+	if err != nil {
+		return err
+	}
+	if !addEnvVars {
+		return nil
+	}
+	for {
+		k, v, err := readKeyValue("", "")
+		if err != nil {
+			return err
+		}
+		secret.Data[k] = v
+
+		add, err := prompts.ReadBool("Add another environment variable to this secret", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readKeyValue(k, v string) (string, string, error) {
+	key, err := prompts.ReadText("Key", k, false, -1)
+	if err != nil {
+		return "", "", err
+	}
+	value, err := prompts.ReadText("Value", v, false, -1)
+	if err != nil {
+		return "", "", err
+	}
+	return key, value, nil
 }

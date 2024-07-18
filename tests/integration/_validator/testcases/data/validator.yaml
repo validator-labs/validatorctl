@@ -6,9 +6,7 @@ helmRelease:
     insecureSkipVerify: true
   values: ""
 helmReleaseSecret:
-  name: ""
-  username: ""
-  password: ""
+  name: ""    
   caCertFile: ""
   exists: false
 imageRegistry: quay.io/validator-labs
@@ -17,7 +15,7 @@ airgapConfig:
   enabled: false
 kindConfig:
   useKindCluster: true
-  kindClusterName: "<kind_cluster_name>"
+  kindClusterName: "validator-kind-cluster-60e58"
 sinkConfig:
   enabled: true
   createSecret: true
@@ -49,8 +47,6 @@ awsPlugin:
     values: ""
   helmReleaseSecret:
     name: ""
-    username: ""
-    password: ""
     caCertFile: ""
     exists: false
   accessKeyId: a0XCQd+Emx7/bwAaTyY13ipTRychb4MiQw==
@@ -170,8 +166,6 @@ networkPlugin:
     values: ""
   helmReleaseSecret:
     name: ""
-    username: ""
-    password: ""
     caCertFile: ""
     exists: false
   validator:
@@ -205,8 +199,6 @@ ociPlugin:
     values: ""
   helmReleaseSecret:
     name: ""
-    username: ""
-    password: ""
     caCertFile: ""
     exists: false
   secrets:
@@ -242,8 +234,6 @@ vspherePlugin:
     values: ""
   helmReleaseSecret:
     name: ""
-    username: ""
-    password: ""
     caCertFile: ""
     exists: false
   account:
@@ -412,7 +402,6 @@ vspherePlugin:
     privileges:
     - Folder.Create
     clusterScoped: false
-    ruleType: Spectro Entity Privileges
   vsphereRolePrivilegeRules:
   - username: user1@vsphere.local
     privileges:
@@ -532,7 +521,6 @@ vspherePlugin:
     entityType: cluster
     entityName: C0
     tag: k8s-zone
-    ruleType: Spectro Cloud Tags
 azurePlugin:
   enabled: true
   helmRelease:
@@ -544,8 +532,6 @@ azurePlugin:
     values: ""
   helmReleaseSecret:
     name: ""
-    username: ""
-    password: ""
     caCertFile: ""
     exists: false
   tenantId: d551b7b1-78ae-43df-9d61-4935c843a454
