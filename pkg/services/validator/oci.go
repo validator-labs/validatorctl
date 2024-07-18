@@ -397,10 +397,11 @@ func readOciSecret(secret *components.Secret) error {
 		secret.Data = make(map[string]string)
 	}
 	for k, v := range secret.Data {
-		secret.Data[k], secret.Data[v], err = readKeyValue(k, v)
+		k, v, err = readKeyValue(k, v)
 		if err != nil {
 			return err
 		}
+		secret.Data[k] = v
 	}
 	addEnvVars, err := prompts.ReadBool("Add environment variables to this secret", false)
 	if err != nil {
