@@ -323,8 +323,8 @@ github.com/validator-labs/validator-plugin-aws v0.1.1 h1:GPWSk1hSRBV+NgOBKKn0q6f
 github.com/validator-labs/validator-plugin-aws v0.1.1/go.mod h1:GGFVx01t77XomgrPZFmF5Dkre+iqmtBOBjThuWgB/jI=
 github.com/validator-labs/validator-plugin-azure v0.0.13 h1:0aWcNuOs9XHQg6TFyW+TM69A3FxUOzG/E5uQF1fn+Og=
 github.com/validator-labs/validator-plugin-azure v0.0.13/go.mod h1:4B6ndY5OGO9C7ZvAO4FiQ4Fre4utPMa3KuAFF1ozyjM=
-github.com/validator-labs/validator-plugin-network v0.0.17 h1:j2K02tL7pv6Ltzc3tk/3qZnF2Fl3nAvULZocLujxCjo=
-github.com/validator-labs/validator-plugin-network v0.0.17/go.mod h1:t7mAowf/3C41zZVio5zlXIdnc8iEPS6MbIMB+w49WgU=
+github.com/validator-labs/validator-plugin-network v0.0.18 h1:UTcDM4afREb/phFxQl8cj2Q7GtI4kx4Z+OT7zycVfL0=
+github.com/validator-labs/validator-plugin-network v0.0.18/go.mod h1:rLVE0TU8FnrHlLg+G0LQ4TQ2I2hyVxG/pwic4mqhRdY=
 github.com/validator-labs/validator-plugin-oci v0.0.11 h1:1eRpQNbmXntK//kYj+CsapseDqYX6tCn1csCdDKczKE=
 github.com/validator-labs/validator-plugin-oci v0.0.11/go.mod h1:nGwq7xPETEitU33oGyrGA6WgC5+fQeojPIo3ifG/RbA=
 github.com/validator-labs/validator-plugin-vsphere v0.0.26 h1:Zoe75nhRo9duPAvptKotWnNDAukYHgPP+fMdVI8axz8=
