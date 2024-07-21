@@ -622,10 +622,6 @@ func watchValidatorConfig(numPlugins int) (bool, error) {
 		return false, errors.Wrap(err, "failed to create retry watcher for validator config")
 	}
 
-	if os.Getenv("IS_TEST") == "true" {
-		return true, nil
-	}
-
 	pluginsOk := true
 
 	for event := range watcher.ResultChan() {
