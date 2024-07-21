@@ -82,16 +82,16 @@ func DeleteCluster(name string) error {
 }
 
 // RenderKindConfig renders a kind cluster configuration file with optional proxy and registry mirror customizations
-func RenderKindConfig(env *components.Env, hauler *components.Hauler, kindConfig string) error {
+func RenderKindConfig(vc *components.ValidatorConfig, kindConfig string) error {
 	image := fmt.Sprintf("%s:%s", cfg.KindImage, cfg.KindImageTag)
 
 	clusterConfigArgs := map[string]interface{}{
-		"Env":   env,
+		"Env":   vc.ProxyConfig.Env,
 		"Image": image,
 	}
 
-	// air-gapped configuration
-	if hauler != nil {
+	if vc.AirgapConfig != nil && vc.AirgapConfig.Enabled {
+		hauler := vc.AirgapConfig.Hauler
 		ep := hauler.Endpoint()
 		clusterConfigArgs["Image"] = hauler.KindImage(image)
 		clusterConfigArgs["RegistryEndpoint"] = ep

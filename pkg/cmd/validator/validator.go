@@ -13,6 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
+	v1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -374,7 +375,9 @@ func createReleaseSecretCmd(secret *components.Secret) []string {
 
 // nolint:gocyclo
 func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
-	kubecommands, kubecommandsPre := [][]string{}, [][]string{}
+	pluginCount := 0
+	kubecommandsPre := [][]string{}
+
 	kClient, err := kube.GetKubeClientset(vc.Kubeconfig)
 	if err != nil {
 		return err
@@ -401,7 +404,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if vc.AWSPlugin.ReleaseSecret != nil && vc.AWSPlugin.ReleaseSecret.ShouldCreate() {
 			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.AWSPlugin.ReleaseSecret))
 		}
-		kubecommands = append(kubecommands, cfg.ValidatorPluginAwsWaitCmd)
+		pluginCount++
 	}
 
 	if vc.AzurePlugin.Enabled {
@@ -420,7 +423,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if vc.AzurePlugin.ReleaseSecret != nil && vc.AzurePlugin.ReleaseSecret.ShouldCreate() {
 			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.AzurePlugin.ReleaseSecret))
 		}
-		kubecommands = append(kubecommands, cfg.ValidatorPluginAzureWaitCmd)
+		pluginCount++
 	}
 
 	if vc.NetworkPlugin.Enabled {
@@ -439,7 +442,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if vc.NetworkPlugin.ReleaseSecret != nil && vc.NetworkPlugin.ReleaseSecret.ShouldCreate() {
 			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.NetworkPlugin.ReleaseSecret))
 		}
-		kubecommands = append(kubecommands, cfg.ValidatorPluginNetworkWaitCmd)
+		pluginCount++
 	}
 
 	if vc.OCIPlugin.Enabled {
@@ -458,7 +461,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if vc.OCIPlugin.ReleaseSecret != nil && vc.OCIPlugin.ReleaseSecret.ShouldCreate() {
 			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.OCIPlugin.ReleaseSecret))
 		}
-		kubecommands = append(kubecommands, cfg.ValidatorPluginOciWaitCmd)
+		pluginCount++
 	}
 
 	if vc.VspherePlugin.Enabled {
@@ -477,7 +480,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if vc.VspherePlugin.ReleaseSecret != nil && vc.VspherePlugin.ReleaseSecret.ShouldCreate() {
 			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.VspherePlugin.ReleaseSecret))
 		}
-		kubecommands = append(kubecommands, cfg.ValidatorPluginVsphereWaitCmd)
+		pluginCount++
 	}
 
 	if !vc.AnyPluginEnabled() {
@@ -590,19 +593,67 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if _, stderr, err := kube.KubectlCommand(cfg.ValidatorWaitCmd, vc.Kubeconfig); err != nil {
 		return errors.Wrap(err, stderr)
 	}
-
-	// TODO: remove wait commands; watch ValidatorConfig status instead
-	log.InfoCLI("Pausing for 20s for validator to establish a lease & begin plugin installation")
-	time.Sleep(30 * time.Second)
-
-	// wait for validator plugin(s) to be ready
-	for _, c := range kubecommands {
-		if _, stderr, err := kube.KubectlCommand(c, vc.Kubeconfig); err != nil {
-			return errors.Wrap(err, stderr)
-		}
+	pluginsOk, err := watchValidatorConfig(pluginCount)
+	if err != nil {
+		return err
+	}
+	if !pluginsOk {
+		return errors.New("one or more validator plugin(s) failed to install")
 	}
 
 	return nil
+}
+
+// watchValidatorConfig watches the validator config until all plugins have been installed
+func watchValidatorConfig(numPlugins int) (bool, error) {
+	log.InfoCLI("\nWatching validator config, waiting for plugins to be installed or failed")
+
+	gv := kube.GetGroupVersion("validation.spectrocloud.labs", "v1alpha1")
+	kClient, err := kube.GetCRDClient(gv, "validatorconfigs")
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get validator config client")
+	}
+
+	watchFunc := func(_ metav1.ListOptions) (watch.Interface, error) {
+		return kClient.Watch(context.Background(), metav1.ListOptions{})
+	}
+	watcher, err := toolsWatch.NewRetryWatcher("1", &cache.ListWatch{WatchFunc: watchFunc})
+	if err != nil {
+		return false, errors.Wrap(err, "failed to create retry watcher for validator config")
+	}
+
+	if os.Getenv("IS_TEST") == "true" {
+		return true, nil
+	}
+
+	pluginsOk := true
+
+	for event := range watcher.ResultChan() {
+		vrObj := event.Object.(*unstructured.Unstructured)
+		bytes, err := vrObj.MarshalJSON()
+		if err != nil {
+			return false, err
+		}
+
+		vc := &vapi.ValidatorConfig{}
+		if err := json.Unmarshal(bytes, vc); err != nil {
+			return false, err
+		}
+
+		if len(vc.Status.Conditions) == numPlugins {
+			for _, c := range vc.Status.Conditions {
+				if c.Status == v1.ConditionFalse {
+					pluginsOk = false
+				}
+			}
+			break
+		}
+
+		log.InfoCLI("\nFound %d/%d plugin conditions in validator config status. Waiting...", len(vc.Status.Conditions), numPlugins)
+	}
+
+	log.InfoCLI("\nPlugin conditions found. All ok: %t", pluginsOk)
+	return pluginsOk, nil
 }
 
 // getHelmClient gets a helm client w/ a monkey-patched path to the embedded kind binary
@@ -704,7 +755,7 @@ func applyValidatorManifest(kubeconfig, name, path string) error {
 
 func createKindCluster(c *cfg.Config, vc *components.ValidatorConfig) error {
 	clusterConfig := filepath.Join(c.RunLoc, "kind-cluster-config.yaml")
-	if err := kind.RenderKindConfig(vc.ProxyConfig.Env, vc.AirgapConfig.Hauler, clusterConfig); err != nil {
+	if err := kind.RenderKindConfig(vc, clusterConfig); err != nil {
 		return err
 	}
 	kindClusterName := vc.KindConfig.KindClusterName
