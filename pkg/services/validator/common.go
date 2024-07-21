@@ -98,6 +98,10 @@ func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient k
 		return nil
 	}
 
+	if rs.BasicAuth == nil {
+		rs.BasicAuth = &components.BasicAuth{}
+	}
+
 	insecure, err := prompts.ReadBool("Allow Insecure Connection (Bypass x509 Verification)", true)
 	if err != nil {
 		return err
@@ -135,21 +139,21 @@ func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient k
 					return err
 				}
 				rs.Name = secret.Name
-				rs.Username = string(secret.Data["username"])
-				rs.Password = string(secret.Data["password"])
+				rs.BasicAuth.Username = string(secret.Data["username"])
+				rs.BasicAuth.Password = string(secret.Data["password"])
 				rs.Exists = true
 			}
 		}
 
 		if k8sClient == nil || !useExistingSecret {
-			if err = readSecret(rs); err != nil {
+			if err = readBasicAuthSecret(rs); err != nil {
 				return err
 			}
 		}
 	}
 
 	// Helm credentials and/or CA cert provided
-	if rs.Username != "" || rs.Password != "" || rs.CaCertFile != "" {
+	if rs.BasicAuth.Username != "" || rs.BasicAuth.Password != "" || rs.CaCertFile != "" {
 		r.Chart.AuthSecretName = rs.Name
 	}
 
@@ -202,7 +206,7 @@ func getReleasesFromHelmRepo(repoURL string) ([]string, error) {
 	return versions, nil
 }
 
-func readSecret(secret *components.Secret) error {
+func readBasicAuthSecret(secret *components.Secret) error {
 	var err error
 	if secret.Name == "" {
 		secret.Name, err = prompts.ReadK8sName("Secret Name", "", false)
@@ -212,12 +216,18 @@ func readSecret(secret *components.Secret) error {
 	} else {
 		log.InfoCLI("Reconfiguring secret: %s", secret.Name)
 	}
-	secret.Username, secret.Password, err = prompts.ReadBasicCreds(
-		"Username", "Password", secret.Username, secret.Password, false, false,
+
+	if secret.BasicAuth == nil {
+		secret.BasicAuth = &components.BasicAuth{}
+	}
+
+	secret.BasicAuth.Username, secret.BasicAuth.Password, err = prompts.ReadBasicCreds(
+		"Username", "Password", secret.BasicAuth.Username, secret.BasicAuth.Password, false, false,
 	)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

@@ -14,9 +14,9 @@ import (
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
+	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	env "github.com/validator-labs/validatorctl/pkg/services"
 	embed_utils "github.com/validator-labs/validatorctl/pkg/utils/embed"
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 )
@@ -82,16 +82,16 @@ func DeleteCluster(name string) error {
 }
 
 // RenderKindConfig renders a kind cluster configuration file with optional proxy and registry mirror customizations
-func RenderKindConfig(env *env.Env, hauler *env.Hauler, kindConfig string) error {
+func RenderKindConfig(vc *components.ValidatorConfig, kindConfig string) error {
 	image := fmt.Sprintf("%s:%s", cfg.KindImage, cfg.KindImageTag)
 
 	clusterConfigArgs := map[string]interface{}{
-		"Env":   env,
+		"Env":   vc.ProxyConfig.Env,
 		"Image": image,
 	}
 
-	// air-gapped configuration
-	if hauler != nil {
+	if vc.AirgapConfig != nil && vc.AirgapConfig.Enabled {
+		hauler := vc.AirgapConfig.Hauler
 		ep := hauler.Endpoint()
 		clusterConfigArgs["Image"] = hauler.KindImage(image)
 		clusterConfigArgs["RegistryEndpoint"] = ep
