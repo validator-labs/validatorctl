@@ -5,6 +5,7 @@ VERSION_SUFFIX ?= -dev
 VERSION ?= 0.0.4${VERSION_SUFFIX} # x-release-please-version
 
 ##@ Build Targets
+
 .PHONY: build
 build: ## Build CLI
 	@echo "Building CLI binary..."
@@ -25,6 +26,10 @@ build-release:  ## Build CLI for multiple platforms
 
 manifests:
 	@$(INFO) manifests: no-op
+
+reviewable-ext:
+	@$(INFO) Checking for validator version updates...
+	bash hack/update-versions.sh
 
 ##@ Test Targets
 
