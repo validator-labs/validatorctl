@@ -590,8 +590,10 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if _, stderr, err := kube.KubectlCommand(cfg.ValidatorWaitCmd, vc.Kubeconfig); err != nil {
 		return errors.Wrap(err, stderr)
 	}
+
+	// TODO: remove wait commands; watch ValidatorConfig status instead
 	log.InfoCLI("Pausing for 20s for validator to establish a lease & begin plugin installation")
-	time.Sleep(20 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	// wait for validator plugin(s) to be ready
 	for _, c := range kubecommands {
