@@ -644,6 +644,7 @@ func watchValidatorConfig(numPlugins int) (bool, error) {
 			for _, c := range vc.Status.Conditions {
 				if c.Status == v1.ConditionFalse {
 					pluginsOk = false
+					log.ErrorCLI("Plugin failed to install", c.PluginName, c.Message)
 				}
 			}
 			break
@@ -652,7 +653,7 @@ func watchValidatorConfig(numPlugins int) (bool, error) {
 		log.InfoCLI("\nFound %d/%d plugin conditions in validator config status. Waiting...", len(vc.Status.Conditions), numPlugins)
 	}
 
-	log.InfoCLI("\nPlugin conditions found. All ok: %t", pluginsOk)
+	log.InfoCLI("\nPlugin conditions found. All ok: %t.", pluginsOk)
 	return pluginsOk, nil
 }
 
