@@ -98,6 +98,10 @@ func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient k
 		return nil
 	}
 
+	if rs.BasicAuth == nil {
+		rs.BasicAuth = &components.BasicAuth{}
+	}
+
 	insecure, err := prompts.ReadBool("Allow Insecure Connection (Bypass x509 Verification)", true)
 	if err != nil {
 		return err
