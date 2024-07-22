@@ -22,9 +22,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 	toolsWatch "k8s.io/client-go/tools/watch"
 
+	"github.com/validator-labs/validator-plugin-oci/pkg/oci"
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
 	"github.com/validator-labs/validator/pkg/helm"
-	"github.com/validator-labs/validator/pkg/oci"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -559,10 +559,13 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		opts.Path = fmt.Sprintf("%s/%s", c.RunLoc, opts.Chart)
 		opts.Version = strings.TrimPrefix(opts.Version, "v")
 
-		ociClient := oci.NewOCIClient(
+		ociClient, err := oci.NewOCIClient(
 			oci.WithMultiAuth(),
-			oci.WithTLSConfig(opts.InsecureSkipTLSVerify, opts.CaFile),
+			oci.WithTLSConfig(opts.InsecureSkipTLSVerify, "", opts.CaFile),
 		)
+		if err != nil {
+			return fmt.Errorf("failed to create OCI client: %w", err)
+		}
 		ociOpts := oci.ImageOptions{
 			Ref:     fmt.Sprintf("%s/%s:%s", strings.TrimPrefix(opts.Repo, oci.Scheme), opts.Chart, opts.Version),
 			OutDir:  opts.Path,
