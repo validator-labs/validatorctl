@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	tuimocks "github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
-	vsphere_cloud "github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
@@ -67,11 +67,11 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 
 	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "-l", "debug"})
 
-	vsphereDriverMock := vsphere_cloud.MockVsphereDriver{
+	vsphereDriverMock := vsphere.MockVsphereDriver{
 		Datacenters: []string{"DC0"},
 		Clusters:    []string{"C0", "C1", "C2", "C3", "C4"},
 		VMFolders:   []string{"spectro-templates", "test"},
-		HostSystems: map[string][]vsphere_cloud.VSphereHostSystem{
+		HostSystems: map[string][]vsphere.HostSystem{
 			"DC0_C0": {
 				{
 					Name:      "DC0_C0_H0",
@@ -91,7 +91,7 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 
 	vsphereDriverFunc := clouds.GetVSphereDriver
 	ctx.Put("vsphereDriverFunc", vsphereDriverFunc)
-	clouds.GetVSphereDriver = func(account *vsphere_cloud.VsphereCloudAccount) (vsphere_cloud.VsphereDriver, error) {
+	clouds.GetVSphereDriver = func(account *vsphere.CloudAccount) (vsphere.Driver, error) {
 		return vsphereDriverMock, nil
 	}
 
@@ -462,8 +462,8 @@ func (t *ValidatorTest) testUpdatePasswords() (tr *test.TestResult) {
 		"install", "-f", t.filePath(cfg.ValidatorConfigFile), "-p",
 	})
 
-	clouds.GetVSphereDriver = func(account *vsphere_cloud.VsphereCloudAccount) (vsphere_cloud.VsphereDriver, error) {
-		return vsphere_cloud.MockVsphereDriver{}, nil
+	clouds.GetVSphereDriver = func(account *vsphere.CloudAccount) (vsphere.Driver, error) {
+		return vsphere.MockVsphereDriver{}, nil
 	}
 
 	prompts.Tui = &tuimocks.MockTUI{
@@ -539,7 +539,7 @@ func (t *ValidatorTest) TearDown(ctx *test.TestContext) {
 
 	// restore clouds.GetVSphereDriver
 	vsphereDriverFunc := ctx.Get("vsphereDriverFunc")
-	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account *vsphere_cloud.VsphereCloudAccount) (vsphere_cloud.VsphereDriver, error))
+	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account *vsphere.CloudAccount) (vsphere.Driver, error))
 }
 
 // updateTestData updates the hard-coded validator config used in silent installation tests

@@ -12,8 +12,8 @@ import (
 	azure "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
 	network "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	oci "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
-	vsphere "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
-	vsphere_cloud "github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	validator "github.com/validator-labs/validator/api/v1alpha1"
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -108,8 +108,8 @@ func NewValidatorConfig() *ValidatorConfig {
 				BasicAuth: &BasicAuth{},
 				Data:      make(map[string]string),
 			},
-			Validator: &vsphere.VsphereValidatorSpec{},
-			Account:   &vsphere_cloud.VsphereCloudAccount{},
+			Validator: &vsphereapi.VsphereValidatorSpec{},
+			Account:   &vsphere.CloudAccount{},
 		},
 	}
 }
@@ -456,14 +456,14 @@ func (c *OCIPluginConfig) decrypt() error {
 
 // VspherePluginConfig represents the vSphere plugin configuration.
 type VspherePluginConfig struct {
-	Enabled                     bool                               `yaml:"enabled"`
-	Release                     *validator.HelmRelease             `yaml:"helmRelease"`
-	ReleaseSecret               *Secret                            `yaml:"helmReleaseSecret"`
-	Account                     *vsphere_cloud.VsphereCloudAccount `yaml:"account"`
-	Validator                   *vsphere.VsphereValidatorSpec      `yaml:"validator"`
-	VsphereEntityPrivilegeRules []VsphereEntityPrivilegeRule       `yaml:"vsphereEntityPrivilegeRules"`
-	VsphereRolePrivilegeRules   []VsphereRolePrivilegeRule         `yaml:"vsphereRolePrivilegeRules"`
-	VsphereTagRules             []VsphereTagRule                   `yaml:"vsphereTagRules"`
+	Enabled                     bool                             `yaml:"enabled"`
+	Release                     *validator.HelmRelease           `yaml:"helmRelease"`
+	ReleaseSecret               *Secret                          `yaml:"helmReleaseSecret"`
+	Account                     *vsphere.CloudAccount            `yaml:"account"`
+	Validator                   *vsphereapi.VsphereValidatorSpec `yaml:"validator"`
+	VsphereEntityPrivilegeRules []VsphereEntityPrivilegeRule     `yaml:"vsphereEntityPrivilegeRules"`
+	VsphereRolePrivilegeRules   []VsphereRolePrivilegeRule       `yaml:"vsphereRolePrivilegeRules"`
+	VsphereTagRules             []VsphereTagRule                 `yaml:"vsphereTagRules"`
 }
 
 func (c *VspherePluginConfig) encrypt() error {
@@ -500,19 +500,19 @@ func (c *VspherePluginConfig) decrypt() error {
 
 // VsphereEntityPrivilegeRule represents a vSphere entity privilege rule.
 type VsphereEntityPrivilegeRule struct {
-	vsphere.EntityPrivilegeValidationRule `yaml:",inline"`
-	ClusterScoped                         bool `yaml:"clusterScoped"`
+	vsphereapi.EntityPrivilegeValidationRule `yaml:",inline"`
+	ClusterScoped                            bool `yaml:"clusterScoped"`
 }
 
 // VsphereRolePrivilegeRule represents a vSphere role privilege rule.
 type VsphereRolePrivilegeRule struct {
-	vsphere.GenericRolePrivilegeValidationRule `yaml:",inline"`
-	Name                                       string `yaml:"name"`
+	vsphereapi.GenericRolePrivilegeValidationRule `yaml:",inline"`
+	Name                                          string `yaml:"name"`
 }
 
 // VsphereTagRule represents a vSphere tag rule.
 type VsphereTagRule struct {
-	vsphere.TagValidationRule `yaml:",inline"`
+	vsphereapi.TagValidationRule `yaml:",inline"`
 }
 
 // PublicKeySecret represents a public key secret.

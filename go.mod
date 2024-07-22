@@ -7,6 +7,7 @@ require (
 	github.com/L30Bola/aws-policy v0.0.0-20230126045340-5e6118545ac1
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/fsnotify/fsnotify v1.7.0
+	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/pkg/errors v0.9.1
@@ -20,7 +21,7 @@ require (
 	github.com/validator-labs/validator-plugin-azure v0.0.13
 	github.com/validator-labs/validator-plugin-network v0.0.18
 	github.com/validator-labs/validator-plugin-oci v0.0.11
-	github.com/validator-labs/validator-plugin-vsphere v0.0.26
+	github.com/validator-labs/validator-plugin-vsphere v0.0.27
 	github.com/vmware/govmomi v0.38.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	gopkg.in/yaml.v2 v2.4.0
@@ -104,7 +105,6 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible // indirect
 	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
-	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.23.0 // indirect
 	github.com/go-openapi/errors v0.22.0 // indirect
