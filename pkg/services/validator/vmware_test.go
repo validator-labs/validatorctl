@@ -8,9 +8,8 @@ import (
 	tuimocks "github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
 	"k8s.io/client-go/kubernetes"
 
-	vsphere "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
-	mocks "github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
-	vsphere_cloud "github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	"github.com/validator-labs/validator/api/v1alpha1"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
@@ -27,8 +26,8 @@ var vSphereDummyConfig = &components.ValidatorConfig{
 			Chart: v1alpha1.HelmChart{},
 		},
 		ReleaseSecret: &components.Secret{},
-		Account:       &vsphere_cloud.VsphereCloudAccount{},
-		Validator:     &vsphere.VsphereValidatorSpec{},
+		Account:       &vsphere.VsphereCloudAccount{},
+		Validator:     &vsphereapi.VsphereValidatorSpec{},
 	},
 	Release: &v1alpha1.HelmRelease{
 		Chart: v1alpha1.HelmChart{},
@@ -38,7 +37,7 @@ var vSphereDummyConfig = &components.ValidatorConfig{
 
 var (
 	tui               prompts.TUI
-	vSphereDriverFunc func(account *vsphere_cloud.VsphereCloudAccount) (mocks.VsphereDriver, error)
+	vSphereDriverFunc func(account *vsphere.VsphereCloudAccount) (vsphere.VsphereDriver, error)
 )
 
 func setup(returnVals []string) {
@@ -46,8 +45,8 @@ func setup(returnVals []string) {
 	prompts.Tui = &tuimocks.MockTUI{ReturnVals: returnVals}
 
 	vSphereDriverFunc = clouds.GetVSphereDriver
-	clouds.GetVSphereDriver = func(account *vsphere_cloud.VsphereCloudAccount) (mocks.VsphereDriver, error) {
-		return mocks.MockVsphereDriver{}, nil
+	clouds.GetVSphereDriver = func(account *vsphere.VsphereCloudAccount) (vsphere.VsphereDriver, error) {
+		return vsphere.MockVsphereDriver{}, nil
 	}
 }
 

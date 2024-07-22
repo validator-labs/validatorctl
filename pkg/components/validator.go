@@ -44,8 +44,11 @@ type ValidatorConfig struct {
 func NewValidatorConfig() *ValidatorConfig {
 	return &ValidatorConfig{
 		// Base config
-		Release:       &validator.HelmRelease{},
-		ReleaseSecret: &Secret{},
+		Release: &validator.HelmRelease{},
+		ReleaseSecret: &Secret{
+			BasicAuth: &BasicAuth{},
+			Data:      make(map[string]string),
+		},
 		KindConfig: KindConfig{
 			UseKindCluster: false,
 		},
@@ -63,13 +66,19 @@ func NewValidatorConfig() *ValidatorConfig {
 		},
 		// Plugin config
 		AWSPlugin: &AWSPluginConfig{
-			Release:       &validator.HelmRelease{},
-			ReleaseSecret: &Secret{},
-			Validator:     &aws.AwsValidatorSpec{},
+			Release: &validator.HelmRelease{},
+			ReleaseSecret: &Secret{
+				BasicAuth: &BasicAuth{},
+				Data:      make(map[string]string),
+			},
+			Validator: &aws.AwsValidatorSpec{},
 		},
 		AzurePlugin: &AzurePluginConfig{
-			Release:                &validator.HelmRelease{},
-			ReleaseSecret:          &Secret{},
+			Release: &validator.HelmRelease{},
+			ReleaseSecret: &Secret{
+				BasicAuth: &BasicAuth{},
+				Data:      make(map[string]string),
+			},
 			Validator:              &azure.AzureValidatorSpec{},
 			RuleTypes:              make(map[int]string),
 			PlacementTypes:         make(map[int]string),
@@ -77,21 +86,30 @@ func NewValidatorConfig() *ValidatorConfig {
 			StaticDeploymentValues: make(map[int]*AzureStaticDeploymentValues),
 		},
 		NetworkPlugin: &NetworkPluginConfig{
-			Release:       &validator.HelmRelease{},
-			ReleaseSecret: &Secret{},
-			Validator:     &network.NetworkValidatorSpec{},
+			Release: &validator.HelmRelease{},
+			ReleaseSecret: &Secret{
+				BasicAuth: &BasicAuth{},
+				Data:      make(map[string]string),
+			},
+			Validator: &network.NetworkValidatorSpec{},
 		},
 		OCIPlugin: &OCIPluginConfig{
-			Release:       &validator.HelmRelease{},
-			ReleaseSecret: &Secret{},
-			Validator:     &oci.OciValidatorSpec{},
-			CaCertPaths:   make(map[int]string),
+			Release: &validator.HelmRelease{},
+			ReleaseSecret: &Secret{
+				BasicAuth: &BasicAuth{},
+				Data:      make(map[string]string),
+			},
+			Validator:   &oci.OciValidatorSpec{},
+			CaCertPaths: make(map[int]string),
 		},
 		VspherePlugin: &VspherePluginConfig{
-			Release:       &validator.HelmRelease{},
-			ReleaseSecret: &Secret{},
-			Validator:     &vsphere.VsphereValidatorSpec{},
-			Account:       &vsphere_cloud.VsphereCloudAccount{},
+			Release: &validator.HelmRelease{},
+			ReleaseSecret: &Secret{
+				BasicAuth: &BasicAuth{},
+				Data:      make(map[string]string),
+			},
+			Validator: &vsphere.VsphereValidatorSpec{},
+			Account:   &vsphere_cloud.VsphereCloudAccount{},
 		},
 	}
 }
@@ -505,34 +523,77 @@ type PublicKeySecret struct {
 
 // Secret represents a k8s secret.
 type Secret struct {
-	Name       string `yaml:"name"`
-	Username   string `yaml:"username"`
-	Password   string `yaml:"password"`
-	CaCertFile string `yaml:"caCertFile"`
-	Exists     bool   `yaml:"exists"`
+	Name       string            `yaml:"name"`
+	BasicAuth  *BasicAuth        `yaml:"basicAuth,omitempty"`
+	Data       map[string]string `yaml:"data,omitempty"`
+	CaCertFile string            `yaml:"caCertFile,omitempty"`
+	Exists     bool              `yaml:"exists"`
 }
 
 // ShouldCreate returns true if the secret should be created.
 func (s *Secret) ShouldCreate() bool {
-	return !s.Exists && (s.Username != "" || s.Password != "" || s.CaCertFile != "")
+	return !s.Exists && (s.BasicAuth.Configured() || len(s.Data) > 0 || s.CaCertFile != "")
 }
 
 func (s *Secret) encrypt() error {
-	password, err := crypto.EncryptB64([]byte(s.Password))
-	if err != nil {
-		return errors.Wrap(err, "failed to encrypt password")
+	if s.BasicAuth != nil {
+		if err := s.BasicAuth.encrypt(); err != nil {
+			return err
+		}
 	}
-	s.Password = password
-
+	for k, v := range s.Data {
+		v, err := crypto.EncryptB64([]byte(v))
+		if err != nil {
+			return fmt.Errorf("failed to encrypt value for secret key '%s': %w", k, err)
+		}
+		s.Data[k] = v
+	}
 	return nil
 }
 
 func (s *Secret) decrypt() error {
-	bytes, err := crypto.DecryptB64(s.Password)
-	if err != nil {
-		return errors.Wrap(err, "failed to decrypt password")
+	if s.BasicAuth != nil {
+		if err := s.BasicAuth.decrypt(); err != nil {
+			return err
+		}
 	}
-	s.Password = string(*bytes)
+	for k := range s.Data {
+		bytes, err := crypto.DecryptB64(s.Data[k])
+		if err != nil {
+			return fmt.Errorf("failed to decrypt value for secret key '%s': %w", k, err)
+		}
+		s.Data[k] = string(*bytes)
+	}
+	return nil
+}
+
+// BasicAuth represents basic authentication credentials.
+type BasicAuth struct {
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+}
+
+// Configured returns true if the basic auth is non-empty.
+func (ba *BasicAuth) Configured() bool {
+	return ba != nil && ba.Username != "" && ba.Password != ""
+}
+
+func (ba *BasicAuth) encrypt() error {
+	password, err := crypto.EncryptB64([]byte(ba.Password))
+	if err != nil {
+		return fmt.Errorf("failed to encrypt password': %w", err)
+	}
+	ba.Password = password
+
+	return nil
+}
+
+func (ba *BasicAuth) decrypt() error {
+	bytes, err := crypto.DecryptB64(ba.Password)
+	if err != nil {
+		return fmt.Errorf("failed to decrypt password: %w", err)
+	}
+	ba.Password = string(*bytes)
 
 	return nil
 }

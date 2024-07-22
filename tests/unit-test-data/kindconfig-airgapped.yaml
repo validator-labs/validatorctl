@@ -1,0 +1,30 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  podSubnet: 192.168.0.0/16
+  serviceSubnet: 10.96.0.0/12
+  disableDefaultCNI: false
+nodes:
+- role: control-plane
+  image: localhost:5000/kindest/node:v1.30.2
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.example.com:5000".auth]
+      password = "password"
+      username = "user"
+    [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.example.com:5000".tls]
+      insecure_skip_verify = true
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+      endpoint = ["http://registry.example.com:5000/v2"]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."gcr.io"]
+      endpoint = ["http://registry.example.com:5000/v2"]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."ghcr.io"]
+      endpoint = ["http://registry.example.com:5000/v2"]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."k8s.gcr.io"]
+      endpoint = ["http://registry.example.com:5000/v2"]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.k8s.io"]
+      endpoint = ["http://registry.example.com:5000/v2"]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."quay.io"]
+      endpoint = ["http://registry.example.com:5000/v2"]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."*"]
+      endpoint = ["http://registry.example.com:5000/v2"]

@@ -208,7 +208,7 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 			return err
 		}
 		for _, secret := range c.OCIPlugin.Secrets {
-			if err := readSecret(secret); err != nil {
+			if err := readOciSecret(secret); err != nil {
 				return err
 			}
 		}

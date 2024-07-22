@@ -36,12 +36,6 @@ type CACert struct {
 	Path string `yaml:"path"`
 }
 
-// BasicAuth represents basic authentication credentials.
-type BasicAuth struct {
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-}
-
 // Endpoint returns the base registry URL.
 func (r *Registry) Endpoint() string {
 	if r.IsAirgapped {

@@ -85,23 +85,7 @@ var (
 	PlacementTypeDynamic = "Dynamic"
 	PlacementTypes       = []string{PlacementTypeStatic, PlacementTypeDynamic}
 
-	// TODO: centralize these in a single place referenced by validator & validatorctl
-	ValidatorChartVersions = map[string]string{
-		Validator:              "v0.0.46",
-		ValidatorPluginAws:     "v0.1.1",
-		ValidatorPluginAzure:   "v0.0.12",
-		ValidatorPluginNetwork: "v0.0.17",
-		ValidatorPluginOci:     "v0.0.10",
-		ValidatorPluginVsphere: "v0.0.26",
-	}
-
-	ValidatorWaitCmd              = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-controller-manager", "-n", "validator"}
-	ValidatorPluginAwsWaitCmd     = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-aws-controller-manager", "-n", "validator"}
-	ValidatorPluginVsphereWaitCmd = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-vsphere-controller-manager", "-n", "validator"}
-	ValidatorPluginNetworkWaitCmd = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-network-controller-manager", "-n", "validator"}
-	ValidatorPluginOciWaitCmd     = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-oci-controller-manager", "-n", "validator"}
-	ValidatorPluginAzureWaitCmd   = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-plugin-azure-controller-manager", "-n", "validator"}
-
+	ValidatorWaitCmd       = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-controller-manager", "-n", "validator"}
 	ValidatorBasicAuthKeys = []string{"username", "password"}
 	ValidatorSinkKeys      = map[vtypes.SinkType][]string{
 		vtypes.SinkTypeAlertmanager: {"endpoint", "insecureSkipVerify", "username", "password", "caCert"},

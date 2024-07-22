@@ -82,13 +82,16 @@ func DeleteCluster(name string) error {
 }
 
 // RenderKindConfig renders a kind cluster configuration file with optional proxy and registry mirror customizations
-func RenderKindConfig(env *components.Env, r *components.Registry, kindConfig string) error {
+// func RenderKindConfig(env *components.Env, r *components.Registry, kindConfig string) error {
+func RenderKindConfig(vc *components.ValidatorConfig, kindConfig string) error {
 	image := fmt.Sprintf("%s:%s", cfg.KindImage, cfg.KindImageTag)
 
 	clusterConfigArgs := map[string]interface{}{
-		"Env":   env,
+		"Env":   vc.ProxyConfig.Env,
 		"Image": image,
 	}
+
+	r := getRegistry(vc)
 
 	// registry configuration
 	if r != nil {
@@ -167,5 +170,13 @@ func updateCaCerts(name string) error {
 	if err != nil {
 		return errors.Wrap(err, stderr)
 	}
+	return nil
+}
+
+func getRegistry(vc *components.ValidatorConfig) *components.Registry {
+	if vc.RegistryConfig.Enabled {
+		return vc.RegistryConfig.Registry
+	}
+
 	return nil
 }
