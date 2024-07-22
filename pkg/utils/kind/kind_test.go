@@ -65,7 +65,7 @@ func TestRenderKindConfig(t *testing.T) {
 					Enabled: true,
 					Registry: &components.Registry{
 						Host: "registry.example.com",
-						Port: 5000,
+						Port: components.UnspecifiedPort,
 						BasicAuth: &components.BasicAuth{
 							Username: "user",
 							Password: "password",
