@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -128,6 +129,15 @@ func ReadRegistryProps(r *components.Registry, e *components.Env) error {
 		return err
 	}
 	r.Host = parsedURL.Hostname()
+	port := parsedURL.Port()
+	if port == "" {
+		r.Port = components.UnspecifiedPort
+	} else {
+		r.Port, err = strconv.Atoi(port)
+		if err != nil {
+			return err
+		}
+	}
 
 	baseContentPath, err := prompts.ReadText("Registry Base Content Path", "", true, -1)
 	if err != nil {

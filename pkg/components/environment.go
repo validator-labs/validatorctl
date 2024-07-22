@@ -27,7 +27,7 @@ type CACert struct {
 // If IsAirgapped is true, a local Hauler registry is used.
 type Registry struct {
 	Host                  string     `yaml:"host"`
-	Port                  int        `yaml:"port"`
+	Port                  int        `yaml:"port"` // -1 if unspecified
 	BasicAuth             *BasicAuth `yaml:"basicAuth,omitempty"`
 	InsecureSkipTLSVerify bool       `yaml:"insecureSkipTLSVerify"`
 	CACert                *CACert    `yaml:"caCert,omitempty"`
@@ -36,9 +36,11 @@ type Registry struct {
 	IsAirgapped           bool       `yaml:"isAirgapped"`
 }
 
+const UnspecifiedPort = -1
+
 // Endpoint returns the base registry URL.
 func (r *Registry) Endpoint() string {
-	if r.IsAirgapped {
+	if r.Port != UnspecifiedPort {
 		return fmt.Sprintf("%s:%d", r.Host, r.Port)
 	}
 	return r.Host
@@ -49,7 +51,7 @@ func (r *Registry) KindImage(image string) string {
 	if r.IsAirgapped {
 		return fmt.Sprintf("localhost:%d/%s", r.Port, image)
 	}
-	return fmt.Sprintf("%s/%s/%s", r.Host, r.BaseContentPath, image)
+	return fmt.Sprintf("%s/%s/%s", r.Endpoint(), r.BaseContentPath, image)
 }
 
 // ChartEndpoint returns the chart repository URL.
@@ -58,9 +60,9 @@ func (r *Registry) ChartEndpoint() string {
 		return fmt.Sprintf("oci://%s/hauler", r.Endpoint())
 	}
 	if r.BaseContentPath == "" {
-		return fmt.Sprintf("oci://%s/charts", r.Host)
+		return fmt.Sprintf("oci://%s/charts", r.Endpoint())
 	}
-	return fmt.Sprintf("oci://%s/%s/charts", r.Host, r.BaseContentPath)
+	return fmt.Sprintf("oci://%s/%s/charts", r.Endpoint(), r.BaseContentPath)
 }
 
 // ImageEndpoint returns the image repository URL.
