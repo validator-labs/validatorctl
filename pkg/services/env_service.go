@@ -114,6 +114,7 @@ func ReadHaulerProps(h *components.Registry, e *components.Env) error {
 	return nil
 }
 
+// ReadRegistryProps prompts the user to configure custom private registry settings.
 func ReadRegistryProps(r *components.Registry, e *components.Env) error {
 	ociURL, err := prompts.ReadURL(
 		"Registry Endpoint", "", "Invalid Registry Endpoint. A scheme is required, e.g.: 'https://'.", false,

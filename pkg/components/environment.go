@@ -16,8 +16,15 @@ type Env struct {
 	ServiceIPRange *string `yaml:"serviceIPRange"`
 }
 
+// CACert represents a CA certificate.
+type CACert struct {
+	Data string `yaml:"data"`
+	Name string `yaml:"name"`
+	Path string `yaml:"path"`
+}
+
 // Registry represents the generic configuration for a registry.
-// If isAirgapped is true, a local Hauler registry is used.
+// If IsAirgapped is true, a local Hauler registry is used.
 type Registry struct {
 	Host                  string     `yaml:"host"`
 	Port                  int        `yaml:"port"`
@@ -27,13 +34,6 @@ type Registry struct {
 	ReuseProxyCACert      bool       `yaml:"reuseProxyCACert,omitempty"`
 	BaseContentPath       string     `yaml:"baseContentPath"`
 	IsAirgapped           bool       `yaml:"isAirgapped"`
-}
-
-// CACert represents a CA certificate.
-type CACert struct {
-	Data string `yaml:"data"`
-	Name string `yaml:"name"`
-	Path string `yaml:"path"`
 }
 
 // Endpoint returns the base registry URL.

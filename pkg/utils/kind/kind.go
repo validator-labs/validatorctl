@@ -82,7 +82,6 @@ func DeleteCluster(name string) error {
 }
 
 // RenderKindConfig renders a kind cluster configuration file with optional proxy and registry mirror customizations
-// func RenderKindConfig(env *components.Env, r *components.Registry, kindConfig string) error {
 func RenderKindConfig(vc *components.ValidatorConfig, kindConfig string) error {
 	image := fmt.Sprintf("%s:%s", cfg.KindImage, cfg.KindImageTag)
 

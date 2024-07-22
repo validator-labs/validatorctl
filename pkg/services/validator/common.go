@@ -39,8 +39,8 @@ func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components
 	rs.Name = fmt.Sprintf("validator-helm-release-%s", name)
 
 	if vc.RegistryConfig.Enabled {
-		log.InfoCLI("Using helm repository: %s", vc.RegistryConfig.Registry.ChartEndpoint())
 		r.Chart.Repository = vc.RegistryConfig.Registry.ChartEndpoint()
+		log.InfoCLI("Using helm repository: %s", vc.RegistryConfig.Registry.ChartEndpoint())
 	} else {
 		r.Chart.Repository, err = prompts.ReadText(fmt.Sprintf("%s Helm repository", name), defaultRepo, false, -1)
 		if err != nil {
