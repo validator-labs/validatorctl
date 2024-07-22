@@ -27,7 +27,7 @@ type CACert struct {
 // If IsAirgapped is true, a local Hauler registry is used.
 type Registry struct {
 	Host                  string     `yaml:"host"`
-	Port                  int        `yaml:"port"` // -1 if unspecified
+	Port                  int        `yaml:"port"`
 	BasicAuth             *BasicAuth `yaml:"basicAuth,omitempty"`
 	InsecureSkipTLSVerify bool       `yaml:"insecureSkipTLSVerify"`
 	CACert                *CACert    `yaml:"caCert,omitempty"`

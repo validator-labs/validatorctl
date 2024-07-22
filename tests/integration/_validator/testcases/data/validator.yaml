@@ -11,7 +11,7 @@ helmReleaseSecret:
   exists: false
 imageRegistry: quay.io/validator-labs
 useFixedVersion: false
-airgapConfig:
+registryConfig:
   enabled: false
 kindConfig:
   useKindCluster: true

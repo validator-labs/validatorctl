@@ -100,14 +100,17 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 		// Kind
 		"y", // provision & use kind cluster
 
+		// Proxy
+		"n", // Configure an HTTP proxy
+
 		// Air-gapped
 		"n", // enable air-gapped mode
 
+		// Private OCI registry
+		"n", // enable private OCI registry
+
 		// Image registry
 		"quay.io/validator-labs", // validator image registry
-
-		// Proxy
-		"n", // Configure an HTTP proxy
 
 		// Sink
 		"y",                            // Configure a sink
