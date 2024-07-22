@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
@@ -18,7 +19,7 @@ import (
 var GetVSphereDriver = getVSphereDriver
 
 // ReadVsphereAccountProps prompts the user to configure vSphere account properties
-func ReadVsphereAccountProps(account *vsphere.VsphereCloudAccount) error {
+func ReadVsphereAccountProps(account *vsphere.CloudAccount) error {
 	vcenterServer := account.VcenterServer
 	username := account.Username
 	password := account.Password
@@ -72,12 +73,12 @@ func ReadVsphereAccountProps(account *vsphere.VsphereCloudAccount) error {
 	return nil
 }
 
-func getVSphereDriver(account *vsphere.VsphereCloudAccount) (vsphere.VsphereDriver, error) {
-	return vsphere.NewVSphereDriver(account.VcenterServer, account.Username, account.Password, "")
+func getVSphereDriver(account *vsphere.CloudAccount) (vsphere.Driver, error) {
+	return vsphere.NewVSphereDriver(account.VcenterServer, account.Username, account.Password, "", logr.Logger{})
 }
 
 // ValidateCloudAccountVsphere validates that the provided vSphere cloud account is valid
-func ValidateCloudAccountVsphere(account *vsphere.VsphereCloudAccount) error {
+func ValidateCloudAccountVsphere(account *vsphere.CloudAccount) error {
 	driver, err := GetVSphereDriver(account)
 	if err != nil {
 		return err
@@ -86,7 +87,7 @@ func ValidateCloudAccountVsphere(account *vsphere.VsphereCloudAccount) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	isValid, err := driver.IsValidVSphereCredentials(ctx)
+	isValid, err := driver.IsValidVSphereCredentials()
 	if err != nil {
 		return err
 	}

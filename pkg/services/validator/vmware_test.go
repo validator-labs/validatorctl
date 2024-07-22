@@ -26,7 +26,7 @@ var vSphereDummyConfig = &components.ValidatorConfig{
 			Chart: v1alpha1.HelmChart{},
 		},
 		ReleaseSecret: &components.Secret{},
-		Account:       &vsphere.VsphereCloudAccount{},
+		Account:       &vsphere.CloudAccount{},
 		Validator:     &vsphereapi.VsphereValidatorSpec{},
 	},
 	Release: &v1alpha1.HelmRelease{
@@ -37,7 +37,7 @@ var vSphereDummyConfig = &components.ValidatorConfig{
 
 var (
 	tui               prompts.TUI
-	vSphereDriverFunc func(account *vsphere.VsphereCloudAccount) (vsphere.VsphereDriver, error)
+	vSphereDriverFunc func(account *vsphere.CloudAccount) (vsphere.Driver, error)
 )
 
 func setup(returnVals []string) {
@@ -45,7 +45,7 @@ func setup(returnVals []string) {
 	prompts.Tui = &tuimocks.MockTUI{ReturnVals: returnVals}
 
 	vSphereDriverFunc = clouds.GetVSphereDriver
-	clouds.GetVSphereDriver = func(account *vsphere.VsphereCloudAccount) (vsphere.VsphereDriver, error) {
+	clouds.GetVSphereDriver = func(account *vsphere.CloudAccount) (vsphere.Driver, error) {
 		return vsphere.MockVsphereDriver{}, nil
 	}
 }

@@ -3,7 +3,7 @@ package components
 import (
 	"fmt"
 
-	vsphere_api "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
 
@@ -18,8 +18,8 @@ type VsphereConfig struct {
 	Datacenter                   string
 	ClusterName                  string
 	ImageTemplateFolder          string
-	NodePoolResourceRequirements []vsphere_api.NodepoolResourceRequirement
-	TagValidationRules           []vsphere_api.TagValidationRule
+	NodePoolResourceRequirements []vsphereapi.NodepoolResourceRequirement
+	TagValidationRules           []vsphereapi.TagValidationRule
 	Privileges                   []string
 }
 
@@ -39,18 +39,18 @@ func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) {
 		ReleaseSecret: &Secret{
 			Name: fmt.Sprintf("validator-helm-release-%s", cfg.ValidatorPluginVsphere),
 		},
-		Account: &vsphere.VsphereCloudAccount{
+		Account: &vsphere.CloudAccount{
 			Insecure:      true,
 			Username:      config.Username,
 			Password:      config.Password,
 			VcenterServer: config.VcenterServer,
 		},
-		Validator: &vsphere_api.VsphereValidatorSpec{
-			Auth: vsphere_api.VsphereAuth{
+		Validator: &vsphereapi.VsphereValidatorSpec{
+			Auth: vsphereapi.VsphereAuth{
 				SecretName: "vsphere-creds",
 			},
 			Datacenter: config.Datacenter,
-			ComputeResourceRules: []vsphere_api.ComputeResourceRule{
+			ComputeResourceRules: []vsphereapi.ComputeResourceRule{
 				{
 					Name:                         "Cluster Compute Resource Availability",
 					ClusterName:                  config.ClusterName,
@@ -59,7 +59,7 @@ func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) {
 					NodepoolResourceRequirements: config.NodePoolResourceRequirements,
 				},
 			},
-			EntityPrivilegeValidationRules: []vsphere_api.EntityPrivilegeValidationRule{
+			EntityPrivilegeValidationRules: []vsphereapi.EntityPrivilegeValidationRule{
 				{
 					Name:       "Create folder: image template folder",
 					Username:   config.Username,
@@ -68,7 +68,7 @@ func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) {
 					Privileges: []string{"Folder.Create"},
 				},
 			},
-			RolePrivilegeValidationRules: []vsphere_api.GenericRolePrivilegeValidationRule{
+			RolePrivilegeValidationRules: []vsphereapi.GenericRolePrivilegeValidationRule{
 				{
 					Username:   config.Username,
 					Privileges: config.Privileges,
