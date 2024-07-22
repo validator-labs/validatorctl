@@ -38,10 +38,8 @@ func RenderTemplate(args interface{}, dir, filename, outputPath string) error {
 	if err != nil {
 		return err
 	}
-	if err := WriteFile(outputPath, data); err != nil {
-		return err
-	}
-	return nil
+
+	return WriteFile(outputPath, data)
 }
 
 // RenderTemplateBytes renders a template from the embedded file system and returns the resulting bytes.

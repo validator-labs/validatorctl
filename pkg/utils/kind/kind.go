@@ -90,21 +90,26 @@ func RenderKindConfig(vc *components.ValidatorConfig, kindConfig string) error {
 		"Image": image,
 	}
 
-	if vc.AirgapConfig != nil && vc.AirgapConfig.Enabled {
-		hauler := vc.AirgapConfig.Hauler
-		ep := hauler.Endpoint()
-		clusterConfigArgs["Image"] = hauler.KindImage(image)
-		clusterConfigArgs["RegistryEndpoint"] = ep
-		clusterConfigArgs["RegistryInsecure"] = strconv.FormatBool(hauler.InsecureSkipTLSVerify)
-		clusterConfigArgs["RegistryMirrors"] = defaultMirrorRegistries(ep)
-		clusterConfigArgs["ReusedProxyCACert"] = hauler.ReuseProxyCACert
+	r := getRegistry(vc)
 
-		if hauler.CACert != nil {
-			clusterConfigArgs["RegistryCACertName"] = hauler.CACert.Name
+	// registry configuration
+	if r != nil {
+		ep := r.Endpoint()
+		clusterConfigArgs["Image"] = r.KindImage(image)
+		clusterConfigArgs["RegistryEndpoint"] = ep
+		clusterConfigArgs["RegistryInsecure"] = strconv.FormatBool(r.InsecureSkipTLSVerify)
+		clusterConfigArgs["RegistryMirrors"] = defaultMirrorRegistries(ep, r.BaseContentPath)
+		clusterConfigArgs["ReusedProxyCACert"] = r.ReuseProxyCACert
+
+		if r.CACert != nil {
+			clusterConfigArgs["RegistryCACertName"] = r.CACert.Name
 		}
-		if hauler.BasicAuth != nil {
-			clusterConfigArgs["RegistryUsername"] = hauler.BasicAuth.Username
-			clusterConfigArgs["RegistryPassword"] = hauler.BasicAuth.Password
+		if r.BasicAuth != nil {
+			clusterConfigArgs["RegistryUsername"] = r.BasicAuth.Username
+			clusterConfigArgs["RegistryPassword"] = r.BasicAuth.Password
+		}
+		if r.BaseContentPath != "" {
+			clusterConfigArgs["RegistryBaseContentPath"] = r.BaseContentPath
 		}
 	}
 
@@ -112,7 +117,7 @@ func RenderKindConfig(vc *components.ValidatorConfig, kindConfig string) error {
 }
 
 // defaultMirrorRegistries returns a comma-separated string of default registry mirrors
-func defaultMirrorRegistries(registryEndpoint string) []string {
+func defaultMirrorRegistries(registryEndpoint, baseContentPath string) []string {
 	if registryEndpoint == "" {
 		return nil
 	}
@@ -120,6 +125,9 @@ func defaultMirrorRegistries(registryEndpoint string) []string {
 	for _, registry := range cfg.RegistryMirrors {
 		// Add OCI format suffix (/v2)
 		registryMirrorEndpoint := fmt.Sprintf("%s/v2", registryEndpoint)
+		if baseContentPath != "" {
+			registryMirrorEndpoint = fmt.Sprintf("%s/%s", registryMirrorEndpoint, baseContentPath)
+		}
 		mirrorRegistries = append(mirrorRegistries,
 			fmt.Sprintf("%s%s%s", registry, cfg.RegistryMirrorSeparator, registryMirrorEndpoint),
 		)
@@ -161,5 +169,13 @@ func updateCaCerts(name string) error {
 	if err != nil {
 		return errors.Wrap(err, stderr)
 	}
+	return nil
+}
+
+func getRegistry(vc *components.ValidatorConfig) *components.Registry {
+	if vc.RegistryConfig.Enabled {
+		return vc.RegistryConfig.Registry
+	}
+
 	return nil
 }

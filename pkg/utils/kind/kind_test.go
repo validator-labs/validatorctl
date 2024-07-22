@@ -17,6 +17,22 @@ func TestRenderKindConfig(t *testing.T) {
 		expected string
 	}{
 		{
+			name: "Kind config basic",
+			vc: &components.ValidatorConfig{
+				ProxyConfig: &components.ProxyConfig{
+					Env: &components.Env{
+						ProxyCACert:    &components.CACert{},
+						PodCIDR:        &cfg.DefaultPodCIDR,
+						ServiceIPRange: &cfg.DefaultServiceIPRange,
+					},
+				},
+				RegistryConfig: &components.RegistryConfig{
+					Enabled: false,
+				},
+			},
+			expected: "kindconfig-basic.yaml",
+		},
+		{
 			name: "Kind config w/ proxy CA cert",
 			vc: &components.ValidatorConfig{
 				ProxyConfig: &components.ProxyConfig{
@@ -29,11 +45,14 @@ func TestRenderKindConfig(t *testing.T) {
 						},
 					},
 				},
+				RegistryConfig: &components.RegistryConfig{
+					Enabled: false,
+				},
 			},
 			expected: "kindconfig-shared-ca.yaml",
 		},
 		{
-			name: "Kind config basic",
+			name: "Kind config basic w/ custom registry",
 			vc: &components.ValidatorConfig{
 				ProxyConfig: &components.ProxyConfig{
 					Env: &components.Env{
@@ -42,8 +61,50 @@ func TestRenderKindConfig(t *testing.T) {
 						ServiceIPRange: &cfg.DefaultServiceIPRange,
 					},
 				},
+				RegistryConfig: &components.RegistryConfig{
+					Enabled: true,
+					Registry: &components.Registry{
+						Host: "registry.example.com",
+						Port: components.UnspecifiedPort,
+						BasicAuth: &components.BasicAuth{
+							Username: "user",
+							Password: "password",
+						},
+						InsecureSkipTLSVerify: true,
+						ReuseProxyCACert:      false,
+						BaseContentPath:       "base-path",
+						IsAirgapped:           false,
+					},
+				},
 			},
-			expected: "kindconfig-basic.yaml",
+			expected: "kindconfig-custom-registry.yaml",
+		},
+		{
+			name: "Kind config basic w/ airgapped registry",
+			vc: &components.ValidatorConfig{
+				ProxyConfig: &components.ProxyConfig{
+					Env: &components.Env{
+						ProxyCACert:    &components.CACert{},
+						PodCIDR:        &cfg.DefaultPodCIDR,
+						ServiceIPRange: &cfg.DefaultServiceIPRange,
+					},
+				},
+				RegistryConfig: &components.RegistryConfig{
+					Enabled: true,
+					Registry: &components.Registry{
+						Host: "registry.example.com",
+						Port: 5000,
+						BasicAuth: &components.BasicAuth{
+							Username: "user",
+							Password: "password",
+						},
+						InsecureSkipTLSVerify: true,
+						ReuseProxyCACert:      false,
+						IsAirgapped:           true,
+					},
+				},
+			},
+			expected: "kindconfig-airgapped.yaml",
 		},
 	}
 	for _, tt := range tests {

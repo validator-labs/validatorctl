@@ -30,8 +30,6 @@ var (
 		"vSphere": readVspherePlugin,
 	}
 	plugins = make([]string, 0, len(pluginFuncs))
-
-	imageRegistry = cfg.ValidatorImagePath()
 )
 
 func init() {
@@ -66,24 +64,13 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
-	log.Header("Air-gapped Configuration")
-	if err := readAirgapConfig(vc); err != nil {
-		return err
-	}
-	if vc.AirgapConfig.Enabled {
-		vc.ImageRegistry = vc.AirgapConfig.Hauler.ImageEndpoint()
-	} else {
-		if vc.ImageRegistry != "" {
-			imageRegistry = vc.ImageRegistry
-		}
-		vc.ImageRegistry, err = prompts.ReadText("Validator image registry", imageRegistry, false, -1)
-		if err != nil {
-			return err
-		}
-	}
-
 	log.Header("Proxy Configuration")
 	if err := readProxyConfig(vc); err != nil {
+		return err
+	}
+
+	log.Header("Artifact Registry Configuration")
+	if err := readRegistryConfig(vc); err != nil {
 		return err
 	}
 
@@ -190,8 +177,8 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 
-	if c.AirgapConfig.Enabled {
-		if err := readAirgapConfig(c); err != nil {
+	if c.RegistryConfig.Enabled {
+		if err := readRegistryConfig(c); err != nil {
 			return err
 		}
 	}
@@ -238,13 +225,46 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 	return nil
 }
 
-func readAirgapConfig(vc *components.ValidatorConfig) (err error) {
-	vc.AirgapConfig.Enabled, err = prompts.ReadBool("Configure Hauler for air-gapped installation", false)
-	if err != nil || !vc.AirgapConfig.Enabled {
-		return
+func readRegistryConfig(vc *components.ValidatorConfig) (err error) {
+	airgapped, err := prompts.ReadBool("Configure Hauler for air-gapped installation", false)
+	if err != nil {
+		return err
 	}
-	vc.UseFixedVersions = true
-	return services.ReadHaulerProps(vc.AirgapConfig.Hauler, vc.ProxyConfig.Env)
+	if airgapped {
+		vc.RegistryConfig.Enabled = true
+		vc.RegistryConfig.Registry.IsAirgapped = true
+		vc.UseFixedVersions = true
+		if err = services.ReadHaulerProps(vc.RegistryConfig.Registry, vc.ProxyConfig.Env); err != nil {
+			return err
+		}
+		vc.ImageRegistry = vc.RegistryConfig.Registry.ImageEndpoint()
+		return nil
+	}
+
+	privateRegistry, err := prompts.ReadBool("Configure private OCI registry", false)
+	if err != nil {
+		return err
+	}
+	if privateRegistry {
+		vc.RegistryConfig.Enabled = true
+		if err := services.ReadRegistryProps(vc.RegistryConfig.Registry, vc.ProxyConfig.Env); err != nil {
+			return err
+		}
+		vc.ImageRegistry = vc.RegistryConfig.Registry.ImageEndpoint()
+		return nil
+	}
+
+	// public registry configuration
+	imageRegistry := cfg.ValidatorImagePath()
+	if vc.ImageRegistry != "" {
+		imageRegistry = vc.ImageRegistry
+	}
+	vc.ImageRegistry, err = prompts.ReadText("Validator image registry", imageRegistry, false, -1)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }
 
 func readProxyConfig(vc *components.ValidatorConfig) error {

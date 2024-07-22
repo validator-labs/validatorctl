@@ -16,7 +16,7 @@ import (
 )
 
 var awsDummyConfig = &components.ValidatorConfig{
-	AirgapConfig: &components.AirgapConfig{
+	RegistryConfig: &components.RegistryConfig{
 		Enabled: false,
 	},
 	AWSPlugin: &components.AWSPluginConfig{

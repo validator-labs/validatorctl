@@ -38,9 +38,9 @@ func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components
 	r.Chart.Name = name
 	rs.Name = fmt.Sprintf("validator-helm-release-%s", name)
 
-	if vc.AirgapConfig.Enabled {
-		r.Chart.Repository = vc.AirgapConfig.Hauler.ChartEndpoint()
-		log.InfoCLI("Using local Hauler repository: %s", vc.AirgapConfig.Hauler.ChartEndpoint())
+	if vc.RegistryConfig.Enabled {
+		r.Chart.Repository = vc.RegistryConfig.Registry.ChartEndpoint()
+		log.InfoCLI("Using helm repository: %s", vc.RegistryConfig.Registry.ChartEndpoint())
 	} else {
 		r.Chart.Repository, err = prompts.ReadText(fmt.Sprintf("%s Helm repository", name), defaultRepo, false, -1)
 		if err != nil {
@@ -72,11 +72,7 @@ func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components
 		}
 	}
 
-	if err := readHelmCredentials(r, rs, k8sClient, vc); err != nil {
-		return err
-	}
-
-	return nil
+	return readHelmCredentials(r, rs, k8sClient, vc)
 }
 
 func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient kubernetes.Interface, vc *components.ValidatorConfig) error {

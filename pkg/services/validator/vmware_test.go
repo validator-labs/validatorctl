@@ -18,7 +18,7 @@ import (
 )
 
 var vSphereDummyConfig = &components.ValidatorConfig{
-	AirgapConfig: &components.AirgapConfig{
+	RegistryConfig: &components.RegistryConfig{
 		Enabled: false,
 	},
 	VspherePlugin: &components.VspherePluginConfig{

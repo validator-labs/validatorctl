@@ -16,7 +16,7 @@ import (
 )
 
 var networkDummyConfig = &components.ValidatorConfig{
-	AirgapConfig: &components.AirgapConfig{
+	RegistryConfig: &components.RegistryConfig{
 		Enabled: false,
 	},
 	NetworkPlugin: &components.NetworkPluginConfig{

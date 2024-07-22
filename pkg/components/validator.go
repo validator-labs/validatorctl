@@ -27,7 +27,7 @@ type ValidatorConfig struct {
 	ReleaseSecret    *Secret                `yaml:"helmReleaseSecret"`
 	KindConfig       KindConfig             `yaml:"kindConfig"`
 	Kubeconfig       string                 `yaml:"kubeconfig"`
-	AirgapConfig     *AirgapConfig          `yaml:"airgapConfig"`
+	RegistryConfig   *RegistryConfig        `yaml:"registryConfig"`
 	SinkConfig       *SinkConfig            `yaml:"sinkConfig"`
 	ProxyConfig      *ProxyConfig           `yaml:"proxyConfig"`
 	ImageRegistry    string                 `yaml:"imageRegistry"`
@@ -52,8 +52,8 @@ func NewValidatorConfig() *ValidatorConfig {
 		KindConfig: KindConfig{
 			UseKindCluster: false,
 		},
-		AirgapConfig: &AirgapConfig{
-			Hauler: &Hauler{
+		RegistryConfig: &RegistryConfig{
+			Registry: &Registry{
 				BasicAuth: &BasicAuth{},
 				CACert:    &CACert{},
 			},
@@ -199,10 +199,10 @@ func (c *ValidatorConfig) encrypt() error {
 	return nil
 }
 
-// AirgapConfig represents the air-gapped configuration.
-type AirgapConfig struct {
-	Enabled bool    `yaml:"enabled"`
-	Hauler  *Hauler `yaml:"hauler"`
+// RegistryConfig represents the artifact registry configuration.
+type RegistryConfig struct {
+	Enabled  bool      `yaml:"enabled"`
+	Registry *Registry `yaml:"registry"`
 }
 
 // KindConfig represents the kind configuration.
