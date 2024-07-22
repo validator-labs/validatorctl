@@ -36,6 +36,7 @@ type Registry struct {
 	IsAirgapped           bool       `yaml:"isAirgapped"`
 }
 
+// UnspecifiedPort is the value given to a Registry.Port when it is not specified.
 const UnspecifiedPort = -1
 
 // Endpoint returns the base registry URL.
