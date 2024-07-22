@@ -51,6 +51,9 @@ func (r *Registry) KindImage(image string) string {
 	if r.IsAirgapped {
 		return fmt.Sprintf("localhost:%d/%s", r.Port, image)
 	}
+	if r.BaseContentPath == "" {
+		return fmt.Sprintf("%s/%s", r.Endpoint(), image)
+	}
 	return fmt.Sprintf("%s/%s/%s", r.Endpoint(), r.BaseContentPath, image)
 }
 
