@@ -6,8 +6,9 @@ import (
 	"emperror.dev/errors"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	plug "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
+
+	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -16,14 +17,9 @@ import (
 )
 
 const (
-	singleCluster                 = "Single cluster"
-	multipleClustersResourceGroup = "Multiple clusters in a single resource group"
-	multipleClustersSubscription  = "Multiple clusters in a single subscription"
-
-	rbacRuleActionTypeAction      = "Action"
-	rbacRuleActionTypeDataAction  = "DataAction"
-	rbacRuleTypeClusterDeployment = "Cluster Deployment"
-	rbacRuleTypeCustom            = "Custom"
+	rbacRuleActionTypeAction     = "Action"
+	rbacRuleActionTypeDataAction = "DataAction"
+	rbacRuleTypeCustom           = "Custom"
 
 	mustBeValidUUID = "must be valid UUID"
 )
@@ -32,14 +28,7 @@ var (
 	azureSecretName = "azure-creds"
 
 	rbacRuleTypes = []string{
-		rbacRuleTypeClusterDeployment,
 		rbacRuleTypeCustom,
-	}
-
-	staticDeploymentTypes = []string{
-		singleCluster,
-		multipleClustersResourceGroup,
-		multipleClustersSubscription,
 	}
 )
 
@@ -135,14 +124,6 @@ func readAzureCredentials(c *components.AzurePluginConfig, k8sClient kubernetes.
 // configureAzureRBACRules sets up zero or more RBAC rules based on user input. To save the users
 // some typing, we allow the user to choose between using a preset and making custom rules.
 func configureAzureRBACRules(c *components.AzurePluginConfig) error {
-	log.InfoCLI(`
-	Azure RBAC validation ensures that a certain service principal has every
-	permission specified in one of Spectro Cloud's predefined permission sets.
-
-	Different permission sets are required to deploy clusters via Spectro Cloud,
-	depending on placement type (static vs. dynamic) and other factors.
-	`)
-
 	var err error
 	addRules := true
 	ruleNames := make([]string, 0)
@@ -153,10 +134,6 @@ func configureAzureRBACRules(c *components.AzurePluginConfig) error {
 		log.InfoCLI("Reconfiguring Azure RBAC %s rule: %s", ruleType, r.Name)
 
 		switch ruleType {
-		case rbacRuleTypeClusterDeployment:
-			if err := configureClusterDeploymentAzureRBACRule(c, &ruleNames, &r, i); err != nil {
-				return fmt.Errorf("failed to configure cluster deployment RBAC rule: %w", err)
-			}
 		case rbacRuleTypeCustom:
 			if err = configureCustomAzureRBACRule(&ruleNames, &r); err != nil {
 				return fmt.Errorf("failed to configure custom RBAC rule: %w", err)
@@ -200,10 +177,6 @@ func configureAzureRBACRules(c *components.AzurePluginConfig) error {
 		}
 
 		switch ruleType {
-		case rbacRuleTypeClusterDeployment:
-			if err := configureClusterDeploymentAzureRBACRule(c, &ruleNames, rule, ruleIdx); err != nil {
-				return fmt.Errorf("failed to configure cluster deployment RBAC rule: %w", err)
-			}
 		case rbacRuleTypeCustom:
 			if err := configureCustomAzureRBACRule(&ruleNames, rule); err != nil {
 				return fmt.Errorf("failed to configure custom RBAC rule: %w", err)
@@ -227,71 +200,6 @@ func configureAzureRBACRules(c *components.AzurePluginConfig) error {
 	return nil
 }
 
-// Allows the user to configure an Azure RBAC rule for the situation where they want to deploy a
-// cluster. They must specify cluster deployment type and then remaining info common to all cluster
-// deployment scenarios. The info they specify is added to one of our presets.
-func configureClusterDeploymentAzureRBACRule(c *components.AzurePluginConfig, ruleNames *[]string, r *plug.RBACRule, idx int) error {
-	var err error
-
-	placementType, ok := c.PlacementTypes[idx]
-	if !ok {
-		placementType, err = prompts.Select("Placement type", cfg.PlacementTypes)
-		if err != nil {
-			return fmt.Errorf("failed to prompt for selection for placement type: %w", err)
-		}
-		c.PlacementTypes[idx] = placementType
-	}
-
-	switch placementType {
-	case cfg.PlacementTypeStatic:
-		if err := configureAzureRBACRuleClusterDeploymentStatic(c, ruleNames, r, idx); err != nil {
-			return fmt.Errorf("failed to configure (%s placement type): %w", placementType, err)
-		}
-	case cfg.PlacementTypeDynamic:
-		if err := configureAzureRBACRuleClusterDeploymentDynamic(c, ruleNames, r, idx); err != nil {
-			return fmt.Errorf("failed to configure (%s placement type): %w", placementType, err)
-		}
-	default:
-		return fmt.Errorf("unknown placement type (%s)", placementType)
-	}
-
-	return nil
-}
-
-// Builds an RBAC rule for deploying clusters with the static placement type. There are multiple
-// ways to deploy clusters this way and the user specifies further.
-func configureAzureRBACRuleClusterDeploymentStatic(c *components.AzurePluginConfig, ruleNames *[]string, r *plug.RBACRule, idx int) error {
-	var err error
-
-	deploymentType, ok := c.StaticDeploymentTypes[idx]
-	if !ok {
-		deploymentType, err = prompts.Select("Static deployment type", staticDeploymentTypes)
-		if err != nil {
-			return fmt.Errorf("failed to prompt for selection for static deployment type: %w", err)
-		}
-		c.StaticDeploymentTypes[idx] = deploymentType
-	}
-
-	switch deploymentType {
-	case singleCluster:
-		if err := configureAzureSingleCluster(c, ruleNames, r, idx); err != nil {
-			return fmt.Errorf("failed to configure (%s): %w", deploymentType, err)
-		}
-	case multipleClustersResourceGroup:
-		if err := configureAzureMultipleClustersResourceGroup(c, ruleNames, r, idx); err != nil {
-			return fmt.Errorf("failed to configure (%s): %w", deploymentType, err)
-		}
-	case multipleClustersSubscription:
-		if err := configureAzureMultipleClustersSubscription(c, ruleNames, r, idx); err != nil {
-			return fmt.Errorf("failed to configure (%s): %w", deploymentType, err)
-		}
-	default:
-		return fmt.Errorf("unknown deployment type (%s)", deploymentType)
-	}
-
-	return nil
-}
-
 func initRbacRule(ruleNames *[]string, r *plug.RBACRule) error {
 	var err error
 	if r.Name != "" {
@@ -303,269 +211,6 @@ func initRbacRule(ruleNames *[]string, r *plug.RBACRule) error {
 			return err
 		}
 	}
-	return nil
-}
-
-func staticRbacRuleValues(c *components.AzurePluginConfig, r *plug.RBACRule, idx int) (*components.AzureStaticDeploymentValues, error) {
-	values, ok := c.StaticDeploymentValues[idx]
-	if !ok {
-		if r.PrincipalID != "" { // failure reconfiguring a rule
-			return nil, fmt.Errorf("failed to get static deployment values for rule %s with index: %d", r.Name, idx)
-		}
-		return &components.AzureStaticDeploymentValues{}, nil
-	}
-	return values, nil
-}
-
-// Builds an RBAC rule for deploying a cluster with dynamic placement based on data provided by the user.
-func configureAzureRBACRuleClusterDeploymentDynamic(c *components.AzurePluginConfig, ruleNames *[]string, r *plug.RBACRule, idx int) error {
-	if err := initRbacRule(ruleNames, r); err != nil {
-		return err
-	}
-	v, err := staticRbacRuleValues(c, r, idx)
-	if err != nil {
-		return err
-	}
-
-	// For this use case, the security principal will always be a service principal (not user etc).
-	logToCollect("service principal that will deploy cluster resources", formatAzureGUID)
-	r.PrincipalID, err = prompts.ReadTextRegex("Service principal", r.PrincipalID, mustBeValidUUID, prompts.UUIDRegex)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for service principal: %w", err)
-	}
-
-	logToCollect("subscription to deploy cluster resources into", formatAzureGUID)
-	v.Subscription, err = prompts.ReadTextRegex("Subscription", v.Subscription, mustBeValidUUID, prompts.UUIDRegex)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for subscription: %w", err)
-	}
-	scope := fmt.Sprintf("/subscriptions/%s", v.Subscription)
-
-	actionStrs := []plug.ActionStr{}
-	for _, a := range cfg.ValidatorAzurePluginDynamicPlacementActions {
-		actionStrs = append(actionStrs, plug.ActionStr(a))
-	}
-
-	r.Permissions = []plug.PermissionSet{
-		// Permission set can be made narrower in scope in the future.
-		{
-			Actions: actionStrs,
-			// This works for subscriptions that are in management groups and ones that aren't.
-			Scope: scope,
-		},
-	}
-
-	c.StaticDeploymentValues[idx] = v
-
-	return nil
-}
-
-// Builds an RBAC rule for deploying a single cluster with static placement based on data provided
-// by the user. Because it's a single cluster, it is expected that the user know which low level
-// resources (e.g. virtual network subnet) will be used and they must provide them.
-func configureAzureSingleCluster(c *components.AzurePluginConfig, ruleNames *[]string, r *plug.RBACRule, idx int) error {
-	if err := initRbacRule(ruleNames, r); err != nil {
-		return err
-	}
-	v, err := staticRbacRuleValues(c, r, idx)
-	if err != nil {
-		return err
-	}
-
-	// For this use case, the security principal will always be a service principal (not user etc).
-	logToCollect("service principal that will deploy cluster resources", formatAzureGUID)
-	r.PrincipalID, err = prompts.ReadTextRegex("Service principal", r.PrincipalID, mustBeValidUUID, prompts.UUIDRegex)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for service principal: %w", err)
-	}
-
-	logToCollect("subscription to deploy cluster resources into", formatAzureGUID)
-	v.Subscription, err = prompts.ReadTextRegex("Subscription", v.Subscription, mustBeValidUUID, prompts.UUIDRegex)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for subscription: %w", err)
-	}
-
-	logToCollect("name of resource group (within configured subscription) to deploy cluster resources into", formatResourceGroupName)
-	v.ResourceGroup, err = prompts.ReadText("Resource group", v.ResourceGroup, false, 1000)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for resource group: %w", err)
-	}
-	rgScope := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s", v.Subscription, v.ResourceGroup)
-
-	logToCollect("name of virtual network (within configured resource group) to use", formatVirtualNetworkName)
-	v.VirtualNetwork, err = prompts.ReadText("Virtual network", v.VirtualNetwork, false, 1000)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for virtual network: %w", err)
-	}
-	vnScope := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s", v.Subscription, v.ResourceGroup, v.VirtualNetwork)
-
-	logToCollect("name of subnet (within configured virtual network) to use", formatSubnetName)
-	v.Subnet, err = prompts.ReadText("Subnet", v.Subnet, false, 1000)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for subnet: %w", err)
-	}
-	subnetScope := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", v.Subscription, v.ResourceGroup, v.VirtualNetwork, v.Subnet)
-
-	logToCollect("Azure Compute Gallery (within configured resource group) to use for machine images", formatComputeGalleryName)
-	v.ComputeGallery, err = prompts.ReadText("Compute Gallery", v.ComputeGallery, false, 1000)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for compute gallery: %w", err)
-	}
-	cgScope := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/galleries/%s", v.Subscription, v.ResourceGroup, v.ComputeGallery)
-
-	resourceGroupLevelActions := []plug.ActionStr{}
-	for _, a := range cfg.ValidatorAzurePluginStaticPlacementResourceGroupLevelActions {
-		resourceGroupLevelActions = append(resourceGroupLevelActions, plug.ActionStr(a))
-	}
-
-	virtualNetworkLevelActions := []plug.ActionStr{}
-	for _, a := range cfg.ValidatorAzurePluginStaticPlacementVirtualNetworkLevelActions {
-		virtualNetworkLevelActions = append(virtualNetworkLevelActions, plug.ActionStr(a))
-	}
-
-	subnetLevelActions := []plug.ActionStr{}
-	for _, a := range cfg.ValidatorAzurePluginStaticPlacementSubnetLevelActions {
-		subnetLevelActions = append(subnetLevelActions, plug.ActionStr(a))
-	}
-
-	azureComputeGalleryLevelActions := []plug.ActionStr{}
-	for _, a := range cfg.ValidatorAzurePluginStaticPlacementComputeGalleryLevelActions {
-		azureComputeGalleryLevelActions = append(azureComputeGalleryLevelActions, plug.ActionStr(a))
-	}
-
-	r.Permissions = []plug.PermissionSet{
-		// Each slice item corresponds to a group of actions needed for a particular
-		// resource. We provide the actions and the user provides the resource which becomes
-		// the scope of the permission set.
-		{
-			Actions: resourceGroupLevelActions,
-			Scope:   rgScope,
-		},
-		{
-			Actions: virtualNetworkLevelActions,
-			Scope:   vnScope,
-		},
-		{
-			Actions: subnetLevelActions,
-			Scope:   subnetScope,
-		},
-		{
-			Actions: azureComputeGalleryLevelActions,
-			Scope:   cgScope,
-		},
-	}
-
-	c.StaticDeploymentValues[idx] = v
-
-	return nil
-}
-
-// Builds an RBAC rule for deploying multiple clusters to a single resource group with static
-// placement based on data provided by the user. Because it's multiple clusters, we use the resource
-// group as the scope for every permission so that it validates that the user can create all the
-// resources (they do not know every resource down to its lowest level scope). It is expected that
-// the user know which resource group is to be used and they must provide it.
-func configureAzureMultipleClustersResourceGroup(c *components.AzurePluginConfig, ruleNames *[]string, r *plug.RBACRule, idx int) error {
-	if err := initRbacRule(ruleNames, r); err != nil {
-		return err
-	}
-	v, err := staticRbacRuleValues(c, r, idx)
-	if err != nil {
-		return err
-	}
-
-	// For this use case, the security principal will always be a service principal (not user etc).
-	logToCollect("service principal that will deploy cluster resources", formatAzureGUID)
-	r.PrincipalID, err = prompts.ReadTextRegex("Service principal", r.PrincipalID, mustBeValidUUID, prompts.UUIDRegex)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for service principal: %w", err)
-	}
-
-	logToCollect("subscription to deploy cluster resources into", formatAzureGUID)
-	v.Subscription, err = prompts.ReadTextRegex("Subscription", v.Subscription, mustBeValidUUID, prompts.UUIDRegex)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for subscription: %w", err)
-	}
-
-	logToCollect("name of resource group (within configured subscription) to deploy cluster resources into", formatResourceGroupName)
-	v.ResourceGroup, err = prompts.ReadText("Resource group", v.ResourceGroup, false, 1000)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for resource group: %w", err)
-	}
-	rgScope := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s", v.Subscription, v.ResourceGroup)
-
-	allPerms := []string{}
-	allPerms = append(allPerms, cfg.ValidatorAzurePluginStaticPlacementResourceGroupLevelActions...)
-	allPerms = append(allPerms, cfg.ValidatorAzurePluginStaticPlacementVirtualNetworkLevelActions...)
-	allPerms = append(allPerms, cfg.ValidatorAzurePluginStaticPlacementSubnetLevelActions...)
-	allPerms = append(allPerms, cfg.ValidatorAzurePluginStaticPlacementComputeGalleryLevelActions...)
-
-	allPermActionStrs := []plug.ActionStr{}
-	for _, a := range allPerms {
-		allPermActionStrs = append(allPermActionStrs, plug.ActionStr(a))
-	}
-
-	r.Permissions = []plug.PermissionSet{
-		// We provide the actions. The user provides the resource group.
-		{
-			Actions: allPermActionStrs,
-			Scope:   rgScope,
-		},
-	}
-
-	c.StaticDeploymentValues[idx] = v
-
-	return nil
-}
-
-// Builds an RBAC rule for deploying multiple clusters to a single subscription with static
-// placement based on data provided by the user. Because it's multiple clusters, we use the
-// subscription as the scope for every permission so that it validates that the user can create all
-// the resources (they do not know every resource down to its lowest level scope). It is expected
-// that the user know which subscription is to be used and they must provide it.
-func configureAzureMultipleClustersSubscription(c *components.AzurePluginConfig, ruleNames *[]string, r *plug.RBACRule, idx int) error {
-	if err := initRbacRule(ruleNames, r); err != nil {
-		return err
-	}
-	v, err := staticRbacRuleValues(c, r, idx)
-	if err != nil {
-		return err
-	}
-
-	// For this use case, the security principal will always be a service principal (not user etc).
-	logToCollect("service principal that will deploy cluster resources", formatAzureGUID)
-	r.PrincipalID, err = prompts.ReadTextRegex("Service principal", r.PrincipalID, mustBeValidUUID, prompts.UUIDRegex)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for service principal: %w", err)
-	}
-
-	logToCollect("subscription to deploy cluster resources into", formatAzureGUID)
-	v.Subscription, err = prompts.ReadTextRegex("Subscription", v.Subscription, mustBeValidUUID, prompts.UUIDRegex)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for subscription: %w", err)
-	}
-
-	allPerms := []string{}
-	allPerms = append(allPerms, cfg.ValidatorAzurePluginStaticPlacementResourceGroupLevelActions...)
-	allPerms = append(allPerms, cfg.ValidatorAzurePluginStaticPlacementVirtualNetworkLevelActions...)
-	allPerms = append(allPerms, cfg.ValidatorAzurePluginStaticPlacementSubnetLevelActions...)
-	allPerms = append(allPerms, cfg.ValidatorAzurePluginStaticPlacementComputeGalleryLevelActions...)
-
-	allPermActionStrs := []plug.ActionStr{}
-	for _, a := range allPerms {
-		allPermActionStrs = append(allPermActionStrs, plug.ActionStr(a))
-	}
-
-	r.Permissions = []plug.PermissionSet{
-		// We provide the actions. The user provides the subscription.
-		{
-			Actions: allPermActionStrs,
-			Scope:   v.Subscription,
-		},
-	}
-
-	c.StaticDeploymentValues[idx] = v
-
 	return nil
 }
 
