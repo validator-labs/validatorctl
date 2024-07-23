@@ -16,7 +16,7 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.0.0-20240715203051-ec46421ba5c0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.0.47
+	github.com/validator-labs/validator v0.0.48
 	github.com/validator-labs/validator-plugin-aws v0.1.1
 	github.com/validator-labs/validator-plugin-azure v0.0.13
 	github.com/validator-labs/validator-plugin-network v0.0.18
@@ -130,7 +130,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.5 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.1-vault-5 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
