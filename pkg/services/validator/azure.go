@@ -1,7 +1,10 @@
 package validator
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"time"
 
 	"emperror.dev/errors"
 	"k8s.io/client-go/kubernetes"
@@ -243,7 +246,7 @@ func configureAzureRBACRulePermissionSets(r *plug.RBACRule) error {
 	for {
 		log.InfoCLI("Note: Collecting input for permission set #%d.", len(permissionSets)+1)
 
-		set, err := configureAzureRBACRulePermissionSet()
+		set, err := readPermissionSet()
 		if err != nil {
 			return fmt.Errorf("failed to configure permission set: %w", err)
 		}
@@ -263,68 +266,54 @@ func configureAzureRBACRulePermissionSets(r *plug.RBACRule) error {
 	return nil
 }
 
-func configureAzureRBACRulePermissionSet() (plug.PermissionSet, error) {
-	permissionSet := plug.PermissionSet{}
-
-	logToCollect("scope that the the permissions must apply to", formatFullyQualifiedAzureResourceName)
-	scope, err := prompts.ReadText("Scope", "", false, 500)
+// readPermissionSet reads a permission set from the user. The user can provide the permission set
+// via a local file or by editing a file in the terminal.
+func readPermissionSet() (plug.PermissionSet, error) {
+	permissions := plug.PermissionSet{}
+	inputType, err := prompts.Select("Add permission set via", []string{"Local Filepath", "File Editor"})
 	if err != nil {
-		return plug.PermissionSet{}, fmt.Errorf("failed to prompt for text for scope: %w", err)
+		return permissions, err
 	}
-	permissionSet.Scope = scope
-
-	actions, err := configureAzureRBACRulePermissionSetActions(rbacRuleActionTypeAction)
-	if err != nil {
-		return plug.PermissionSet{}, fmt.Errorf("failed to configure Actions: %w", err)
-	}
-	actionStrs := []plug.ActionStr{}
-	for _, a := range actions {
-		actionStrs = append(actionStrs, plug.ActionStr(a))
-	}
-	permissionSet.Actions = actionStrs
-
-	dataActions, err := configureAzureRBACRulePermissionSetActions(rbacRuleActionTypeDataAction)
-	if err != nil {
-		return plug.PermissionSet{}, fmt.Errorf("failed to configure DataActions: %w", err)
-	}
-	dataActionStrs := []plug.ActionStr{}
-	for _, da := range dataActions {
-		dataActionStrs = append(dataActionStrs, plug.ActionStr(da))
-	}
-	permissionSet.DataActions = dataActionStrs
-
-	if len(actions) == 0 && len(dataActions) == 0 {
-		log.InfoCLI("You must configure at least one Action or one DataAction for each permission set. Please try again.")
-		return configureAzureRBACRulePermissionSet()
-	}
-
-	return permissionSet, nil
-}
-
-func configureAzureRBACRulePermissionSetActions(actionType string) ([]string, error) {
-	actions := make([]string, 0)
 
 	for {
-		log.InfoCLI("Enter configuration for %s #%d.", actionType, len(actions)+1)
+		var permissionSetBytes []byte
+		if inputType == "Local Filepath" {
+			permissionSetFile, err := prompts.ReadFilePath("Permission set file path", "", "Invalid file path", false)
+			if err != nil {
+				return plug.PermissionSet{}, err
+			}
 
-		action, err := prompts.ReadText(actionType, "", true, 100)
-		if err != nil {
-			return nil, fmt.Errorf("failed to prompt for text for %s: %w", actionType, err)
-		}
-		if action != "" {
-			actions = append(actions, action)
+			permissionSetBytes, err = os.ReadFile(permissionSetFile) //#nosec
+			if err != nil {
+				return plug.PermissionSet{}, err
+			}
+		} else {
+			log.InfoCLI("Configure permission set")
+			time.Sleep(2 * time.Second)
+			permissionSetFile, err := prompts.EditFileValidatedByFullContent(cfg.AzurePermissionSetPrompt, "", prompts.ValidateJson, 1)
+			if err != nil {
+				return plug.PermissionSet{}, err
+			}
+			permissionSetBytes = []byte(permissionSetFile)
 		}
 
-		add, err := prompts.ReadBool(fmt.Sprintf("Add another %s", actionType), false)
-		if err != nil {
-			return nil, fmt.Errorf("failed to prompt for bool for add %s: %w", actionType, err)
+		var permissionSet plug.PermissionSet
+		errUnmarshal := json.Unmarshal(permissionSetBytes, &permissionSet)
+		if errUnmarshal != nil {
+			log.ErrorCLI("Failed to unmarshal the provided permission set", "err", errUnmarshal)
+			retry, err := prompts.ReadBool("Reconfigure permission set", true)
+			if err != nil {
+				return plug.PermissionSet{}, err
+			}
+
+			if retry {
+				continue
+			}
+			return plug.PermissionSet{}, errUnmarshal
 		}
-		if !add {
-			break
-		}
+
+		return permissionSet, nil
 	}
-
-	return actions, nil
 }
 
 const (

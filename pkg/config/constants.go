@@ -49,6 +49,8 @@ const (
 
 	AWSPolicyDocumentPrompt = "# Provide the AWS policy document for IAM validation rule. The policy document should be in JSON format. Type :wq to save and exit (if using vi).\n"
 
+	AzurePermissionSetPrompt = "# Provide the Azure permission set for IAM validation rule. The permission set should be in JSON format. Type :wq to save and exit (if using vi).\n"
+
 	DefaultStorageClassAnnotation string = "storageclass.kubernetes.io/is-default-class"
 
 	// Embed dirs
