@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.0.5](https://github.com/validator-labs/validatorctl/compare/v0.0.4...v0.0.5) (2024-07-24)
+
+
+### Features
+
+* add support for private custom image registries ([#83](https://github.com/validator-labs/validatorctl/issues/83)) ([ae91659](https://github.com/validator-labs/validatorctl/commit/ae91659286b9bab40f01a905d2279ee835c2abe8))
+* support env vars in OCI secrets ([#88](https://github.com/validator-labs/validatorctl/issues/88)) ([584b3c7](https://github.com/validator-labs/validatorctl/commit/584b3c70a1a5fc94ce7c5a24dda731d76ff43f41))
+
+
+### Bug Fixes
+
+* ensure passwords in helm templates are quoted ([#96](https://github.com/validator-labs/validatorctl/issues/96)) ([f36383b](https://github.com/validator-labs/validatorctl/commit/f36383bc88e97aebf0c86c991bf2adcb1c4b0f42))
+
+
+### Other
+
+* omit EDITOR logs by default ([#76](https://github.com/validator-labs/validatorctl/issues/76)) ([b3ab7ec](https://github.com/validator-labs/validatorctl/commit/b3ab7ecb050429940d550f23270bca41ddc22ed1))
+
+
+### Dependency Updates
+
+* **deps:** update anchore/sbom-action action to v0.17.0 ([#75](https://github.com/validator-labs/validatorctl/issues/75)) ([caf800d](https://github.com/validator-labs/validatorctl/commit/caf800d3796d3ee5ea97ac793f18e73c2dd1c341))
+* **deps:** update golang.org/x/exp digest to 8a7402a ([#89](https://github.com/validator-labs/validatorctl/issues/89)) ([3ffda87](https://github.com/validator-labs/validatorctl/commit/3ffda878f19b1836bce95d933f9b425f3c417eb3))
+* **deps:** update golang.org/x/exp digest to e3f2596 ([#82](https://github.com/validator-labs/validatorctl/issues/82)) ([a89beb6](https://github.com/validator-labs/validatorctl/commit/a89beb6529aae14933959e0068a9627ecd455f95))
+* **deps:** update module github.com/validator-labs/validator to v0.0.47 ([#92](https://github.com/validator-labs/validatorctl/issues/92)) ([8c359e1](https://github.com/validator-labs/validatorctl/commit/8c359e105a7b20c93b0006f6676fc93f67c54af6))
+* **deps:** update module github.com/validator-labs/validator to v0.0.48 ([#94](https://github.com/validator-labs/validatorctl/issues/94)) ([743656d](https://github.com/validator-labs/validatorctl/commit/743656dc57da5a9b5811fd66ca2d71d92abac8d2))
+* **deps:** update module github.com/validator-labs/validator-plugin-azure to v0.0.13 ([#79](https://github.com/validator-labs/validatorctl/issues/79)) ([0c2dff7](https://github.com/validator-labs/validatorctl/commit/0c2dff70689f37479bc4b7527e6fb427b4fcf14f))
+* **deps:** update module github.com/validator-labs/validator-plugin-network to v0.0.18 ([#87](https://github.com/validator-labs/validatorctl/issues/87)) ([c69e355](https://github.com/validator-labs/validatorctl/commit/c69e355765539593bc09e8e84427563583efa879))
+* **deps:** update module github.com/validator-labs/validator-plugin-network to v0.0.19 ([#95](https://github.com/validator-labs/validatorctl/issues/95)) ([e70433a](https://github.com/validator-labs/validatorctl/commit/e70433ab22eadadd82fde4bbe3fcaedfbafaa368))
+* **deps:** update module github.com/validator-labs/validator-plugin-oci to v0.0.11 ([#90](https://github.com/validator-labs/validatorctl/issues/90)) ([a633962](https://github.com/validator-labs/validatorctl/commit/a6339628adb7efb19301fcb9458961d1267d7d81))
+* **deps:** update module github.com/validator-labs/validator-plugin-vsphere to v0.0.27 ([#80](https://github.com/validator-labs/validatorctl/issues/80)) ([feb6360](https://github.com/validator-labs/validatorctl/commit/feb636043bca4c7b56330fb845387c3cf50f811c))
+* **deps:** update module github.com/vmware/govmomi to v0.39.0 ([#93](https://github.com/validator-labs/validatorctl/issues/93)) ([2a01e95](https://github.com/validator-labs/validatorctl/commit/2a01e95b8d7cf52c420149426c6840ffa2fbcc18))
+* **deps:** update softprops/action-gh-release digest to c062e08 ([#85](https://github.com/validator-labs/validatorctl/issues/85)) ([b8b5c62](https://github.com/validator-labs/validatorctl/commit/b8b5c626bf8c6b8078f1b9a0d193f4fb62688a7b))
+
 ## [0.0.4](https://github.com/validator-labs/validatorctl/compare/v0.0.3...v0.0.4) (2024-07-15)
 
 
