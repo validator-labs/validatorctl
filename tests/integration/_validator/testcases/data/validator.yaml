@@ -2,7 +2,7 @@ helmRelease:
   chart:
     name: validator
     repository: https://validator-labs.github.io/validator
-    version: v0.0.48
+    version: v0.0.49
     insecureSkipVerify: true
   values: ""
 helmReleaseSecret:
