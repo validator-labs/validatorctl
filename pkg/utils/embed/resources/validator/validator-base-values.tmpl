@@ -126,10 +126,10 @@ pluginSecrets:
   {{- if .VspherePlugin.Validator.Auth.SecretName }}
   vSphere:
     secretName: {{ .VspherePlugin.Validator.Auth.SecretName }}
-    username: {{ .VspherePlugin.Account.Username }}
-    password: {{ .VspherePlugin.Account.Password }}
-    vcenterServer: {{ .VspherePlugin.Account.VcenterServer }}
-    insecureSkipVerify: {{ .VspherePlugin.Account.Insecure }}
+    username: {{ .VspherePlugin.Account.Username | quote }}
+    password: {{ .VspherePlugin.Account.Password | quote }}
+    vcenterServer: {{ .VspherePlugin.Account.VcenterServer | quote }}
+    insecureSkipVerify: {{ .VspherePlugin.Account.Insecure | quote }}
   {{- else }}
   vSphere: {}
   {{- end }}
@@ -142,8 +142,8 @@ pluginSecrets:
     - secretName: {{ .Name }}
       env:
         {{- if .BasicAuth }}
-        username: {{ .BasicAuth.Username }}
-        password: {{ .BasicAuth.Password }}
+        username: {{ .BasicAuth.Username | quote }}
+        password: {{ .BasicAuth.Password | quote }}
         {{- end }}
         {{- range $k, $v := .Data }}
         {{ $k }}: {{ $v }}

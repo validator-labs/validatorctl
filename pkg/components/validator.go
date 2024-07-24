@@ -658,10 +658,12 @@ func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) {
 	}
 	vc.KindConfig.UseKindCluster = true
 	vc.Kubeconfig = kubeconfig
+	// TODO: update this to use the correct image registry (custom private registry / hauler / default)
 	vc.ImageRegistry = cfg.ValidatorImagePath()
 	vc.ProxyConfig = &ProxyConfig{
 		Env: &Env{
 			PodCIDR:        &cfg.DefaultPodCIDR,
+			ProxyCACert:    &CACert{},
 			ServiceIPRange: &cfg.DefaultServiceIPRange,
 		},
 	}

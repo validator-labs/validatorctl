@@ -30,7 +30,8 @@ func ConfigureNetworkPlugin(vc *ValidatorConfig, config NetworkConfig) {
 			},
 		},
 		ReleaseSecret: &Secret{
-			Name: fmt.Sprintf("validator-helm-release-%s", cfg.ValidatorPluginNetwork),
+			Name:      fmt.Sprintf("validator-helm-release-%s", cfg.ValidatorPluginNetwork),
+			BasicAuth: &BasicAuth{},
 		},
 		Validator: &network_api.NetworkValidatorSpec{
 			IPRangeRules: config.IPRangeRules,

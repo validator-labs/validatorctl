@@ -29,7 +29,8 @@ func ConfigureOciPlugin(vc *ValidatorConfig, config OciConfig) {
 			},
 		},
 		ReleaseSecret: &Secret{
-			Name: fmt.Sprintf("validator-helm-release-%s", cfg.ValidatorPluginOci),
+			Name:      fmt.Sprintf("validator-helm-release-%s", cfg.ValidatorPluginOci),
+			BasicAuth: &BasicAuth{},
 		},
 		Validator: &oci_api.OciValidatorSpec{
 			OciRegistryRules: generateOciRegistryRules(config.HostRefs),

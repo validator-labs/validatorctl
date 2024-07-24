@@ -37,7 +37,8 @@ func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) {
 			},
 		},
 		ReleaseSecret: &Secret{
-			Name: fmt.Sprintf("validator-helm-release-%s", cfg.ValidatorPluginVsphere),
+			Name:      fmt.Sprintf("validator-helm-release-%s", cfg.ValidatorPluginVsphere),
+			BasicAuth: &BasicAuth{},
 		},
 		Account: &vsphere.CloudAccount{
 			Insecure:      true,
