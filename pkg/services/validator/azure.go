@@ -20,9 +20,7 @@ import (
 )
 
 const (
-	rbacRuleActionTypeAction     = "Action"
-	rbacRuleActionTypeDataAction = "DataAction"
-	rbacRuleTypeCustom           = "Custom"
+	ruleTypeRBAC = "RBAC"
 
 	mustBeValidUUID = "must be valid UUID"
 )
@@ -31,7 +29,7 @@ var (
 	azureSecretName = "azure-creds"
 
 	rbacRuleTypes = []string{
-		rbacRuleTypeCustom,
+		ruleTypeRBAC,
 	}
 )
 
@@ -124,8 +122,8 @@ func readAzureCredentials(c *components.AzurePluginConfig, k8sClient kubernetes.
 	return nil
 }
 
-// configureAzureRBACRules sets up zero or more RBAC rules based on user input. To save the users
-// some typing, we allow the user to choose between using a preset and making custom rules.
+// configureAzureRBACRules sets up zero or more RBAC rules based on pre-existing files or user
+// input.
 func configureAzureRBACRules(c *components.AzurePluginConfig) error {
 	var err error
 	addRules := true
@@ -136,13 +134,8 @@ func configureAzureRBACRules(c *components.AzurePluginConfig) error {
 		ruleType := c.RuleTypes[i]
 		log.InfoCLI("Reconfiguring Azure RBAC %s rule: %s", ruleType, r.Name)
 
-		switch ruleType {
-		case rbacRuleTypeCustom:
-			if err = configureCustomAzureRBACRule(&ruleNames, &r); err != nil {
-				return fmt.Errorf("failed to configure custom RBAC rule: %w", err)
-			}
-		default:
-			return fmt.Errorf("unknown rule type (%s)", ruleType)
+		if err = configureAzureRBACRule(&ruleNames, &r); err != nil {
+			return fmt.Errorf("failed to configure RBAC rule: %w", err)
 		}
 
 		c.Validator.RBACRules[i] = r
@@ -166,9 +159,6 @@ func configureAzureRBACRules(c *components.AzurePluginConfig) error {
 	for {
 		log.InfoCLI("Note: Collecting input for rule #%d", ruleIdx+1)
 
-		// Type is determined first because this is likely how a user would think while they're
-		// using the CLI. This causes some repeated code in other functions called from this one
-		// for name and principal, but this is intentional.
 		ruleType, err := prompts.Select("Rule type", rbacRuleTypes)
 		if err != nil {
 			return fmt.Errorf("failed to prompt for selection for rule type: %w", err)
@@ -180,9 +170,9 @@ func configureAzureRBACRules(c *components.AzurePluginConfig) error {
 		}
 
 		switch ruleType {
-		case rbacRuleTypeCustom:
-			if err := configureCustomAzureRBACRule(&ruleNames, rule); err != nil {
-				return fmt.Errorf("failed to configure custom RBAC rule: %w", err)
+		case ruleTypeRBAC:
+			if err := configureAzureRBACRule(&ruleNames, rule); err != nil {
+				return fmt.Errorf("failed to configure RBAC rule: %w", err)
 			}
 		default:
 			return fmt.Errorf("unknown rule type (%s)", ruleType)
@@ -218,14 +208,14 @@ func initRbacRule(ruleNames *[]string, r *plug.RBACRule) error {
 }
 
 // Allows the user to configure an Azure RBAC rule where they specify every detail.
-func configureCustomAzureRBACRule(ruleNames *[]string, r *plug.RBACRule) error {
+func configureAzureRBACRule(ruleNames *[]string, r *plug.RBACRule) error {
 	err := initRbacRule(ruleNames, r)
 	if err != nil {
 		return err
 	}
 
-	logToCollect("service principal", formatAzureGUID)
-	r.PrincipalID, err = prompts.ReadTextRegex("Service principal", r.PrincipalID, mustBeValidUUID, prompts.UUIDRegex)
+	logToCollect("security principal", formatAzureGUID)
+	r.PrincipalID, err = prompts.ReadTextRegex("Security principal", r.PrincipalID, mustBeValidUUID, prompts.UUIDRegex)
 	if err != nil {
 		return fmt.Errorf("failed to prompt for text for service principal: %w", err)
 	}
@@ -240,8 +230,8 @@ func configureAzureRBACRulePermissionSets(r *plug.RBACRule) error {
 	permissionSets := []plug.PermissionSet{}
 
 	log.InfoCLI("Note: You must configure at least one permission set for rule.")
-	log.InfoCLI("If you're updating an existing custom RBAC rule, its permission sets will be replaced.")
-	// TODO: consider reconfiguration supported for custom RBAC rules. It's just not worth the effort right now.
+	log.InfoCLI("If you're updating an existing RBAC rule, its permission sets will be replaced.")
+	// TODO: consider reconfiguration supported for RBAC rules. It's just not worth the effort right now.
 
 	for {
 		log.InfoCLI("Note: Collecting input for permission set #%d.", len(permissionSets)+1)
