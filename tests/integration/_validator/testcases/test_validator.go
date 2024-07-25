@@ -235,7 +235,6 @@ func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []strin
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // tenant id
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // client id
 		"test_client_secret",                   // client secret
-		"RBAC",                                 // rule type (select)
 		"rule-1",                               // rule name
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // security principal
 		"Local Filepath",                       // Add permission sets via

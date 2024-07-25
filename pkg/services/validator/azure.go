@@ -159,10 +159,11 @@ func configureAzureRBACRules(c *components.AzurePluginConfig) error {
 	for {
 		log.InfoCLI("Note: Collecting input for rule #%d", ruleIdx+1)
 
-		ruleType, err := prompts.Select("Rule type", rbacRuleTypes)
-		if err != nil {
-			return fmt.Errorf("failed to prompt for selection for rule type: %w", err)
-		}
+		// This is intentional. We only have one rule type in the Azure plugin now, so we don't
+		// prompt the user for rule type. But we are keeping the rest of the type-oriented code here
+		// (e.g. the rule types tracked in the YAML config file) to avoid less refactor work later
+		// when we add more rule types for Azure.
+		ruleType := ruleTypeRBAC
 		c.RuleTypes[ruleIdx] = ruleType
 
 		rule := &plug.RBACRule{
