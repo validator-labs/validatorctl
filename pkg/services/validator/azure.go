@@ -27,10 +27,6 @@ const (
 
 var (
 	azureSecretName = "azure-creds"
-
-	rbacRuleTypes = []string{
-		ruleTypeRBAC,
-	}
 )
 
 func readAzurePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
