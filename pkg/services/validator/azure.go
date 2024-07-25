@@ -227,92 +227,58 @@ func configureAzureRBACRule(ruleNames *[]string, r *plug.RBACRule) error {
 }
 
 func configureAzureRBACRulePermissionSets(r *plug.RBACRule) error {
-	permissionSets := []plug.PermissionSet{}
-
 	log.InfoCLI("Note: You must configure at least one permission set for rule.")
 	log.InfoCLI("If you're updating an existing RBAC rule, its permission sets will be replaced.")
-	// TODO: consider reconfiguration supported for RBAC rules. It's just not worth the effort right now.
 
-	for {
-		log.InfoCLI("Note: Collecting input for permission set #%d.", len(permissionSets)+1)
-
-		set, err := readPermissionSet()
-		if err != nil {
-			return fmt.Errorf("failed to configure permission set: %w", err)
-		}
-		permissionSets = append(permissionSets, set)
-
-		add, err := prompts.ReadBool("Add additional permission set", false)
-		if err != nil {
-			return fmt.Errorf("failed to prompt for bool for add permission set: %w", err)
-		}
-		if !add {
-			break
-		}
-	}
-
-	r.Permissions = permissionSets
-
-	return nil
-}
-
-// readPermissionSet reads a permission set from the user. The user can provide the permission set
-// via a local file or by editing a file in the terminal.
-func readPermissionSet() (plug.PermissionSet, error) {
-	permissions := plug.PermissionSet{}
-	inputType, err := prompts.Select("Add permission set via", []string{"Local Filepath", "File Editor"})
+	inputType, err := prompts.Select("Add permission sets via", []string{"Local Filepath", "File Editor"})
 	if err != nil {
-		return permissions, err
+		return err
 	}
 
 	for {
 		var permissionSetBytes []byte
 		if inputType == "Local Filepath" {
-			permissionSetFile, err := prompts.ReadFilePath("Permission set file path", "", "Invalid file path", false)
+			permissionSetFile, err := prompts.ReadFilePath("Permission sets file path", "", "Invalid file path", false)
 			if err != nil {
-				return plug.PermissionSet{}, err
+				return err
 			}
 
 			permissionSetBytes, err = os.ReadFile(permissionSetFile) //#nosec
 			if err != nil {
-				return plug.PermissionSet{}, err
+				return fmt.Errorf("failed to read permission sets file: %w", err)
 			}
 		} else {
-			log.InfoCLI("Configure permission set")
+			log.InfoCLI("Configure permission sets")
 			time.Sleep(2 * time.Second)
 			permissionSetFile, err := prompts.EditFileValidatedByFullContent(cfg.AzurePermissionSetPrompt, "", prompts.ValidateJson, 1)
 			if err != nil {
-				return plug.PermissionSet{}, err
+				return fmt.Errorf("failed to configure permission sets: %w", err)
 			}
 			permissionSetBytes = []byte(permissionSetFile)
 		}
 
-		var permissionSet plug.PermissionSet
-		errUnmarshal := json.Unmarshal(permissionSetBytes, &permissionSet)
+		var permissionSets []plug.PermissionSet
+		errUnmarshal := json.Unmarshal(permissionSetBytes, &permissionSets)
 		if errUnmarshal != nil {
-			log.ErrorCLI("Failed to unmarshal the provided permission set", "err", errUnmarshal)
-			retry, err := prompts.ReadBool("Reconfigure permission set", true)
+			log.ErrorCLI("Failed to unmarshal the provided permission sets", "err", errUnmarshal)
+			retry, err := prompts.ReadBool("Reconfigure permission sets", true)
 			if err != nil {
-				return plug.PermissionSet{}, err
+				return fmt.Errorf("failed to prompt for reconfiguration of permission sets: %w", err)
 			}
 
 			if retry {
 				continue
 			}
-			return plug.PermissionSet{}, errUnmarshal
+			return fmt.Errorf("failed to unmarshal permission sets: %w", errUnmarshal)
 		}
 
-		return permissionSet, nil
+		r.Permissions = permissionSets
+		return nil
 	}
 }
 
 const (
 	formatAzureGUID = iota
-	formatResourceGroupName
-	formatVirtualNetworkName
-	formatSubnetName
-	formatComputeGalleryName
-	formatFullyQualifiedAzureResourceName
 )
 
 // logToCollect logs a few messages to guide the user when we need to collect data from them.
@@ -326,31 +292,11 @@ func logToCollect(dataToCollect string, format int) {
 	var example string
 
 	exampleGUID := "d6df0bba-800d-492f-802e-d04a38c80786"
-	exampleResourceGroupName := "rg1"
-	exampleVirtualNetworkName := "vnet1"
-	exampleSubnetName := "subnet1"
-	exampleGalleryName := "gallery1"
-	exampleFullyQualifiedAzureResourceName := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s", exampleGUID, exampleResourceGroupName)
 
 	switch format {
 	case formatAzureGUID:
 		formatLabel = "Azure GUID"
 		example = exampleGUID
-	case formatResourceGroupName:
-		formatLabel = "Resource group name"
-		example = exampleResourceGroupName
-	case formatVirtualNetworkName:
-		formatLabel = "Virtual network name"
-		example = exampleVirtualNetworkName
-	case formatSubnetName:
-		formatLabel = "Subnet name"
-		example = exampleSubnetName
-	case formatComputeGalleryName:
-		formatLabel = "Gallery name"
-		example = exampleGalleryName
-	case formatFullyQualifiedAzureResourceName:
-		formatLabel = "Fully-qualified Azure resource name"
-		example = exampleFullyQualifiedAzureResourceName
 	}
 
 	log.InfoCLI("Format: %s", formatLabel)

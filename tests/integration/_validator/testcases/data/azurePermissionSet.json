@@ -1,7 +1,0 @@
-{
-    "actions": [
-        "Microsoft.ClassicNetwork/virtualNetworks/read"
-    ],
-    "dataActions": [],
-    "scope": "/subscriptions/af76f574-ba51-4470-bc9f-b15b66b66c21"
-}

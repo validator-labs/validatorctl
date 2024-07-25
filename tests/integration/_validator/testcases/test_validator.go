@@ -7,11 +7,11 @@ import (
 	"slices"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	tuimocks "github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
 
+	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
@@ -238,9 +238,8 @@ func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []strin
 		"RBAC",                                 // rule type (select)
 		"rule-1",                               // rule name
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // security principal
-		"Local Filepath",                       // Add permission set via
-		t.filePath("azurePermissionSet.json"),  // Permission set file
-		"n",                                    // add permission set
+		"Local Filepath",                       // Add permission sets via
+		t.filePath("azurePermissionSets.json"), // Permission sets file
 		"n",                                    // add RBAC rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
