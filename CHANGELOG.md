@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.6](https://github.com/validator-labs/validatorctl/compare/v0.0.5...v0.0.6) (2024-07-26)
+
+
+### Features
+
+* Azure plugin - remove Palette presets, reading permission set files ([#97](https://github.com/validator-labs/validatorctl/issues/97)) ([95787db](https://github.com/validator-labs/validatorctl/commit/95787db0cd8e4edbb993ec22deeb17ff891c6d34))
+
+
+### Other
+
+* bump validator and plugin versions ([#106](https://github.com/validator-labs/validatorctl/issues/106)) ([a3863aa](https://github.com/validator-labs/validatorctl/commit/a3863aac993aa111d9aaaded20d0b54cc5cff866))
+
 ## [0.0.5](https://github.com/validator-labs/validatorctl/compare/v0.0.4...v0.0.5) (2024-07-24)
 
 
