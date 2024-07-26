@@ -2,7 +2,7 @@ helmRelease:
   chart:
     name: validator
     repository: https://validator-labs.github.io/validator
-    version: v0.0.49
+    version: v0.0.50
     insecureSkipVerify: true
   values: ""
 helmReleaseSecret:
@@ -42,7 +42,7 @@ awsPlugin:
     chart:
       name: validator-plugin-aws
       repository: https://validator-labs.github.io/validator-plugin-aws
-      version: v0.1.1
+      version: v0.1.2
       insecureSkipVerify: true
     values: ""
   helmReleaseSecret:
@@ -161,7 +161,7 @@ networkPlugin:
     chart:
       name: validator-plugin-network
       repository: https://validator-labs.github.io/validator-plugin-network
-      version: v0.0.19
+      version: v0.0.20
       insecureSkipVerify: true
     values: ""
   helmReleaseSecret:
@@ -194,7 +194,7 @@ ociPlugin:
     chart:
       name: validator-plugin-oci
       repository: https://validator-labs.github.io/validator-plugin-oci
-      version: v0.0.11
+      version: v0.0.12
       insecureSkipVerify: true
     values: ""
   helmReleaseSecret:
@@ -229,7 +229,7 @@ vspherePlugin:
     chart:
       name: validator-plugin-vsphere
       repository: https://validator-labs.github.io/validator-plugin-vsphere
-      version: v0.0.27
+      version: v0.0.28
       insecureSkipVerify: true
     values: ""
   helmReleaseSecret:
@@ -527,7 +527,7 @@ azurePlugin:
     chart:
       name: validator-plugin-azure
       repository: https://validator-labs.github.io/validator-plugin-azure
-      version: v0.0.13
+      version: v0.0.14
       insecureSkipVerify: true
     values: ""
   helmReleaseSecret:

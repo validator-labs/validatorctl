@@ -423,6 +423,17 @@ func readTCPConnRule(c *components.NetworkPluginConfig, r *vpnetworkapi.TCPConnR
 			}
 		}
 	}
+
+	r.InsecureSkipTLSVerify, err = prompts.ReadBool("Skip TLS certificate verification", true)
+	if err != nil {
+		return err
+	}
+
+	r.Timeout, err = prompts.ReadInt("Timeout in seconds", "5", 1, -1)
+	if err != nil {
+		return err
+	}
+
 	if idx == -1 {
 		c.Validator.TCPConnRules = append(c.Validator.TCPConnRules, *r)
 	} else {
