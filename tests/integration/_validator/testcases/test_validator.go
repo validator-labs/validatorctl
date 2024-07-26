@@ -7,10 +7,11 @@ import (
 	"slices"
 
 	log "github.com/sirupsen/logrus"
+
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	tuimocks "github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
-	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 
+	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
@@ -234,47 +235,10 @@ func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []strin
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // tenant id
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // client id
 		"test_client_secret",                   // client secret
-		"Cluster Deployment",                   // rule type (select)
-		"Static",                               // placement type (select)
-		"Single cluster",                       // static deployment style (select)
 		"rule-1",                               // rule name
-		"d551b7b1-78ae-43df-9d61-4935c843a454", // service principal
-		"d551b7b1-78ae-43df-9d61-4935c843a454", // subscription
-		"rg",                                   // resource group
-		"vn",                                   // virtual network
-		"s",                                    // subnet
-		"acg",                                  // azure compute gallery
-		"y",                                    // add RBAC rule
-		"Cluster Deployment",                   // rule type (select)
-		"Static",                               // placement type (select)
-		"Multiple clusters in a single resource group", // static deployment style (select)
-		"rule-2",                               // rule name
-		"d551b7b1-78ae-43df-9d61-4935c843a454", // service principal
-		"d551b7b1-78ae-43df-9d61-4935c843a454", // subscription
-		"rg",                                   // resource group
-		"y",                                    // add RBAC rule
-		"Cluster Deployment",                   // rule type (select)
-		"Static",                               // placement type (select)
-		"Multiple clusters in a single subscription", // static deployment style (select)
-		"rule-3",                               // rule name
-		"d551b7b1-78ae-43df-9d61-4935c843a454", // service principal
-		"d551b7b1-78ae-43df-9d61-4935c843a454", // subscription
-		"y",                                    // add RBAC rule
-		"Cluster Deployment",                   // rule type (select)
-		"Dynamic",                              // placement type (select)
-		"rule-4",                               // rule name
-		"d551b7b1-78ae-43df-9d61-4935c843a454", // service principal
-		"d551b7b1-78ae-43df-9d61-4935c843a454", // subscription
-		"y",                                    // add RBAC rule
-		"Custom",                               // rule type (select)
-		"rule-5",                               // rule name
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // security principal
-		"s",                                    // scope
-		"a",                                    // Action
-		"n",                                    // add Action
-		"da",                                   // DataAction
-		"n",                                    // add DataAction
-		"n",                                    // add permission set
+		"Local Filepath",                       // Add permission sets via
+		t.filePath("azurePermissionSets.json"), // Permission sets file
 		"n",                                    // add RBAC rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
