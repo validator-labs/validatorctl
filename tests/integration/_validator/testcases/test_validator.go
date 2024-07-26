@@ -279,6 +279,8 @@ func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, tuiVals []str
 		"foo",                       // TCP connection host
 		"80",                        // TCP connection port
 		"n",                         // add another port
+		"y",                         // InsecureSkipTLSVerify
+		"5",                         // TCP connection timeout
 		"n",                         // add another TCP connection rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
