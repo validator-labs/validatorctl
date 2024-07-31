@@ -646,6 +646,8 @@ github.com/smartystreets/assertions v1.1.0/go.mod h1:tcbTF8ujkAEcZ8TElKY+i30BzYl
 github.com/smartystreets/goconvey v1.6.4/go.mod h1:syvi0/a8iFYH4r/RixwvyeAJjdLS9QV7WQ/tjFTllLA=
 github.com/sourcegraph/conc v0.3.0 h1:OQTbbt6P72L20UqAkXXuLOj79LfEanQ+YQFNpLA9ySo=
 github.com/sourcegraph/conc v0.3.0/go.mod h1:Sdozi7LEKbFPqYX2/J+iBAM6HpqSLTASQIKqDmF7Mt0=
+github.com/spectrocloud-labs/embeddedfs v0.1.0 h1:Izs9wPYLVp8Fp9mi9zYysu9AzvHK1kIelQz3IIfh4N0=
+github.com/spectrocloud-labs/embeddedfs v0.1.0/go.mod h1:JrCbGXImUCsim3jjYSahRJUKyVN57Fb5u3DkE3crqA4=
 github.com/spectrocloud-labs/prompts-tui v0.0.0-20240715203051-ec46421ba5c0 h1:YdN7sgQxRemJ/EPnVpIGH9Io5yUrSMHKHrcaY8ItO18=
 github.com/spectrocloud-labs/prompts-tui v0.0.0-20240715203051-ec46421ba5c0/go.mod h1:XCvyEc3OLxKVXNLbOGZJOR6PiktfWqjYdrwU+ymCmLQ=
 github.com/spf13/afero v1.11.0 h1:WJQKhtpdm3v2IzqG8VMqrr6Rf3UYpEF239Jy9wNepM8=

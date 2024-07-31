@@ -65,11 +65,12 @@ Use 'validator help <sub-command>' to explore all of the functionality the Valid
 	}
 
 	// add base commands
-	rootCmd.AddCommand(NewVersionCmd())
 	rootCmd.AddCommand(NewDeployValidatorCmd())
 	rootCmd.AddCommand(NewUpgradeValidatorCmd())
 	rootCmd.AddCommand(NewUndeployValidatorCmd())
 	rootCmd.AddCommand(NewDescribeValidationResultsCmd())
+	rootCmd.AddCommand(NewValidatorDocsCmd())
+	rootCmd.AddCommand(NewVersionCmd())
 
 	return rootCmd
 }
@@ -106,7 +107,7 @@ func InitConfig() {
 	} else {
 		switch err.(type) {
 		case viper.ConfigFileNotFoundError:
-			log.InfoCLI("No validator cli config file detected. One will be created.")
+			log.Debug("No validator cli config file detected. One will be created.")
 		default:
 			log.FatalCLI("Failed to initialize Validator CLI config", "error", err)
 		}

@@ -17,7 +17,7 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	embed_utils "github.com/validator-labs/validatorctl/pkg/utils/embed"
+	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 )
 
@@ -113,7 +113,7 @@ func RenderKindConfig(vc *components.ValidatorConfig, kindConfig string) error {
 		}
 	}
 
-	return embed_utils.RenderTemplate(clusterConfigArgs, cfg.Kind, cfg.ClusterConfigTemplate, kindConfig)
+	return embed.EFS.RenderTemplate(clusterConfigArgs, cfg.Kind, cfg.ClusterConfigTemplate, kindConfig)
 }
 
 // defaultMirrorRegistries returns a comma-separated string of default registry mirrors

@@ -8,7 +8,9 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/cmd/validator"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	cfgmanager "github.com/validator-labs/validatorctl/pkg/config/manager"
+	log "github.com/validator-labs/validatorctl/pkg/logging"
 	cmdutils "github.com/validator-labs/validatorctl/pkg/utils/cmd"
+	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 )
 
 // NewDeployValidatorCmd returns a new cobra command for deploying the validator
@@ -157,6 +159,30 @@ If the --config-file flag is specified, the KUBECONFIG specified in the validato
 
 	flags := cmd.Flags()
 	flags.StringVarP(&configFile, "config-file", "f", "", "Validator configuration file to read kubeconfig from (optional)")
+
+	return cmd
+}
+
+// NewValidatorDocsCmd returns a new cobra command for displaying information about validator plugins
+func NewValidatorDocsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "docs",
+		Short: "Display information about supported validator plugins",
+		Long: `Display information about supported validator plugins.
+
+For more information about validator, see: https://github.com/validator-labs/validator.
+`,
+		Args:         cobra.NoArgs,
+		SilenceUsage: false,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			args := map[string]interface{}{
+				"Version":          Version,
+				"ValidatorVersion": cfg.ValidatorChartVersions[cfg.Validator],
+				"Plugins":          cfg.ValidatorChartVersions,
+			}
+			return embed.EFS.PrintTableTemplate(log.Out(), args, cfg.Validator, "docs.tmpl")
+		},
+	}
 
 	return cmd
 }

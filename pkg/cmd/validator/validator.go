@@ -30,7 +30,7 @@ import (
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services/validator"
-	embed_utils "github.com/validator-labs/validatorctl/pkg/utils/embed"
+	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	"github.com/validator-labs/validatorctl/pkg/utils/kube"
@@ -306,7 +306,7 @@ func buildValidationResultString(vrObj unstructured.Unstructured) (string, error
 		"Values": vals,
 	}
 
-	if err := embed_utils.PrintTableTemplate(sb, args, cfg.Validator, "validation-result.tmpl"); err != nil {
+	if err := embed.EFS.PrintTableTemplate(sb, args, cfg.Validator, "validation-result.tmpl"); err != nil {
 		return "", err
 	}
 
@@ -317,7 +317,7 @@ func buildValidationResultString(vrObj unstructured.Unstructured) (string, error
 			"Values": []string{c.ValidationRule, c.ValidationType, string(c.Status), c.LastValidationTime.Format(time.RFC3339), strings.TrimSpace(c.Message)},
 		}
 
-		if err := embed_utils.PrintTableTemplate(sb, args, cfg.Validator, "validation-result.tmpl"); err != nil {
+		if err := embed.EFS.PrintTableTemplate(sb, args, cfg.Validator, "validation-result.tmpl"); err != nil {
 			return "", err
 		}
 
@@ -393,7 +393,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			"Config":        vc.AWSPlugin,
 			"ImageRegistry": vc.ImageRegistry,
 		}
-		values, err := embed_utils.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-aws-values.tmpl")
+		values, err := embed.EFS.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-aws-values.tmpl")
 		if err != nil {
 			return errors.Wrap(err, "failed to render validator plugin aws values.yaml")
 		}
@@ -412,7 +412,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			"Config":        vc.AzurePlugin,
 			"ImageRegistry": vc.ImageRegistry,
 		}
-		values, err := embed_utils.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-azure-values.tmpl")
+		values, err := embed.EFS.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-azure-values.tmpl")
 		if err != nil {
 			return errors.Wrap(err, "failed to render validator plugin azure values.yaml")
 		}
@@ -431,7 +431,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			"Tag":           vc.NetworkPlugin.Release.Chart.Version,
 			"ImageRegistry": vc.ImageRegistry,
 		}
-		values, err := embed_utils.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-network-values.tmpl")
+		values, err := embed.EFS.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-network-values.tmpl")
 		if err != nil {
 			return errors.Wrap(err, "failed to render validator plugin network values.yaml")
 		}
@@ -450,7 +450,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			"Config":        vc.OCIPlugin,
 			"ImageRegistry": vc.ImageRegistry,
 		}
-		values, err := embed_utils.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-oci-values.tmpl")
+		values, err := embed.EFS.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-oci-values.tmpl")
 		if err != nil {
 			return errors.Wrap(err, "failed to render validator plugin oci values.yaml")
 		}
@@ -469,7 +469,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			"Config":        vc.VspherePlugin,
 			"ImageRegistry": vc.ImageRegistry,
 		}
-		values, err := embed_utils.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-vsphere-values.tmpl")
+		values, err := embed.EFS.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-vsphere-values.tmpl")
 		if err != nil {
 			return errors.Wrap(err, "failed to render validator plugin vsphere values.yaml")
 		}
@@ -502,7 +502,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		args["ProxyCaCertData"] = strings.Split(vc.ProxyConfig.Env.ProxyCACert.Data, "\n")
 	}
 
-	values, err := embed_utils.RenderTemplateBytes(args, cfg.Validator, "validator-base-values.tmpl")
+	values, err := embed.EFS.RenderTemplateBytes(args, cfg.Validator, "validator-base-values.tmpl")
 	if err != nil {
 		return errors.Wrap(err, "failed to render validator base values.yaml")
 	}
@@ -727,7 +727,7 @@ func createValidator(kubeconfig, runLoc, name, template string, validator interf
 		"Spec":      indent(spec, 2),
 	}
 	path := filepath.Join(runLoc, "manifests", fmt.Sprintf("%s.yaml", name))
-	if err := embed_utils.RenderTemplate(args, cfg.Validator, template, path); err != nil {
+	if err := embed.EFS.RenderTemplate(args, cfg.Validator, template, path); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to render %s validator manifest", name))
 	}
 	return applyValidatorManifest(kubeconfig, name, path)
