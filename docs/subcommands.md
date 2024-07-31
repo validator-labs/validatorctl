@@ -4,22 +4,22 @@ The `validator` command exposes the following subcommands.
 
 - [`describe`](#describe) - Describe Validator results in a Kubernetes cluster.
 
-- [`install`](#install) - Install Validator framework and configure Validator plugins.
+- [`install`](#install) - Install Validator and configure Validator plugins.
 
-- [`uninstall`](#uninstall) - Uninstall Validator framework and remove all Validator plugins.
+- [`uninstall`](#uninstall) - Uninstall Validator and remove all Validator plugins.
 
-- [`upgrade`](#upgrade) - Upgrade Validator & reconfigure validator plugins.
+- [`upgrade`](#upgrade) - Upgrade Validator & reconfigure Validator plugins.
 
-- [`version`](#version) - Display Validator version.
+- [`version`](#version) - Display `validatorctl` version.
 
 > [!WARNING]
 >
-> Credentials and other permissions may be required depending on Validator plugins you use. For example, the AWS
+> Credentials and other permissions may be required depending on the Validator plugins you use. For example, the AWS
 > plugin requires AWS credentials with elevated permissions to validate your AWS environment.
 
 ## Install
 
-Use the `install` subcommand to install Validator framework and configure Validator plugins. An interactive wizard
+Use the `install` subcommand to install the Validator framework and configure Validator plugins. An interactive wizard
 will guide you through the installation process. You can also use a configuration file to install Validator.
 
 > [!NOTE]
@@ -292,7 +292,7 @@ kubectl describe validationresults --namespace validator
 
 ## Uninstall
 
-Use the `uninstall` subcommand to uninstall Validator framework and remove all Validator plugins. To remove
+Use the `uninstall` subcommand to uninstall the Validator framework and remove all Validator plugins. To remove
 Validator, you must specify the `--config-file` flag.
 
 The `uninstall` subcommand accepts the following flags.
@@ -378,7 +378,7 @@ Failures
 ## Upgrade
 
 Use the `upgrade` subcommand to upgrade Validator and reconfigure Validator plugins. The `upgrade` subcommand
-requires Validator configuration file. Use the `--config-file` flag to specify the configuration file.
+requires a Validator configuration file. Use the `--config-file` flag to specify the configuration file.
 
 The `upgrade` subcommand accepts the following flags.
 
@@ -389,7 +389,7 @@ The `upgrade` subcommand accepts the following flags.
 
 ### Examples
 
-In the following example, Validator version is upgraded. The configuration file located at
+In the following example, the Validator version is upgraded. The configuration file located at
 `/Users/demo/.validator/validator-20231109135306/validator.yaml` was updated to use Validator version `v0.0.36`
 from version `v0.0.30`.
 
@@ -447,7 +447,7 @@ kubectl -n validator describe validationresults --kubeconfig /home/ubuntu/.valid
 
 ## Version
 
-Use the `version` subcommand to display the current Validator version.
+Use the `version` subcommand to display the current `validatorctl` version.
 
 ```shell
 validator version
