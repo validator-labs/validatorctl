@@ -10,7 +10,7 @@ The `validator` command exposes the following subcommands.
 
 - [`upgrade`](#upgrade) - Upgrade Validator & reconfigure validator plugins.
 
-- [`version`](#version) - Display the Validator version.
+- [`version`](#version) - Display Validator version.
 
 > [!WARNING]
 >
@@ -292,7 +292,7 @@ kubectl describe validationresults --namespace validator
 
 ## Uninstall
 
-Use the `uninstall` subcommand to uninstall Validator framework and remove all Validator plugins. To remove the
+Use the `uninstall` subcommand to uninstall Validator framework and remove all Validator plugins. To remove
 Validator, you must specify the `--config-file` flag.
 
 The `uninstall` subcommand accepts the following flags.
@@ -447,7 +447,7 @@ kubectl -n validator describe validationresults --kubeconfig /home/ubuntu/.valid
 
 ## Version
 
-Use the `version` subcommand to display the Validator version.
+Use the `version` subcommand to display the current Validator version.
 
 ```shell
 validator version
