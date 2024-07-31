@@ -2,39 +2,41 @@
 
 The `validator` command exposes the following subcommands.
 
-- [`describe`](#describe) - Describe the Validator results in a Kubernetes cluster.
+- [`describe`](#describe) - Describe Validator results in a Kubernetes cluster.
 
-- [`install`](#install) - Install the Validator framework and configure Validator plugins.
+- [`install`](#install) - Install Validator framework and configure Validator plugins.
 
-- [`uninstall`](#uninstall) - Uninstall the Validator framework and remove all Validator plugins.
+- [`uninstall`](#uninstall) - Uninstall Validator framework and remove all Validator plugins.
 
 - [`upgrade`](#upgrade) - Upgrade Validator & reconfigure validator plugins.
 
+- [`version`](#version) - Display the Validator version.
+
 > [!WARNING]
 >
-> Credentials and other permissions may be required depending on the Validator plugins you use. For example, the AWS
+> Credentials and other permissions may be required depending on Validator plugins you use. For example, the AWS
 > plugin requires AWS credentials with elevated permissions to validate your AWS environment.
 
 ## Install
 
-Use the `install` subcommand to install the Validator framework and configure Validator plugins. An interactive wizard
-will guide you through the installation process. You can also use a configuration file to install the Validator.
+Use the `install` subcommand to install Validator framework and configure Validator plugins. An interactive wizard
+will guide you through the installation process. You can also use a configuration file to install Validator.
 
 > [!NOTE]
 >
-> A [kind](https://kind.sigs.k8s.io/) cluster will be deployed as part of the Validator installation. The name of the kind
-> cluster is `validator-kind-cluster`. You can install the Validator into an existing Kubernetes cluster by using the Helm chart. Refer to the
+> A [kind](https://kind.sigs.k8s.io/) cluster will be deployed as part of Validator installation. If you have the environment variable `KUBECONFIG` set, then Validator will automatically target the specified cluster. Otherwise, a kind cluster with the name `validator-kind-cluster` is deployed.
+> You can install Validator into an existing Kubernetes cluster by using the Helm chart. Refer to the
 > [Validator Helm Install](https://github.com/validator-labs/validator/blob/main/docs/install.md) steps for more information.
 
 The `install` subcommand accepts the following flags.
 
-| **Short Flag** | **Long Flag**   | **Description**                                                                                                                                            | **Type** |
-| -------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `-f`           | `--config-file` | Install the Validator using a configuration file (optional). Provide the file path to the configuration file.                                              | string   |
-| `-o`           | `--config-only` | Generate a configuration file without proceeding with an actual install. Default: false                                                                    | boolean  |
-| `-h`           | `--help`        | Help with any command.                                                                                                                                     | -        |
-| `-r`           | `--reconfigure` | Reconfigure Validator and plugins prior to installation. The `--config-file` flag must be included. Default: false.                                        | boolean  |
-| `-p`           | `--password`    | Update credentials provided in the configuration file. This does not proceed with installation. The `--config-file` flag must be included. Default: false. | boolean  |
+| **Short Flag** | **Long Flag**        | **Description**                                                                                                                                            | **Type** |
+| -------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `-f`           | `--config-file`      | Install Validator using a configuration file (optional). Provide the file path to the configuration file.                                                  | string   |
+| `-o`           | `--config-only`      | Generate a configuration file without proceeding with an actual install. Default: false                                                                    | boolean  |
+| `-h`           | `--help`             | Help with any command.                                                                                                                                     | -        |
+| `-r`           | `--reconfigure`      | Reconfigure Validator and plugins prior to installation. The `--config-file` flag must be included. Default: false.                                        | boolean  |
+| `-p`           | `--update-passwords` | Update credentials provided in the configuration file. This does not proceed with installation. The `--config-file` flag must be included. Default: false. | boolean  |
 
 ### Examples
 
@@ -53,6 +55,13 @@ validator install \
 --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
+Reconfigure an install and reference a configuration file
+
+```shell
+validator install --reconfigure \
+--config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
+```
+
 Generate a configuration file without proceeding with an actual installation
 
 ```shell
@@ -63,14 +72,14 @@ Update credentials provided in the configuration file. This does proceed with in
 credentials.
 
 ```shell
-validator install --password --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
+validator install --update-passwords --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
 ### Configuration Files
 
-After the install wizard completes, the Validator will generate a configuration file. You can use the generated
-configuration file to install the Validator using with the same configuration you specified in the wizard. You also need
-this configuration file to uninstall the Validator.
+After the install wizard completes, Validator will generate a configuration file. You can use the generated
+configuration file to install Validator using with the same configuration you specified in the wizard. You also need
+this configuration file to uninstall Validator.
 
 Once Validator is installed, the configuration file is located in the `$HOME/.validator` directory and is named
 `validator.yaml`.
@@ -79,7 +88,7 @@ The install output displays the location of the configuration file. In the examp
 located at `/Users/demo/.validator/validator-20231109135306/validator.yaml`. The output is truncated for
 brevity.
 
-```shell hideClipboard
+```shell
 validator configuration file saved: /Users/demo/.validator/validator-20231109135306/validator.yaml
 Creating cluster "validator-kind-cluster" ...
  ✓ Ensuring node image (kindest/node:v1.24.7) 🖼
@@ -98,9 +107,9 @@ The kubeconfig file to the kind cluster is also located in the `$HOME/.validator
 
 ### Review Validation Results
 
-The Validator generates a report after the validation process is complete. All validations are stored as a
+Validator generates a report after the validation process is complete. All validations are stored as a
 [Custom Resource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) (CR) in the
-`validator` namespace. Each plugin you specified during installation will have its own CR. Additionally, the Validator
+`validator` namespace. Each plugin you specified during installation will have its own CR. Additionally, Validator
 creates a CR containing all the validation results and Validator configurations.
 
 > [!TIP]
@@ -111,10 +120,10 @@ creates a CR containing all the validation results and Validator configurations.
 
 Example: `/Users/demo/.validator/validator-20231109135306/kind-cluster.kubeconfig`
 
-Below is example output of the CRs the Validator creates after a successful validation process. Two plugins were used in
+Below is example output of the CRs Validator creates after a successful validation process. Two plugins were used in
 this example: the `aws` plugin and the `network` plugin.
 
-```shell hideClipboard
+```shell
 NAME                                             CREATED AT
 awsvalidators.validation.spectrocloud.labs       2023-11-09T21:02:41Z
 networkvalidators.validation.spectrocloud.labs   2023-11-09T21:02:45Z
@@ -221,7 +230,7 @@ In the example below, the `State` field is set to `Succeeded` for the `validator
 This check was successful because the usage for all service quotas is below the specified buffer. The output is
 truncated for brevity.
 
-```yaml hideClipboard {12}
+```yaml
 Name:         validator-plugin-aws-validator-plugin-aws
 ...
 Status:
@@ -242,7 +251,7 @@ If the validation is not successful, the `State` field is set to `Failed`. The `
 additional information about the failure. In this example, several IAM permissions are missing for the
 `SpectroCloudRole` IAM role. The output is truncated for brevity.
 
-```yaml hideClipboard {6,8,12}
+```yaml
 Name:         validator-plugin-aws-aws-validator-spectro-cloud-base
 ...
 Status:
@@ -266,9 +275,9 @@ requirements.
 Each plugin may have its own set of failures. Resolving failures will depend on the plugin and the failure. Use the
 error output to help you address the failure.
 
-Every 30 seconds, the Validator will continuously re-issue a validation and update the `ValidationResult` CR with the
+Every 30 seconds, Validator will continuously re-issue a validation and update the `ValidationResult` CR with the
 result of the validation. The validation results are hashed, and result events are only emitted if the result has
-changed. Once you resolve the failure, the Validator will update the `ValidationResult` CR with the new result.
+changed. Once you resolve the failure, Validator will update the `ValidationResult` CR with the new result.
 
 Use the `kubectl describe` command to view the validation results.
 
@@ -283,20 +292,20 @@ kubectl describe validationresults --namespace validator
 
 ## Uninstall
 
-Use the `uninstall` subcommand to uninstall the Validator framework and remove all Validator plugins. To remove the
+Use the `uninstall` subcommand to uninstall Validator framework and remove all Validator plugins. To remove the
 Validator, you must specify the `--config-file` flag.
 
 The `uninstall` subcommand accepts the following flags.
 
-| **Short Flag** | **Long Flag**      | **Description**                                                                                                  | **Type** |
-| -------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------- | -------- |
-| `-f`           | `--config-file`    | Uninstall the Validator using a configuration file (required). Provide the file path to the configuration file.  | string   |
-| `-d`           | `--delete-cluster` | Delete the Validator kind cluster. This does not apply if using a preexisting Kubernetes cluster. Default: true. | bool     |
-| `-h`           | `--help`           | Help with any command.                                                                                           | -        |
+| **Short Flag** | **Long Flag**      | **Description**                                                                                              | **Type** |
+| -------------- | ------------------ | ------------------------------------------------------------------------------------------------------------ | -------- |
+| `-f`           | `--config-file`    | Uninstall Validator using a configuration file (required). Provide the file path to the configuration file.  | string   |
+| `-d`           | `--delete-cluster` | Delete Validator kind cluster. This does not apply if using a preexisting Kubernetes cluster. Default: true. | bool     |
+| `-h`           | `--help`           | Help with any command.                                                                                       | -        |
 
 ### Examples
 
-Remove the Validator, its plugins, and the kind cluster.
+Remove Validator, its plugins, and the kind cluster.
 
 ```shell
 validator uninstall  \
@@ -304,7 +313,7 @@ validator uninstall  \
 --delete-cluster
 ```
 
-Remove the Validator, its plugins, but not the kind cluster.
+Remove Validator, its plugins, but not the kind cluster.
 
 ```shell
 validator uninstall  \
@@ -314,7 +323,7 @@ validator uninstall  \
 
 ## Describe
 
-Use the `describe` subcommand to describe the Validator results in a Kubernetes cluster. The `describe` subcommand
+Use the `describe` subcommand to describe Validator results in a Kubernetes cluster. The `describe` subcommand
 prints out the validation results in a user-friendly format.
 
 The `describe` subcommand accepts the following flags.
@@ -328,12 +337,12 @@ The `describe` subcommand accepts the following flags.
 
 The following example uses the `describe` subcommand to display the validation results in a user-friendly format.
 
-```shell hideClipboard
+```shell
 validator describe \
  --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
-```shell hideClipboard
+```shell
 Using kubeconfig from validator configuration file: /home/ubuntu/.validator/validator-20240311151646/kind-cluster.kubeconfig
 
 =================
@@ -368,8 +377,8 @@ Failures
 
 ## Upgrade
 
-Use the `upgrade` subcommand to upgrade Validator and reconfigure the Validator plugins. The `upgrade` subcommand
-requires the Validator configuration file. Use the `--config-file` flag to specify the configuration file.
+Use the `upgrade` subcommand to upgrade Validator and reconfigure Validator plugins. The `upgrade` subcommand
+requires Validator configuration file. Use the `--config-file` flag to specify the configuration file.
 
 The `upgrade` subcommand accepts the following flags.
 
@@ -380,11 +389,11 @@ The `upgrade` subcommand accepts the following flags.
 
 ### Examples
 
-In the following example, the Validator version is upgraded. The configuration file located at
+In the following example, Validator version is upgraded. The configuration file located at
 `/Users/demo/.validator/validator-20231109135306/validator.yaml` was updated to use Validator version `v0.0.36`
 from version `v0.0.30`.
 
-```yaml {5} hideClipboard
+```yaml
 helmRelease:
   chart:
     name: validator
@@ -395,14 +404,14 @@ helmRelease:
 helmReleaseSecret:
 ```
 
-Once the configuration file is updated, use the `upgrade` subcommand to upgrade the Validator.
+Once the configuration file is updated, use the `upgrade` subcommand to upgrade Validator.
 
 ```shell
 validator upgrade \
 --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
-```shell hideClipboard
+```shell
 ==== Installing/upgrading validator Helm chart ====
 helm upgrade validator validator --repo https://validator-labs.github.io/validator --version v0.0.36 --insecure-skip-tls-verify --kubeconfig /tmp/2773008921 --namespace validator --install --create-namespace --values /tmp/1655869680
 
@@ -434,4 +443,16 @@ kubectl -n validator get validationresults --kubeconfig /home/ubuntu/.validator/
 
 And you can view all validation result details via the following command:
 kubectl -n validator describe validationresults --kubeconfig /home/ubuntu/.validator/validator-20240311153652/kind-cluster.kubeconfig
+```
+
+## Version
+
+Use the `version` subcommand to display the Validator version.
+
+```shell
+validator version
+```
+
+```shell
+Validator CLI version: 0.0.6
 ```
