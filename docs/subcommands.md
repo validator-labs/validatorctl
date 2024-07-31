@@ -20,7 +20,7 @@ The `validator` command exposes the following subcommands.
 Use the `install` subcommand to install the Validator framework and configure Validator plugins. An interactive wizard
 will guide you through the installation process. You can also use a configuration file to install the Validator.
 
-> [!INFO]
+> [!NOTE]
 >
 > A [kind](https://kind.sigs.k8s.io/) cluster will be deployed as part of the Validator installation. The > name of the kind
 > cluster is `validator-kind-cluster`. You can find the `kind` binary installed in the `$HOME/.palette/ bin` directory. You
