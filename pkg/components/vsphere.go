@@ -34,7 +34,7 @@ func ConfigureVspherePlugin(vc *ValidatorConfig, config VsphereConfig) {
 			},
 		},
 		Account: &vsphere.CloudAccount{
-			Insecure:      true,
+			Insecure:      true, // TODO: get this from VsphereConfig
 			Username:      config.Username,
 			Password:      config.Password,
 			VcenterServer: config.VcenterServer,

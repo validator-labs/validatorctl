@@ -93,7 +93,6 @@ func readHelmConfig(name string, k8sClient kubernetes.Interface, vc *components.
 	return nil
 }
 
-// TODO: fully implement this
 func readHelmRelease(name string, vc *components.ValidatorConfig, c *vapi.HelmRelease) error {
 	log.Header(fmt.Sprintf("%s Helm Chart Configuration", name))
 
