@@ -22,9 +22,8 @@ will guide you through the installation process. You can also use a configuratio
 
 > [!NOTE]
 >
-> A [kind](https://kind.sigs.k8s.io/) cluster will be deployed as part of the Validator installation. The > name of the kind
-> cluster is `validator-kind-cluster`. You can find the `kind` binary installed in the `$HOME/.palette/ bin` directory. You
-> can install the Validator into an existing Kubernetes cluster by using the Helm chart. Refer to the
+> A [kind](https://kind.sigs.k8s.io/) cluster will be deployed as part of the Validator installation. The name of the kind
+> cluster is `validator-kind-cluster`. You can install the Validator into an existing Kubernetes cluster by using the Helm chart. Refer to the
 > [Validator Helm Install](https://github.com/validator-labs/validator/blob/main/docs/install.md) steps for more information.
 
 The `install` subcommand accepts the following flags.
@@ -44,27 +43,27 @@ Below are some examples of using the `install` subcommand and its supported work
 Interactive Install
 
 ```shell
-validatorctl validator install
+validatorctl install
 ```
 
 Install using a configuration file
 
 ```shell
-validatorctl validator install \
+validatorctl install \
 --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
 Generate a configuration file without proceeding with an actual installation
 
 ```shell
-validatorctl validator install --config-only
+validatorctl install --config-only
 ```
 
 Update credentials provided in the configuration file. This does proceed with installation but will prompt for new
 credentials.
 
 ```shell
-validatorctl validator install --password --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
+validatorctl install --password --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
 ### Configuration Files
@@ -94,7 +93,7 @@ You can now use your cluster with:
 kubectl cluster-info --context kind-validator-kind-cluster --kubeconfig /Users/demo/.validator/validator-20231109135306/kind-cluster.kubeconfig
 ```
 
-The kubeconfig file to the kind cluster is also located in the `$HOME/.palette/validator` directory and is named
+The kubeconfig file to the kind cluster is also located in the `$HOME/.validator/` directory and is named
 `kind-cluster.kubeconfig`. Its location is displayed in the install output.
 
 ### Review Validation Results
@@ -106,7 +105,7 @@ creates a CR containing all the validation results and Validator configurations.
 
 > [!TIP]
 >
-> The kind cluster's kubeconfig file is located in the `$HOME/.palette/validator` directory and is named
+> The kind cluster's kubeconfig file is located in the `$HOME/.validator/` directory and is named
 > `kind-cluster.kubeconfig`. Its location is displayed in the install output. You can use this kubeconfig file to access
 > the kind cluster and view the CRs.
 
@@ -300,7 +299,7 @@ The `uninstall` subcommand accepts the following flags.
 Remove the Validator, its plugins, and the kind cluster.
 
 ```shell
-palette validator uninstall  \
+validatorctl uninstall  \
 --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml \
 --delete-cluster
 ```
@@ -308,7 +307,7 @@ palette validator uninstall  \
 Remove the Validator, its plugins, but not the kind cluster.
 
 ```shell
-palette validator uninstall  \
+validatorctl uninstall  \
 --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml \
 --delete-cluster=false
 ```
@@ -330,7 +329,7 @@ The `describe` subcommand accepts the following flags.
 The following example uses the `describe` subcommand to display the validation results in a user-friendly format.
 
 ```shell hideClipboard
-palette validator describe \
+validatorctl describe \
  --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
@@ -399,7 +398,7 @@ helmReleaseSecret:
 Once the configuration file is updated, use the `upgrade` subcommand to upgrade the Validator.
 
 ```shell
-palette validator upgrade \
+validatorctl upgrade \
 --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
@@ -408,12 +407,12 @@ palette validator upgrade \
 helm upgrade validator validator --repo https://validator-labs.github.io/validator --version v0.0.36 --insecure-skip-tls-verify --kubeconfig /tmp/2773008921 --namespace validator --install --create-namespace --values /tmp/1655869680
 
 ==== Kubectl Command ====
-/home/ubuntu/.palette/bin/kubectl wait --for=condition=available --timeout=600s deployment/validator-controller-manager -n validator --kubeconfig=/home/ubuntu/.validator/validator-20240311153652/kind-cluster.kubeconfig
+kubectl wait --for=condition=available --timeout=600s deployment/validator-controller-manager -n validator --kubeconfig=/home/ubuntu/.validator/validator-20240311153652/kind-cluster.kubeconfig
 deployment.apps/validator-controller-manager condition met
 Pausing for 20s for validator to establish a lease & begin plugin installation
 
 ==== Kubectl Command ====
-/home/ubuntu/.palette/bin/kubectl wait --for=condition=available --timeout=600s deployment/validator-plugin-aws-controller-manager -n validator --kubeconfig=/home/ubuntu/.validator/validator-20240311153652/kind-cluster.kubeconfig
+kubectl wait --for=condition=available --timeout=600s deployment/validator-plugin-aws-controller-manager -n validator --kubeconfig=/home/ubuntu/.validator/validator-20240311153652/kind-cluster.kubeconfig
 deployment.apps/validator-plugin-aws-controller-manager condition met
 
 validator and validator plugin(s) installed successfully
@@ -421,11 +420,11 @@ validator and validator plugin(s) installed successfully
 ==== Applying AWS plugin validator(s) ====
 
 ==== Kubectl Command ====
-/home/ubuntu/.palette/bin/kubectl apply -f /home/ubuntu/.validator/validator-20240311154338/manifests/rules.yaml --kubeconfig=/home/ubuntu/.validator/validator-20240311153652/kind-cluster.kubeconfig
+kubectl apply -f /home/ubuntu/.validator/validator-20240311154338/manifests/rules.yaml --kubeconfig=/home/ubuntu/.validator/validator-20240311153652/kind-cluster.kubeconfig
 awsvalidator.validation.spectrocloud.labs/rules unchanged
 
 ==== Kubectl Command ====
-/home/ubuntu/.palette/bin/kubectl apply -f /home/ubuntu/.validator/validator-20240311154338/manifests/awsvalidator-iam-role-spectro-cloud-base.yaml --kubeconfig=/home/ubuntu/.validator/validator-20240311153652/kind-cluster.kubeconfig
+kubectl apply -f /home/ubuntu/.validator/validator-20240311154338/manifests/awsvalidator-iam-role-spectro-cloud-base.yaml --kubeconfig=/home/ubuntu/.validator/validator-20240311153652/kind-cluster.kubeconfig
 awsvalidator.validation.spectrocloud.labs/validator-plugin-aws-iam-base unchanged
 
 Plugins will now execute validation checks.
