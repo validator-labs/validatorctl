@@ -43,27 +43,27 @@ Below are some examples of using the `install` subcommand and its supported work
 Interactive Install
 
 ```shell
-validatorctl install
+validator install
 ```
 
 Install using a configuration file
 
 ```shell
-validatorctl install \
+validator install \
 --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
 Generate a configuration file without proceeding with an actual installation
 
 ```shell
-validatorctl install --config-only
+validator install --config-only
 ```
 
 Update credentials provided in the configuration file. This does proceed with installation but will prompt for new
 credentials.
 
 ```shell
-validatorctl install --password --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
+validator install --password --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
 ### Configuration Files
@@ -299,7 +299,7 @@ The `uninstall` subcommand accepts the following flags.
 Remove the Validator, its plugins, and the kind cluster.
 
 ```shell
-validatorctl uninstall  \
+validator uninstall  \
 --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml \
 --delete-cluster
 ```
@@ -307,7 +307,7 @@ validatorctl uninstall  \
 Remove the Validator, its plugins, but not the kind cluster.
 
 ```shell
-validatorctl uninstall  \
+validator uninstall  \
 --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml \
 --delete-cluster=false
 ```
@@ -329,7 +329,7 @@ The `describe` subcommand accepts the following flags.
 The following example uses the `describe` subcommand to display the validation results in a user-friendly format.
 
 ```shell hideClipboard
-validatorctl describe \
+validator describe \
  --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
@@ -398,7 +398,7 @@ helmReleaseSecret:
 Once the configuration file is updated, use the `upgrade` subcommand to upgrade the Validator.
 
 ```shell
-validatorctl upgrade \
+validator upgrade \
 --config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
 ```
 
