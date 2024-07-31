@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"emperror.dev/errors"
-	"github.com/mohae/deepcopy"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/helm/pkg/repo"
 	"sigs.k8s.io/yaml"
@@ -24,92 +23,30 @@ import (
 
 var errNoRulesEnabled = errors.New("no validation rules enabled")
 
-func readHelmRelease(name string, k8sClient kubernetes.Interface, vc *components.ValidatorConfig, r *vapi.HelmRelease, rs *components.Secret) error {
-	log.Header(fmt.Sprintf("%s Helm Chart Configuration", name))
+func readHelmConfig(name string, k8sClient kubernetes.Interface, vc *components.ValidatorConfig, rs *components.Secret) error {
 	var err error
 
-	defaultRepo := fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, name)
-	defaultVersion := ""
-	if r != nil && r.Chart.Repository != "" {
-		defaultRepo = r.Chart.Repository
-		defaultVersion = r.Chart.Version
-	}
-
-	r.Chart.Name = name
 	rs.Name = fmt.Sprintf("validator-helm-release-%s", name)
-
 	if vc.RegistryConfig.Enabled {
-		r.Chart.Repository = vc.RegistryConfig.Registry.ChartEndpoint()
+		vc.HelmConfig.Registry = vc.RegistryConfig.Registry.ChartEndpoint() // TODO: verify this is correct. it should just be the endpoint with a scheme at the beginning (ie Registry.Endpoint?)
 		log.InfoCLI("Using helm repository: %s", vc.RegistryConfig.Registry.ChartEndpoint())
 	} else {
-		r.Chart.Repository, err = prompts.ReadText(fmt.Sprintf("%s Helm repository", name), defaultRepo, false, -1)
+		vc.HelmConfig.Registry, err = prompts.ReadText("Helm registry", cfg.ValidatorHelmRepository, false, -1)
 		if err != nil {
 			return err
 		}
 	}
 
-	if vc.UseFixedVersions {
-		r.Chart.Version = cfg.ValidatorChartVersions[name]
-		log.InfoCLI("Using fixed version: %s for %s chart", r.Chart.Version, r.Chart.Name)
-	} else {
-		versionPrompt := fmt.Sprintf("%s version", name)
-		availableVersions, err := getReleasesFromHelmRepo(r.Chart.Repository)
-		// Ignore error and fall back to reading version from the command line.
-		// Errors may occur in air-gapped environments or misconfigured helm repos.
-		if err != nil {
-			log.InfoCLI("Failed to fetch chart versions from Helm repo due to error: %v. Falling back to manual input.", err)
-		}
-		if availableVersions != nil {
-			r.Chart.Version, err = prompts.Select(versionPrompt, availableVersions)
-			if err != nil {
-				return err
-			}
-		} else {
-			r.Chart.Version, err = prompts.ReadSemVer(versionPrompt, defaultVersion, "invalid Helm version")
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return readHelmCredentials(r, rs, k8sClient, vc)
-}
-
-func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient kubernetes.Interface, vc *components.ValidatorConfig) error {
-	copyChart := false
-	var err error
-
-	if vc.Release != nil && r.Chart.Name != cfg.Validator {
-		copyChart, err = prompts.ReadBool("Re-use security configuration from validator chart", true)
-		if err != nil {
-			return err
-		}
-	}
-	if copyChart {
-		rsCp := deepcopy.Copy(vc.ReleaseSecret).(*components.Secret)
-		*rs = *rsCp
-		r.Chart.AuthSecretName = vc.Release.Chart.AuthSecretName
-		r.Chart.CAFile = vc.Release.Chart.CAFile
-		r.Chart.InsecureSkipTLSVerify = vc.Release.Chart.InsecureSkipTLSVerify
-		return nil
-	}
-
-	if rs.BasicAuth == nil {
-		rs.BasicAuth = &components.BasicAuth{}
-	}
-
-	insecure, err := prompts.ReadBool("Allow Insecure Connection (Bypass x509 Verification)", true)
+	vc.HelmConfig.InsecureSkipTLSVerify, err = prompts.ReadBool("Allow Insecure Connection (Bypass x509 Verification)", true)
 	if err != nil {
 		return err
 	}
-	if !insecure {
-		rs.CaCertFile, _, _, err = prompts.ReadCACert("Helm repository CA certificate filepath", rs.CaCertFile, "")
+	if !vc.HelmConfig.InsecureSkipTLSVerify {
+		vc.HelmConfig.CAFile, _, _, err = prompts.ReadCACert("Helm repository CA certificate filepath", vc.HelmConfig.CAFile, "")
 		if err != nil {
 			return err
 		}
-		r.Chart.CAFile = rs.CaCertFile
 	}
-	r.Chart.InsecureSkipTLSVerify = insecure
 
 	useBasicAuth, err := prompts.ReadBool("Configure Helm basic authentication", false)
 	if err != nil {
@@ -150,7 +87,42 @@ func readHelmCredentials(r *vapi.HelmRelease, rs *components.Secret, k8sClient k
 
 	// Helm credentials and/or CA cert provided
 	if rs.BasicAuth.Username != "" || rs.BasicAuth.Password != "" || rs.CaCertFile != "" {
-		r.Chart.AuthSecretName = rs.Name
+		vc.HelmConfig.AuthSecretName = rs.Name
+	}
+
+	return nil
+}
+
+// TODO: fully implement this
+func readHelmRelease(name string, vc *components.ValidatorConfig, c *vapi.HelmRelease) error {
+	log.Header(fmt.Sprintf("%s Helm Chart Configuration", name))
+
+	c.Chart.Name = name
+	c.Chart.Repository = name
+	repoURL := fmt.Sprintf("%s/%s", vc.HelmConfig.Registry, c.Chart.Repository)
+
+	if vc.UseFixedVersions {
+		c.Chart.Version = cfg.ValidatorChartVersions[name]
+		log.InfoCLI("Using fixed version: %s for %s chart", c.Chart.Version, repoURL)
+	} else {
+		versionPrompt := fmt.Sprintf("%s version", name)
+		availableVersions, err := getReleasesFromHelmRepo(repoURL)
+		// Ignore error and fall back to reading version from the command line.
+		// Errors may occur in air-gapped environments or misconfigured helm repos.
+		if err != nil {
+			log.InfoCLI("Failed to fetch chart versions from Helm repo due to error: %v. Falling back to manual input.", err)
+		}
+		if availableVersions != nil {
+			c.Chart.Version, err = prompts.Select(versionPrompt, availableVersions)
+			if err != nil {
+				return err
+			}
+		} else {
+			c.Chart.Version, err = prompts.ReadSemVer(versionPrompt, c.Chart.Version, "invalid Helm version")
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

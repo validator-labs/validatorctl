@@ -1,8 +1,6 @@
 package components
 
 import (
-	"fmt"
-
 	network_api "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
 
@@ -18,20 +16,15 @@ type NetworkConfig struct {
 
 // ConfigureNetworkPlugin configures the network plugin.
 func ConfigureNetworkPlugin(vc *ValidatorConfig, config NetworkConfig) {
-	// TODO: properly handle TLS, helm, and air-gap config
+	// TODO: prompt for chart version if !vc.UseFixedVersions
 	vc.NetworkPlugin = &NetworkPluginConfig{
 		Enabled: true,
 		Release: &vapi.HelmRelease{
 			Chart: vapi.HelmChart{
-				Name:                  cfg.ValidatorPluginNetwork,
-				Repository:            fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, cfg.ValidatorPluginNetwork),
-				Version:               cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork],
-				InsecureSkipTLSVerify: true,
+				Name:       cfg.ValidatorPluginNetwork,
+				Repository: cfg.ValidatorPluginNetwork,
+				Version:    cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork],
 			},
-		},
-		ReleaseSecret: &Secret{
-			Name:      fmt.Sprintf("validator-helm-release-%s", cfg.ValidatorPluginNetwork),
-			BasicAuth: &BasicAuth{},
 		},
 		Validator: &network_api.NetworkValidatorSpec{
 			IPRangeRules: config.IPRangeRules,

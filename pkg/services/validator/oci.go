@@ -21,7 +21,7 @@ const notApplicable = "N/A"
 func readOciPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
 	c := vc.OCIPlugin
 
-	if err := readHelmRelease(cfg.ValidatorPluginOci, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
+	if err := readHelmRelease(cfg.ValidatorPluginOci, vc, c.Release); err != nil {
 		return err
 	}
 

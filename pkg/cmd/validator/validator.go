@@ -360,19 +360,6 @@ func applyValidatorAndPlugins(c *cfg.Config, vc *components.ValidatorConfig) err
 	return nil
 }
 
-func createReleaseSecretCmd(secret *components.Secret) []string {
-	args := []string{
-		"create", "secret", "generic", secret.Name, "-n", "validator",
-		// include empty username/password, even if unset, to avoid error in validator
-		fmt.Sprintf("--from-literal=username=%s", secret.BasicAuth.Username),
-		fmt.Sprintf("--from-literal=password=%s", secret.BasicAuth.Password),
-	}
-	if secret.CaCertFile != "" {
-		args = append(args, fmt.Sprintf("--from-file=caCert=%s", secret.CaCertFile))
-	}
-	return args
-}
-
 // nolint:gocyclo
 func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	pluginCount := 0
@@ -385,7 +372,8 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 
 	// build validator plugin spec
 	validatorSpec := vapi.ValidatorConfigSpec{
-		Plugins: make([]vapi.HelmRelease, 0),
+		HelmConfig: *vc.HelmConfig,
+		Plugins:    make([]vapi.HelmRelease, 0),
 	}
 
 	if vc.AWSPlugin.Enabled {
@@ -401,9 +389,6 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Chart:  vc.AWSPlugin.Release.Chart,
 			Values: string(values),
 		})
-		if vc.AWSPlugin.ReleaseSecret != nil && vc.AWSPlugin.ReleaseSecret.ShouldCreate() {
-			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.AWSPlugin.ReleaseSecret))
-		}
 		pluginCount++
 	}
 
@@ -420,9 +405,6 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Chart:  vc.AzurePlugin.Release.Chart,
 			Values: string(values),
 		})
-		if vc.AzurePlugin.ReleaseSecret != nil && vc.AzurePlugin.ReleaseSecret.ShouldCreate() {
-			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.AzurePlugin.ReleaseSecret))
-		}
 		pluginCount++
 	}
 
@@ -439,9 +421,6 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Chart:  vc.NetworkPlugin.Release.Chart,
 			Values: string(values),
 		})
-		if vc.NetworkPlugin.ReleaseSecret != nil && vc.NetworkPlugin.ReleaseSecret.ShouldCreate() {
-			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.NetworkPlugin.ReleaseSecret))
-		}
 		pluginCount++
 	}
 
@@ -458,9 +437,6 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Chart:  vc.OCIPlugin.Release.Chart,
 			Values: string(values),
 		})
-		if vc.OCIPlugin.ReleaseSecret != nil && vc.OCIPlugin.ReleaseSecret.ShouldCreate() {
-			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.OCIPlugin.ReleaseSecret))
-		}
 		pluginCount++
 	}
 
@@ -477,9 +453,6 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Chart:  vc.VspherePlugin.Release.Chart,
 			Values: string(values),
 		})
-		if vc.VspherePlugin.ReleaseSecret != nil && vc.VspherePlugin.ReleaseSecret.ShouldCreate() {
-			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.VspherePlugin.ReleaseSecret))
-		}
 		pluginCount++
 	}
 
@@ -541,8 +514,9 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	opts := helm.Options{
 		Chart:                 vc.Release.Chart.Name,
 		Repo:                  vc.Release.Chart.Repository,
-		CaFile:                vc.Release.Chart.CAFile,
-		InsecureSkipTLSVerify: vc.Release.Chart.InsecureSkipTLSVerify,
+		Registry:              vc.HelmConfig.Registry,
+		CaFile:                vc.HelmConfig.CAFile,
+		InsecureSkipTLSVerify: vc.HelmConfig.InsecureSkipTLSVerify,
 		Version:               vc.Release.Chart.Version,
 		Values:                finalValues,
 		CreateNamespace:       true,

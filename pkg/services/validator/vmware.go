@@ -49,7 +49,7 @@ func readVspherePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := readHelmRelease(cfg.ValidatorPluginVsphere, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
+	if err := readHelmRelease(cfg.ValidatorPluginVsphere, vc, c.Release); err != nil {
 		return err
 	}
 

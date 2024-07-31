@@ -74,12 +74,18 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		return err
 	}
 
+	log.Header("Helm Configuration")
+	if err := readHelmConfig(cfg.Validator, k8sClient, vc, vc.ReleaseSecret); err != nil {
+		return err
+	}
+
 	log.Header("Sink Configuration")
 	if err := readSinkConfig(vc, k8sClient); err != nil {
 		return err
 	}
 
-	if err := readHelmRelease(cfg.Validator, k8sClient, vc, vc.Release, vc.ReleaseSecret); err != nil {
+	// Configure validator HelmRelease
+	if err := readHelmRelease(cfg.Validator, vc, vc.Release); err != nil {
 		return err
 	}
 
@@ -183,30 +189,21 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 
-	if err := readHelmCredentials(c.Release, c.ReleaseSecret, k8sClient, c); err != nil {
+	if err := readHelmConfig(cfg.Validator, k8sClient, c, c.ReleaseSecret); err != nil {
 		return err
 	}
 
 	if c.AWSPlugin != nil && c.AWSPlugin.Enabled {
-		if err := readHelmCredentials(c.AWSPlugin.Release, c.AWSPlugin.ReleaseSecret, k8sClient, c); err != nil {
-			return err
-		}
 		if err := readAwsCredentials(c.AWSPlugin, k8sClient); err != nil {
 			return err
 		}
 	}
 	if c.AzurePlugin != nil && c.AzurePlugin.Enabled {
-		if err := readHelmCredentials(c.AzurePlugin.Release, c.AzurePlugin.ReleaseSecret, k8sClient, c); err != nil {
-			return err
-		}
 		if err := readAzureCredentials(c.AzurePlugin, k8sClient); err != nil {
 			return err
 		}
 	}
 	if c.OCIPlugin != nil && c.OCIPlugin.Enabled {
-		if err := readHelmCredentials(c.OCIPlugin.Release, c.OCIPlugin.ReleaseSecret, k8sClient, c); err != nil {
-			return err
-		}
 		for _, secret := range c.OCIPlugin.Secrets {
 			if err := readOciSecret(secret); err != nil {
 				return err
@@ -214,9 +211,6 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 	if c.VspherePlugin != nil && c.VspherePlugin.Enabled {
-		if err = readHelmCredentials(c.VspherePlugin.Release, c.VspherePlugin.ReleaseSecret, k8sClient, c); err != nil {
-			return err
-		}
 		if err := readVsphereCredentials(c.VspherePlugin, k8sClient); err != nil {
 			return err
 		}

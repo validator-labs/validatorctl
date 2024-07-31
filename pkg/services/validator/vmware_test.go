@@ -25,9 +25,8 @@ var vSphereDummyConfig = &components.ValidatorConfig{
 		Release: &v1alpha1.HelmRelease{
 			Chart: v1alpha1.HelmChart{},
 		},
-		ReleaseSecret: &components.Secret{},
-		Account:       &vsphere.CloudAccount{},
-		Validator:     &vsphereapi.VsphereValidatorSpec{},
+		Account:   &vsphere.CloudAccount{},
+		Validator: &vsphereapi.VsphereValidatorSpec{},
 	},
 	Release: &v1alpha1.HelmRelease{
 		Chart: v1alpha1.HelmChart{},
