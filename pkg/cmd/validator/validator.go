@@ -527,8 +527,8 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	}
 
 	var cleanupLocalChart bool
-	if strings.HasPrefix(opts.Repo, oci.Scheme) {
-		log.InfoCLI("\n==== Pulling validator Helm chart from OCI repository %s ====", opts.Repo)
+	if strings.HasPrefix(opts.Registry, oci.Scheme) {
+		log.InfoCLI("\n==== Pulling validator Helm chart from OCI registry %s ====", opts.Registry)
 
 		opts.Path = fmt.Sprintf("%s/%s", c.RunLoc, opts.Chart)
 		opts.Version = strings.TrimPrefix(opts.Version, "v")
@@ -541,7 +541,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			return fmt.Errorf("failed to create OCI client: %w", err)
 		}
 		ociOpts := oci.ImageOptions{
-			Ref:     fmt.Sprintf("%s/%s:%s", strings.TrimPrefix(opts.Repo, oci.Scheme), opts.Chart, opts.Version),
+			Ref:     fmt.Sprintf("%s/%s:%s", strings.TrimPrefix(opts.Registry, oci.Scheme), opts.Chart, opts.Version),
 			OutDir:  opts.Path,
 			OutFile: opts.Chart,
 		}

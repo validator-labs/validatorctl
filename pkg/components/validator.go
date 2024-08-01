@@ -190,7 +190,7 @@ type RegistryConfig struct {
 // ToHelmConfig converts the RegistryConfgi to a HelmConfig.
 func (c *RegistryConfig) ToHelmConfig() *validator.HelmConfig {
 	hc := &validator.HelmConfig{
-		Registry:              c.Registry.Endpoint(),
+		Registry:              c.Registry.ChartEndpoint(),
 		InsecureSkipTLSVerify: c.Registry.InsecureSkipTLSVerify,
 	}
 
