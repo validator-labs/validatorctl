@@ -6,9 +6,11 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/validator-labs/validatorctl.svg)](https://pkg.go.dev/github.com/validator-labs/validatorctl)
 
 # validatorctl
+
 A CLI tool for the validator ecosystem.
 
 ## Table of Contents
+
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
   - [Binary Installation](#binary-installation)
@@ -20,6 +22,7 @@ A CLI tool for the validator ecosystem.
 ## Prerequisites
 
 The `validatorctl` relies on a few binaries that you'll need to ensure you have installed:
+
 - Docker v24.0.6+
 - Helm v3.14.0+
 - Kind v0.20.0+
@@ -50,13 +53,16 @@ make build
 ```
 
 ## Usage
+
 `validatorctl` provides several commands for managing validator plugins. Below are some common commands:
+
 - Install validator plugins with the `validator install` command.
 - Describe validation results with the `validator describe` command.
 - Re-configure validator plugins after they've been installed with the `validator upgrade` command.
 - Uninstall the validator and all plugins with the `validator uninstall` command.
 
-For more information about any supported `validatorctl` command, run `validator help`
+Refer to the [subcommands](./docs/subcommands.md) page to learn more about each command. You can also issue the `validator help` command to learn more about the available commands.
+
 ```sh
 ❯ validator help
 Welcome to the Validator CLI.
@@ -85,6 +91,7 @@ Use "validator [command] --help" for more information about a command.
 ```
 
 ## Contributing
+
 Contributions are always welcome; take a look at our [contributions guide](https://github.com/validator-labs/.github/blob/main/.github/CONTRIBUTING.md) and [code of conduct](https://github.com/validator-labs/.github/blob/main/.github/CODE_OF_CONDUCT.md) to get started.
 
 ## License
