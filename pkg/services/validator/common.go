@@ -33,7 +33,7 @@ func readHelmConfig(name string, k8sClient kubernetes.Interface, vc *components.
 
 		log.InfoCLI("Using helm registry: %s", vc.HelmConfig.Registry)
 		if rc.BasicAuthEnabled() {
-			rs.Name = cfg.ValidatorReleaseSecretName
+			rs.Name = cfg.ValidatorHelmReleaseName
 			rs.BasicAuth.Username = rc.Registry.BasicAuth.Username
 			rs.BasicAuth.Password = rc.Registry.BasicAuth.Password
 		}
