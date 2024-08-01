@@ -53,6 +53,8 @@ const (
 
 	DefaultStorageClassAnnotation string = "storageclass.kubernetes.io/is-default-class"
 
+	HelmAuthSecretName = "helm-registry-auth"
+
 	// Embed dirs
 	Kind      string = "kind"
 	Validator string = "validator"

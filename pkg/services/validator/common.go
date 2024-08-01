@@ -28,19 +28,28 @@ func readHelmConfig(name string, k8sClient kubernetes.Interface, vc *components.
 
 	rs.Name = fmt.Sprintf("validator-helm-release-%s", name)
 	if vc.RegistryConfig.Enabled {
-		vc.HelmConfig.Registry = vc.RegistryConfig.Registry.ChartEndpoint() // TODO: verify this is correct. it should just be the endpoint with a scheme at the beginning (ie Registry.Endpoint?)
-		log.InfoCLI("Using helm repository: %s", vc.RegistryConfig.Registry.ChartEndpoint())
-	} else {
-		vc.HelmConfig.Registry, err = prompts.ReadText("Helm registry", cfg.ValidatorHelmRepository, false, -1)
-		if err != nil {
-			return err
+		rc := vc.RegistryConfig
+		vc.HelmConfig = rc.ToHelmConfig()
+
+		log.InfoCLI("Using helm registry: %s", vc.HelmConfig.Registry)
+		if rc.BasicAuthEnabled() {
+			rs.Name = cfg.HelmAuthSecretName
+			rs.BasicAuth.Username = rc.Registry.BasicAuth.Username
+			rs.BasicAuth.Password = rc.Registry.BasicAuth.Password
 		}
+		return nil
+	}
+
+	vc.HelmConfig.Registry, err = prompts.ReadText("Helm registry", cfg.ValidatorHelmRepository, false, -1)
+	if err != nil {
+		return err
 	}
 
 	vc.HelmConfig.InsecureSkipTLSVerify, err = prompts.ReadBool("Allow Insecure Connection (Bypass x509 Verification)", true)
 	if err != nil {
 		return err
 	}
+
 	if !vc.HelmConfig.InsecureSkipTLSVerify {
 		vc.HelmConfig.CAFile, _, _, err = prompts.ReadCACert("Helm repository CA certificate filepath", vc.HelmConfig.CAFile, "")
 		if err != nil {

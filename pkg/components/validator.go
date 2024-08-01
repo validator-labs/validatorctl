@@ -187,6 +187,28 @@ type RegistryConfig struct {
 	Registry *Registry `yaml:"registry"`
 }
 
+func (c *RegistryConfig) ToHelmConfig() *validator.HelmConfig {
+	hc := &validator.HelmConfig{
+		Registry:              c.Registry.Endpoint(),
+		InsecureSkipTLSVerify: c.Registry.InsecureSkipTLSVerify,
+	}
+
+	if c.Registry.CACert != nil {
+		hc.CAFile = c.Registry.CACert.Path
+	}
+
+	if c.BasicAuthEnabled() {
+		hc.AuthSecretName = cfg.HelmAuthSecretName
+	}
+
+	return hc
+}
+
+func (c *RegistryConfig) BasicAuthEnabled() bool {
+	return c.Registry.BasicAuth != nil &&
+		(c.Registry.BasicAuth.Username != "" || c.Registry.BasicAuth.Password != "")
+}
+
 // KindConfig represents the kind configuration.
 type KindConfig struct {
 	UseKindCluster  bool   `yaml:"useKindCluster"`
