@@ -113,6 +113,11 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 		// Image registry
 		"quay.io/validator-labs", // validator image registry
 
+		// Helm registry
+		cfg.ValidatorHelmRegistry, // validator helm registry
+		"y",                       // allow insecure connection
+		"n",                       // configure basic auth
+
 		// Sink
 		"y",                            // Configure a sink
 		"Alertmanager",                 // Sink type
@@ -121,9 +126,11 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 		"y",                            // Alertmanager insecureSkipVerify
 		"foo",                          // Alertmanager username
 		"bar",                          // Alertmanager password
+
 	}
 
-	tuiVals = t.baseHelmValues(ctx, tuiVals)
+	//tuiVals = t.baseHelmValues(ctx, tuiVals)
+	tuiVals = t.validatorValues(ctx, tuiVals)
 	tuiVals = t.awsPluginValues(ctx, tuiVals)
 	tuiVals = t.azurePluginValues(ctx, tuiVals)
 	tuiVals = t.networkPluginValues(ctx, tuiVals)
@@ -141,6 +148,7 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 	return common.ExecCLI(interactiveCmd, buffer, t.log)
 }
 
+/*
 func (t *ValidatorTest) baseHelmValues(ctx *test.TestContext, tuiVals []string) []string {
 	baseVals := []string{
 		cfg.ValidatorHelmRepository, // validator helm chart repo
@@ -157,41 +165,48 @@ func (t *ValidatorTest) baseHelmValues(ctx *test.TestContext, tuiVals []string) 
 	tuiVals = append(tuiVals, baseVals...)
 	return tuiVals
 }
+*/
+
+func (t *ValidatorTest) validatorValues(ctx *test.TestContext, tuiVals []string) []string {
+	if string_utils.IsDevVersion(ctx.Get("version")) {
+		tuiVals = append(tuiVals, cfg.ValidatorChartVersions[cfg.Validator]) // validator helm chart version
+	}
+
+	return tuiVals
+}
 
 func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, tuiVals []string) []string {
 	awsVals := []string{
-		"y",                         // enable AWS plugin
-		cfg.ValidatorHelmRepository, // validator-plugin-aws helm chart repo
-		"y",                         // Re-use validator chart security configuration
-		"n",                         // use implicit auth
-		"aws-creds",                 // AWS secret name
-		"secretkey",                 // AWS Secret Key ID
-		"secretaccesskey",           // AWS Secret Access Key
-		"",                          // AWS Session Token
-		"y",                         // Configure STS
-		"arn",                       // AWS STS Role Arn
-		"abc",                       // AWS STS Session Name
-		"3600",                      // AWS STS Duration Seconds
-		"us-west-2",                 // default region
-		"y",                         // enable IAM role validation
-		"SpectroCloudRole",          // IAM role name
-		"Local Filepath",            // Policy Document Source
-		t.filePath("policy.json"),   // Policy Document File
-		"n",                         // add another policy document
-		"n",                         // add another IAM role rule
-		"y",                         // enable IAM user validation
-		"SpectroCloudUser",          // IAM user name
-		"Local Filepath",            // Policy Document Source
-		t.filePath("policy.json"),   // Policy Document File
-		"n",                         // add another policy document
-		"n",                         // add another IAM user rule
-		"y",                         // enable IAM group validation
-		"SpectroCloudGroup",         // IAM group name
-		"Local Filepath",            // Policy Document Source
-		t.filePath("policy.json"),   // Policy Document File
-		"n",                         // add another policy document
-		"n",                         // add another IAM group rule
-		"y",                         // enable IAM policy validation
+		"y",                       // enable AWS plugin
+		"n",                       // use implicit auth
+		"aws-creds",               // AWS secret name
+		"secretkey",               // AWS Secret Key ID
+		"secretaccesskey",         // AWS Secret Access Key
+		"",                        // AWS Session Token
+		"y",                       // Configure STS
+		"arn",                     // AWS STS Role Arn
+		"abc",                     // AWS STS Session Name
+		"3600",                    // AWS STS Duration Seconds
+		"us-west-2",               // default region
+		"y",                       // enable IAM role validation
+		"SpectroCloudRole",        // IAM role name
+		"Local Filepath",          // Policy Document Source
+		t.filePath("policy.json"), // Policy Document File
+		"n",                       // add another policy document
+		"n",                       // add another IAM role rule
+		"y",                       // enable IAM user validation
+		"SpectroCloudUser",        // IAM user name
+		"Local Filepath",          // Policy Document Source
+		t.filePath("policy.json"), // Policy Document File
+		"n",                       // add another policy document
+		"n",                       // add another IAM user rule
+		"y",                       // enable IAM group validation
+		"SpectroCloudGroup",       // IAM group name
+		"Local Filepath",          // Policy Document Source
+		t.filePath("policy.json"), // Policy Document File
+		"n",                       // add another policy document
+		"n",                       // add another IAM group rule
+		"y",                       // enable IAM policy validation
 		"arn:aws:iam::account-num:policy/some-policy", // IAM policy ARN
 		"Local Filepath",          // Policy Document Source
 		t.filePath("policy.json"), // Policy Document File
@@ -215,7 +230,7 @@ func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, tuiVals []string)
 		"n",                       // add another tag rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		awsVals = slices.Insert(awsVals, 2,
+		awsVals = slices.Insert(awsVals, 1,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginAws], // validator-plugin-aws helm chart version
 		)
 	}
@@ -226,10 +241,6 @@ func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, tuiVals []string)
 func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []string) []string {
 	azureVals := []string{
 		"y",                                    // enable plugin
-		cfg.ValidatorHelmRepository,            // helm chart repo
-		"n",                                    // Re-use validator chart security configuration
-		"y",                                    // insecure skip verify
-		"n",                                    // use basic auth
 		"n",                                    // implicit plugin auth
 		"azure-creds",                          // k8s secret name
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // tenant id
@@ -242,7 +253,7 @@ func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []strin
 		"n",                                    // add RBAC rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		azureVals = slices.Insert(azureVals, 2,
+		azureVals = slices.Insert(azureVals, 1,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginAzure], // validator-plugin-azure helm chart version
 		)
 	}
@@ -252,39 +263,37 @@ func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []strin
 
 func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, tuiVals []string) []string {
 	networkVals := []string{
-		"y",                         // enable Network plugin
-		cfg.ValidatorHelmRepository, // validator-plugin-network helm chart repo
-		"y",                         // Re-use validator chart security configuration
-		"y",                         // enable DNS validation
-		"resolve foo",               // DNS rule name
-		"foo",                       // DNS host
-		"",                          // DNS nameserver
-		"n",                         // add another DNS rule
-		"y",                         // enable ICMP validation
-		"ping foo",                  // ICMP rule name
-		"foo",                       // ICMP host
-		"n",                         // add another ICMP rule
-		"y",                         // enable IP range validation
-		"check ips",                 // IP range rule name
-		"10.10.10.10",               // first IPv4 in range
-		"10",                        // length of IPv4 range
-		"n",                         // add another IP range rule
-		"y",                         // enable MTU validation
-		"check mtu",                 // MTU rule name
-		"foo",                       // MTU host
-		"1500",                      // minimum MTU
-		"n",                         // add another MTU rule
-		"y",                         // enable TCP connection validation
-		"check tcp",                 // TCP connection rule name
-		"foo",                       // TCP connection host
-		"80",                        // TCP connection port
-		"n",                         // add another port
-		"y",                         // InsecureSkipTLSVerify
-		"5",                         // TCP connection timeout
-		"n",                         // add another TCP connection rule
+		"y",           // enable Network plugin
+		"y",           // enable DNS validation
+		"resolve foo", // DNS rule name
+		"foo",         // DNS host
+		"",            // DNS nameserver
+		"n",           // add another DNS rule
+		"y",           // enable ICMP validation
+		"ping foo",    // ICMP rule name
+		"foo",         // ICMP host
+		"n",           // add another ICMP rule
+		"y",           // enable IP range validation
+		"check ips",   // IP range rule name
+		"10.10.10.10", // first IPv4 in range
+		"10",          // length of IPv4 range
+		"n",           // add another IP range rule
+		"y",           // enable MTU validation
+		"check mtu",   // MTU rule name
+		"foo",         // MTU host
+		"1500",        // minimum MTU
+		"n",           // add another MTU rule
+		"y",           // enable TCP connection validation
+		"check tcp",   // TCP connection rule name
+		"foo",         // TCP connection host
+		"80",          // TCP connection port
+		"n",           // add another port
+		"y",           // InsecureSkipTLSVerify
+		"5",           // TCP connection timeout
+		"n",           // add another TCP connection rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		networkVals = slices.Insert(networkVals, 2,
+		networkVals = slices.Insert(networkVals, 1,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork], // validator-plugin-network helm chart version
 		)
 	}
@@ -294,33 +303,31 @@ func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, tuiVals []str
 
 func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, tuiVals []string) []string {
 	ociVals := []string{
-		"y",                         // enable OCI plugin
-		cfg.ValidatorHelmRepository, // validator-plugin-oci helm chart repo
-		"y",                         // Re-use validator chart security configuration
-		"y",                         // add registry credentials
-		"oci-creds",                 // secret name
-		"y",                         // configure basic auth
-		"user1",                     // username
-		"pa$$w0rd",                  // password
-		"n",                         // skip adding env vars
-		"n",                         // add another registry credential
-		"y",                         // add signature verification secret
-		"cosign-pubkeys",            // secret name
-		t.filePath("cosign.pub"),    // public key file
-		"n",                         // add another public key to this secret
-		"n",                         // add another signature verification secret
-		"public ecr registry",       // rule name
-		"public.ecr.aws",            // registry host
-		"N/A",                       // registry auth secret name
-		"u5n5j0b4/oci-test-public",  // artifact ref
-		"n",                         // enable full layer validation
-		"n",                         // add another artifact
-		"N/A",                       // signature verification secret name
-		"",                          // ca certificate
-		"n",                         // add another registry rule
+		"y",                        // enable OCI plugin
+		"y",                        // add registry credentials
+		"oci-creds",                // secret name
+		"y",                        // configure basic auth
+		"user1",                    // username
+		"pa$$w0rd",                 // password
+		"n",                        // skip adding env vars
+		"n",                        // add another registry credential
+		"y",                        // add signature verification secret
+		"cosign-pubkeys",           // secret name
+		t.filePath("cosign.pub"),   // public key file
+		"n",                        // add another public key to this secret
+		"n",                        // add another signature verification secret
+		"public ecr registry",      // rule name
+		"public.ecr.aws",           // registry host
+		"N/A",                      // registry auth secret name
+		"u5n5j0b4/oci-test-public", // artifact ref
+		"n",                        // enable full layer validation
+		"n",                        // add another artifact
+		"N/A",                      // signature verification secret name
+		"",                         // ca certificate
+		"n",                        // add another registry rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		ociVals = slices.Insert(ociVals, 2,
+		ociVals = slices.Insert(ociVals, 1,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginOci], // validator-plugin-oci helm chart version
 		)
 	}
@@ -331,8 +338,6 @@ func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, tuiVals []string)
 func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, tuiVals []string) []string {
 	vsphereVals := []string{
 		"y",                           // enable vsphere plugin
-		cfg.ValidatorHelmRepository,   // validator-plugin-vsphere helm chart repo
-		"y",                           // Re-use validator chart security configuration
 		"vsphere-creds",               // vSphere secret name
 		"fake.vsphere.com",            // vSphere domain
 		"bob@vsphere.com",             // vSphere username
@@ -394,7 +399,7 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, tuiVals []str
 		"n",                           // add another tag rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		vsphereVals = slices.Insert(vsphereVals, 2,
+		vsphereVals = slices.Insert(vsphereVals, 1,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginVsphere], // validator-plugin-vsphere helm chart version
 		)
 	}
@@ -437,17 +442,14 @@ func (t *ValidatorTest) testUpdatePasswords() (tr *test.TestResult) {
 
 	prompts.Tui = &tuimocks.MockTUI{
 		ReturnVals: []string{
-			// Validator
-			"y",                // Allow Insecure Connection (Bypass x509 Verification)
-			"y",                // Use Helm basic auth
-			"validator-secret", // Helm secret name
-			"admin",            // Helm username
-			"welcome",          // Helm password
+			// Helm config
+			cfg.ValidatorHelmRegistry, // Helm registry
+			"y",                       // Allow Insecure Connection (Bypass x509 Verification)
+			"y",                       // Use Helm basic auth
+			"admin",                   // Helm username
+			"welcome",                 // Helm password
 
 			// AWS validator
-			"n",         // Re-use validator chart security configuration
-			"y",         // Allow Insecure Connection (Bypass x509 Verification)
-			"n",         // Use Helm basic auth
 			"n",         // Use implicit AWS auth
 			"aws-creds", // AWS credentials secret name
 			"abc",       // AWS Access Key
@@ -456,7 +458,6 @@ func (t *ValidatorTest) testUpdatePasswords() (tr *test.TestResult) {
 			"n",         // Use STS
 
 			// Azure validator
-			"y",                                    // Re-use validator chart security configuration
 			"n",                                    // Use implicit Azure auth
 			"azure-creds",                          // Azure credentials secret name
 			"d551b7b1-78ae-43df-9d61-4935c843a454", // Azure Tenant ID
@@ -464,9 +465,6 @@ func (t *ValidatorTest) testUpdatePasswords() (tr *test.TestResult) {
 			"test_azure_client_secret",             // Azure Client Secret
 
 			// OCI validator
-			"n",         // Re-use validator chart security configuration
-			"y",         // Allow Insecure Connection (Bypass x509 Verification)
-			"n",         // Use Helm basic auth
 			"y",         // Add basic auth credentials
 			"user2",     // Registry username
 			"password2", // Registry password
@@ -476,7 +474,6 @@ func (t *ValidatorTest) testUpdatePasswords() (tr *test.TestResult) {
 			"n",         // Add another environment variable
 
 			// vSphere validator
-			"y",                // Re-use validator chart security configuration
 			"vsphere-creds",    // vSphere credentials secret name
 			"vcenter.test.dev", // vSphere endpoint
 			"bob@vsphere.com",  // vSphere username

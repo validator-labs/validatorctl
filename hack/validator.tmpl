@@ -8,16 +8,29 @@ helmRelease:
     version: v${VALIDATOR_VERSION}
   values: ""
 helmReleaseSecret:
-  name: ""
-  caCertFile: ""
+  name: validator-helm-release-validator
+  basicAuth:
+    username: ""
+    password: ""
   exists: false
-imageRegistry: quay.io/validator-labs
-useFixedVersion: false
-registryConfig:
-  enabled: false
 kindConfig:
   useKindCluster: true
   kindClusterName: "<kind_cluster_name>"
+registryConfig:
+  enabled: false
+  registry:
+    host: ""
+    port: 0
+    basicAuth:
+      username: ""
+      password: ""
+    insecureSkipTLSVerify: false
+    caCert:
+      data: ""
+      name: ""
+      path: ""
+    baseContentPath: ""
+    isAirgapped: false
 sinkConfig:
   enabled: true
   createSecret: true
@@ -32,12 +45,14 @@ sinkConfig:
 proxyConfig:
   enabled: false
   env:
+    podCIDR: 172.16.0.0/20
     proxyCaCert:
       data: ""
       name: ""
       path: ""
-    podCIDR: 172.16.0.0/20
     serviceIPRange: 10.155.0.0/24
+imageRegistry: quay.io/validator-labs
+useFixedVersions: false
 awsPlugin:
   enabled: true
   helmRelease:
@@ -46,10 +61,6 @@ awsPlugin:
       repository: validator-plugin-aws
       version: v${AWS_VERSION}
     values: ""
-  helmReleaseSecret:
-    name: ""
-    caCertFile: ""
-    exists: false
   accessKeyId: a0XCQd+Emx7/bwAaTyY13ipTRychb4MiQw==
   secretAccessKey: IrGIW8FPVuOxVDRWQUdTa22SDf1MQ2PBw0kdngVq+w==
   validator:
@@ -164,10 +175,6 @@ networkPlugin:
       repository: validator-plugin-network
       version: v${NETWORK_VERSION}
     values: ""
-  helmReleaseSecret:
-    name: ""
-    caCertFile: ""
-    exists: false
   validator:
     dnsRules:
     - name: resolve foo
@@ -196,10 +203,6 @@ ociPlugin:
       repository: validator-plugin-oci
       version: v${OCI_VERSION}
     values: ""
-  helmReleaseSecret:
-    name: ""
-    caCertFile: ""
-    exists: false
   secrets:
   - name: oci-creds
     username: user1
@@ -230,10 +233,6 @@ vspherePlugin:
       repository: validator-plugin-vsphere
       version: v${VSPHERE_VERSION}
     values: ""
-  helmReleaseSecret:
-    name: ""
-    caCertFile: ""
-    exists: false
   account:
     insecure: true
     password: vn0cCP3U08iqDUwwCgBFWBbfekA+4TTe
@@ -528,10 +527,6 @@ azurePlugin:
       version: v${AZURE_VERSION}
       insecureSkipVerify: true
     values: ""
-  helmReleaseSecret:
-    name: ""
-    caCertFile: ""
-    exists: false
   tenantId: d551b7b1-78ae-43df-9d61-4935c843a454
   clientId: d551b7b1-78ae-43df-9d61-4935c843a454
   clientSecret: qC9aFbiDg/O2Ef31aqEBrbYXb/I+t+qXA4swfguuEBRRAQ==

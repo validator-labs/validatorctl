@@ -40,7 +40,7 @@ func readHelmConfig(name string, k8sClient kubernetes.Interface, vc *components.
 		return nil
 	}
 
-	vc.HelmConfig.Registry, err = prompts.ReadText("Helm registry", cfg.ValidatorHelmRepository, false, -1)
+	vc.HelmConfig.Registry, err = prompts.ReadText("Helm registry", cfg.ValidatorHelmRegistry, false, -1)
 	if err != nil {
 		return err
 	}

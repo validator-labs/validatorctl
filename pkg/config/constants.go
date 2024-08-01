@@ -21,7 +21,7 @@ const (
 	// Validator constants
 	ValidatorConfigFile      = "validator.yaml"
 	ValidatorKindClusterName = "validator-kind-cluster"
-	ValidatorHelmRepository  = "https://validator-labs.github.io"
+	ValidatorHelmRegistry    = "https://validator-labs.github.io"
 	ValidatorImageRegistry   = "quay.io"
 	ValidatorImageRepository = "validator-labs"
 	ValidatorHelmReleaseName = "validator-helm-release"
