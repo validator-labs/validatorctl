@@ -12,7 +12,6 @@ import (
 	"github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
-	cfg "github.com/validator-labs/validatorctl/pkg/config"
 )
 
 var awsDummyConfig = &components.ValidatorConfig{
@@ -47,11 +46,6 @@ func Test_readAwsPlugin(t *testing.T) {
 			name: "Fail - no rules",
 			vc:   deepcopy.Copy(awsDummyConfig).(*components.ValidatorConfig),
 			returnVals: []string{
-				cfg.ValidatorHelmRepository,                        // validator-plugin-aws helm chart repo
-				cfg.ValidatorChartVersions[cfg.ValidatorPluginAws], // validator-plugin-aws helm chart version
-				"y",         // Re-use validator chart security configuration
-				"y",         // use implicit auth
-				"",          // service account name
 				"us-east-1", // region
 				"n",         // enable IAM role validation
 				"n",         // enable IAM user validation
@@ -68,7 +62,7 @@ func Test_readAwsPlugin(t *testing.T) {
 	for _, tt := range tts {
 		prompts.Tui = &mocks.MockTUI{Values: tt.returnVals}
 		t.Run(tt.name, func(t *testing.T) {
-			err := readAwsPlugin(tt.vc, tt.k8sClient)
+			err := readAwsPluginRules(tt.vc, tt.k8sClient)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("readAwsPlugin() error = %v, wantErr %v", err, tt.wantErr)
 				return

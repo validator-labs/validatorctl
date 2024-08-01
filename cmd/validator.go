@@ -13,16 +13,17 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 )
 
-// NewDeployValidatorCmd returns a new cobra command for deploying the validator
-func NewDeployValidatorCmd() *cobra.Command {
+// NewInstallValidatorCmd returns a new cobra command for installing validator & validator plugin(s)
+// nolint:dupl
+func NewInstallValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var configFile string
 	var configOnly, updatePasswords, reconfigure bool
 
 	cmd := &cobra.Command{
 		Use:   "install",
-		Short: "Install validator & configure validator plugin(s)",
-		Long: `Install validator & configure validator plugin(s).
+		Short: "Install validator & validator plugin(s)",
+		Long: `Install validator & validator plugin(s).
 
 For more information about validator, see: https://github.com/validator-labs/validator.
 `,
@@ -40,7 +41,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 				return err
 			}
 
-			if err := validator.DeployValidatorCommand(c, taskConfig, reconfigure); err != nil {
+			if err := validator.InstallValidatorCommand(c, taskConfig, reconfigure); err != nil {
 				return fmt.Errorf("failed to install validator: %v", err)
 			}
 			return nil
@@ -52,6 +53,52 @@ For more information about validator, see: https://github.com/validator-labs/val
 	flags.BoolVarP(&configOnly, "config-only", "o", false, "Generate configuration file only. Do not proceed with installation. Default: false.")
 	flags.BoolVarP(&updatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with installation. The --config-file flag must be provided. Default: false.")
 	flags.BoolVarP(&reconfigure, "reconfigure", "r", false, "Re-configure validator and plugin(s) prior to installation. The --config-file flag must be provided. Default: false.")
+
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
+
+	return cmd
+}
+
+// NewConfigureValidatorCmd returns a new cobra command for configuring and applying rules for validator plugins
+// nolint:dupl
+func NewConfigureValidatorCmd() *cobra.Command {
+	c := cfgmanager.Config()
+	var configFile string
+	var configOnly, updatePasswords, reconfigure bool
+
+	cmd := &cobra.Command{
+		Use:   "check",
+		Short: "Configure & apply rules for validator plugin(s)",
+		Long: `Configure & apply rules for validator plugin(s).
+
+For more information about validator, see: https://github.com/validator-labs/validator.
+`,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
+		},
+		RunE: func(_ *cobra.Command, _ []string) error {
+			taskConfig := cfg.NewTaskConfig(
+				Version, configFile, configOnly, false, updatePasswords, false,
+			)
+			if err := c.Save(""); err != nil {
+				return err
+			}
+
+			if err := validator.ConfigureValidatorCommand(c, taskConfig, reconfigure); err != nil {
+				return fmt.Errorf("failed to configure validator: %v", err)
+			}
+			return nil
+		},
+	}
+
+	flags := cmd.Flags()
+	flags.StringVarP(&configFile, "config-file", "f", "", "Provide checks via a configuration file (optional)")
+	flags.BoolVarP(&configOnly, "config-only", "o", false, "Generate configuration file only. Do not proceed with installation. Default: false.")
+	flags.BoolVarP(&updatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with installation. The --config-file flag must be provided. Default: false.")
+	flags.BoolVarP(&reconfigure, "reconfigure", "r", false, "Re-configure plugin rule(s) in a configuration file. The --config-file flag must be provided. Default: false.")
 
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
 

@@ -640,7 +640,7 @@ func SaveValidatorConfig(c *ValidatorConfig, tc *cfg.TaskConfig) error {
 	if err = os.WriteFile(tc.ConfigFile, b, 0600); err != nil {
 		return errors.Wrap(err, "failed to create validator config file")
 	}
-	log.InfoCLI("validator configuration file saved: %s", tc.ConfigFile)
+	log.InfoCLI("\nvalidator configuration file saved: %s", tc.ConfigFile)
 	return nil
 }
 

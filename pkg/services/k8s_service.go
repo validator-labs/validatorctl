@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"regexp"
@@ -127,7 +128,7 @@ func ReadKubeconfig() (kubernetes.Interface, string, error) {
 
 	k8sClient, err := kube_utils.GetKubeClientset(kubeconfigPath)
 	if err != nil {
-		return nil, "", err
+		return nil, "", fmt.Errorf("failed to create Kubernetes client: %w", err)
 	}
 	return k8sClient, kubeconfigPath, nil
 }

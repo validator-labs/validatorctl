@@ -63,7 +63,8 @@ Use 'validator help <sub-command>' to explore all of the functionality the Valid
 	}
 
 	// add base commands
-	rootCmd.AddCommand(NewDeployValidatorCmd())
+	rootCmd.AddCommand(NewInstallValidatorCmd())
+	rootCmd.AddCommand(NewConfigureValidatorCmd())
 	rootCmd.AddCommand(NewUpgradeValidatorCmd())
 	rootCmd.AddCommand(NewUndeployValidatorCmd())
 	rootCmd.AddCommand(NewDescribeValidationResultsCmd())
