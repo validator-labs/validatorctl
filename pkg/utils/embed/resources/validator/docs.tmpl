@@ -1,0 +1,17 @@
+All validator documentation is available on GitHub.
+
+Please refer to the following links for additional information:
+
+Description	Link
+Framework overview	https://github.com/validator-labs
+Validator overview	https://github.com/validator-labs/validator/blob/main/README.md
+validatorctl usage	https://github.com/validator-labs/validator/blob/main/docs/subcommands.md
+
+The current version of validatorctl is {{ .Version }}.
+
+It supports the following versions of validator and validator plugins:
+
+Name	Version	URL
+{{- range $name, $version := .Plugins }}
+{{ $name }}	{{ $version }}	https://github.com/validator-labs/{{ $name }}
+{{- end}}

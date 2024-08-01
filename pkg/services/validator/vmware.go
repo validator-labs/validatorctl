@@ -378,7 +378,7 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 
 // LoadPrivileges returns a slice of privilege IDs from the provided privilege file
 func LoadPrivileges(privilegeFile string) ([]string, error) {
-	privilegeBytes, err := embed.ReadFile(cfg.Validator, privilegeFile)
+	privilegeBytes, err := embed.EFS.ReadFile(cfg.Validator, privilegeFile)
 	if err != nil {
 		return nil, err
 	}
