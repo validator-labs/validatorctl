@@ -213,8 +213,7 @@ func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, vals []string, sl
 		"us-west-2",                // subnet tag region #1
 		"foo",                      // subnet tag key #1
 		"bar",                      // subnet tag value #1
-		"baz",                      // subnet arn #1
-		"n",                        // add another subnet arn
+		[]string{"arn-1"},          // subnet arns
 		"n",                        // add another subnet tag rule
 		"n",                        // add another tag rule
 		"y",                        // enable AMI validation
@@ -290,8 +289,7 @@ func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, vals []string
 		"y",                              // enable TCP connection validation
 		"check tcp",                      // TCP connection rule name
 		"foo",                            // TCP connection host
-		"80",                             // TCP connection port
-		"n",                              // add another port
+		[]string{"80"},                   // TCP connection ports
 		"y",                              // InsecureSkipTLSVerify
 		"5",                              // TCP connection timeout
 		"n",                              // add another TCP connection rule

@@ -836,29 +836,9 @@ func readSubnetTagRule(c *components.AWSPluginConfig, r *vpawsapi.TagRule, idx i
 			}
 			r.ARNs[i] = arn
 		}
-		addArns := true
-		if len(r.ARNs) > 0 {
-			addArns, err = prompts.ReadBool("Add another subnet ARN", false)
-			if err != nil {
-				return err
-			}
-		}
-		if addArns {
-			for {
-				arn, err := prompts.ReadText("Subnet ARN", "", false, -1)
-				if err != nil {
-					return err
-				}
-				r.ARNs = append(r.ARNs, arn)
-
-				add, err := prompts.ReadBool("Add another subnet ARN", false)
-				if err != nil {
-					return err
-				}
-				if !add {
-					break
-				}
-			}
+		r.ARNs, err = prompts.ReadTextSlice("Subnet ARNs", strings.Join(r.ARNs, "\n"), "invalid ARNs", "", false)
+		if err != nil {
+			return err
 		}
 		if idx == -1 {
 			c.Validator.TagRules = append(c.Validator.TagRules, *r)

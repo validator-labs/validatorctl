@@ -522,49 +522,18 @@ func readTCPConnRule(c *components.NetworkPluginConfig, r *network.TCPConnRule, 
 	if err != nil {
 		return err
 	}
-	addPorts := true
-	for i, p := range r.Ports {
-		port, err := prompts.ReadInt("Port", intToStringDefault(p), 1, -1)
-		if err != nil {
-			return err
-		}
-		r.Ports[i] = port
+	r.Ports, err = prompts.ReadIntSlice("Port", intsToStringDefault(r.Ports), false)
+	if err != nil {
+		return err
 	}
-	if r.Ports == nil {
-		r.Ports = make([]int, 0)
-	} else {
-		addPorts, err = prompts.ReadBool("Add another port", false)
-		if err != nil {
-			return err
-		}
-	}
-	if addPorts {
-		for {
-			port, err := prompts.ReadInt("Port", "", 1, -1)
-			if err != nil {
-				return err
-			}
-			r.Ports = append(r.Ports, port)
-			add, err := prompts.ReadBool("Add another port", false)
-			if err != nil {
-				return err
-			}
-			if !add {
-				break
-			}
-		}
-	}
-
 	r.InsecureSkipTLSVerify, err = prompts.ReadBool("Skip TLS certificate verification", true)
 	if err != nil {
 		return err
 	}
-
 	r.Timeout, err = prompts.ReadInt("Timeout in seconds", "5", 1, -1)
 	if err != nil {
 		return err
 	}
-
 	if idx == -1 {
 		c.Validator.TCPConnRules = append(c.Validator.TCPConnRules, *r)
 	} else {

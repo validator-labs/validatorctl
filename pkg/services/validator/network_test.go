@@ -53,6 +53,7 @@ func Test_readNetworkPlugin(t *testing.T) {
 				"n", // enable IP range validation
 				"n", // enable MTU validation
 				"n", // enable TCP connection validation
+				"n", // enable HTTPFile validation
 			},
 			wantErr: true,
 			err:     errNoRulesEnabled,
