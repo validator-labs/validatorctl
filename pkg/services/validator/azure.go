@@ -32,7 +32,7 @@ var (
 func readAzurePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
 	c := vc.AzurePlugin
 
-	if err := readHelmRelease(cfg.ValidatorPluginAzure, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
+	if err := readHelmRelease(cfg.ValidatorPluginAzure, vc, c.Release); err != nil {
 		return fmt.Errorf("failed to read Helm release: %w", err)
 	}
 

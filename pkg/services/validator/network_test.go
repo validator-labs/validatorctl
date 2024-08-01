@@ -16,6 +16,7 @@ import (
 )
 
 var networkDummyConfig = &components.ValidatorConfig{
+	HelmConfig: &v1alpha1.HelmConfig{},
 	RegistryConfig: &components.RegistryConfig{
 		Enabled: false,
 	},
@@ -23,8 +24,7 @@ var networkDummyConfig = &components.ValidatorConfig{
 		Release: &v1alpha1.HelmRelease{
 			Chart: v1alpha1.HelmChart{},
 		},
-		ReleaseSecret: &components.Secret{},
-		Validator:     &network.NetworkValidatorSpec{},
+		Validator: &network.NetworkValidatorSpec{},
 	},
 	Release: &v1alpha1.HelmRelease{
 		Chart: v1alpha1.HelmChart{},
@@ -45,9 +45,7 @@ func Test_readNetworkPlugin(t *testing.T) {
 			name: "Fail - no rules",
 			vc:   deepcopy.Copy(networkDummyConfig).(*components.ValidatorConfig),
 			returnVals: []string{
-				cfg.ValidatorHelmRepository,                            // validator-plugin-network helm chart repo
 				cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork], // validator-plugin-network helm chart version
-				"y", // Re-use validator chart security configuration
 				"n", // enable DNS validation
 				"n", // enable ICMP validation
 				"n", // enable IP range validation

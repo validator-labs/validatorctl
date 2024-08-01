@@ -4,10 +4,10 @@ import (
 	"reflect"
 	"strings"
 
-	network "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
+	network "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -18,10 +18,10 @@ type networkRule interface {
 	*network.DNSRule | *network.ICMPRule | *network.IPRangeRule | *network.MTURule | *network.TCPConnRule | *network.HTTPFileRule
 }
 
-func readNetworkPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
+func readNetworkPlugin(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
 	c := vc.NetworkPlugin
 
-	if err := readHelmRelease(cfg.ValidatorPluginNetwork, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
+	if err := readHelmRelease(cfg.ValidatorPluginNetwork, vc, c.Release); err != nil {
 		return err
 	}
 
