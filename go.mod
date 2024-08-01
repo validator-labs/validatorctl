@@ -13,7 +13,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pterm/pterm v0.12.79
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spectrocloud-labs/prompts-tui v0.0.0-20240715203051-ec46421ba5c0
+	github.com/spectrocloud-labs/prompts-tui v0.1.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/validator-labs/validator v0.0.50
@@ -221,4 +221,4 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
-replace github.com/spectrocloud-labs/prompts-tui => ../../spectrocloud-labs/prompts-tui
+// replace github.com/spectrocloud-labs/prompts-tui => ../../spectrocloud-labs/prompts-tui
