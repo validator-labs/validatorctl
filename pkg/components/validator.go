@@ -199,7 +199,7 @@ func (c *RegistryConfig) ToHelmConfig() *validator.HelmConfig {
 	}
 
 	if c.BasicAuthEnabled() {
-		hc.AuthSecretName = cfg.HelmAuthSecretName
+		hc.AuthSecretName = cfg.ValidatorReleaseSecretName
 	}
 
 	return hc

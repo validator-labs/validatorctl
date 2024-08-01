@@ -19,11 +19,12 @@ const (
 	NoProxyPrompt         = "# Default NO_PROXY values are on the lines below.\n# Edit as you see fit (comments are ignored). The file should contain a list of NO_PROXY values, newline separated.\n# Type :wq to save and exit (if using vi).\n\n"
 
 	// Validator constants
-	ValidatorConfigFile      = "validator.yaml"
-	ValidatorKindClusterName = "validator-kind-cluster"
-	ValidatorHelmRepository  = "https://validator-labs.github.io"
-	ValidatorImageRegistry   = "quay.io"
-	ValidatorImageRepository = "validator-labs"
+	ValidatorConfigFile        = "validator.yaml"
+	ValidatorKindClusterName   = "validator-kind-cluster"
+	ValidatorHelmRepository    = "https://validator-labs.github.io"
+	ValidatorImageRegistry     = "quay.io"
+	ValidatorImageRepository   = "validator-labs"
+	ValidatorReleaseSecretName = "validator-helm-release"
 
 	ValidatorPluginAws     = "validator-plugin-aws"
 	ValidatorPluginAzure   = "validator-plugin-azure"
@@ -52,8 +53,6 @@ const (
 	AzurePermissionSetPrompt = "# Provide the Azure permission set for IAM validation rule. The permission set should be in JSON format. Type :wq to save and exit (if using vi).\n"
 
 	DefaultStorageClassAnnotation string = "storageclass.kubernetes.io/is-default-class"
-
-	HelmAuthSecretName = "helm-registry-auth"
 
 	// Embed dirs
 	Kind      string = "kind"

@@ -360,6 +360,19 @@ func applyValidatorAndPlugins(c *cfg.Config, vc *components.ValidatorConfig) err
 	return nil
 }
 
+func createReleaseSecretCmd(secret *components.Secret) []string {
+	args := []string{
+		"create", "secret", "generic", secret.Name, "-n", "validator",
+		// include empty username/password, even if unset, to avoid error in validator
+		fmt.Sprintf("--from-literal=username=%s", secret.BasicAuth.Username),
+		fmt.Sprintf("--from-literal=password=%s", secret.BasicAuth.Password),
+	}
+	if secret.CaCertFile != "" {
+		args = append(args, fmt.Sprintf("--from-file=caCert=%s", secret.CaCertFile))
+	}
+	return args
+}
+
 // nolint:gocyclo
 func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	pluginCount := 0
@@ -374,6 +387,10 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	validatorSpec := vapi.ValidatorConfigSpec{
 		HelmConfig: *vc.HelmConfig,
 		Plugins:    make([]vapi.HelmRelease, 0),
+	}
+
+	if vc.ReleaseSecret != nil && vc.ReleaseSecret.ShouldCreate() {
+		kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.ReleaseSecret))
 	}
 
 	if vc.AWSPlugin.Enabled {
