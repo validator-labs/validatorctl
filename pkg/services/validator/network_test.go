@@ -15,6 +15,7 @@ import (
 )
 
 var networkDummyConfig = &components.ValidatorConfig{
+	HelmConfig: &v1alpha1.HelmConfig{},
 	RegistryConfig: &components.RegistryConfig{
 		Enabled: false,
 	},
@@ -22,8 +23,7 @@ var networkDummyConfig = &components.ValidatorConfig{
 		Release: &v1alpha1.HelmRelease{
 			Chart: v1alpha1.HelmChart{},
 		},
-		ReleaseSecret: &components.Secret{},
-		Validator:     &network.NetworkValidatorSpec{},
+		Validator: &network.NetworkValidatorSpec{},
 	},
 	Release: &v1alpha1.HelmRelease{
 		Chart: v1alpha1.HelmChart{},

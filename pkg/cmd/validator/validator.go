@@ -454,7 +454,12 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 
 	// build validator plugin spec
 	validatorSpec := vapi.ValidatorConfigSpec{
-		Plugins: make([]vapi.HelmRelease, 0),
+		HelmConfig: *vc.HelmConfig,
+		Plugins:    make([]vapi.HelmRelease, 0),
+	}
+
+	if vc.ReleaseSecret != nil && vc.ReleaseSecret.ShouldCreate() {
+		kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.ReleaseSecret))
 	}
 
 	if vc.AWSPlugin.Enabled {
@@ -470,9 +475,6 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Chart:  vc.AWSPlugin.Release.Chart,
 			Values: string(values),
 		})
-		if vc.AWSPlugin.ReleaseSecret != nil && vc.AWSPlugin.ReleaseSecret.ShouldCreate() {
-			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.AWSPlugin.ReleaseSecret))
-		}
 		pluginCount++
 	}
 
@@ -489,9 +491,6 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Chart:  vc.AzurePlugin.Release.Chart,
 			Values: string(values),
 		})
-		if vc.AzurePlugin.ReleaseSecret != nil && vc.AzurePlugin.ReleaseSecret.ShouldCreate() {
-			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.AzurePlugin.ReleaseSecret))
-		}
 		pluginCount++
 	}
 
@@ -508,9 +507,6 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Chart:  vc.NetworkPlugin.Release.Chart,
 			Values: string(values),
 		})
-		if vc.NetworkPlugin.ReleaseSecret != nil && vc.NetworkPlugin.ReleaseSecret.ShouldCreate() {
-			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.NetworkPlugin.ReleaseSecret))
-		}
 		pluginCount++
 	}
 
@@ -527,9 +523,6 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Chart:  vc.OCIPlugin.Release.Chart,
 			Values: string(values),
 		})
-		if vc.OCIPlugin.ReleaseSecret != nil && vc.OCIPlugin.ReleaseSecret.ShouldCreate() {
-			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.OCIPlugin.ReleaseSecret))
-		}
 		pluginCount++
 	}
 
@@ -546,9 +539,6 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Chart:  vc.VspherePlugin.Release.Chart,
 			Values: string(values),
 		})
-		if vc.VspherePlugin.ReleaseSecret != nil && vc.VspherePlugin.ReleaseSecret.ShouldCreate() {
-			kubecommandsPre = append(kubecommandsPre, createReleaseSecretCmd(vc.VspherePlugin.ReleaseSecret))
-		}
 		pluginCount++
 	}
 
@@ -610,8 +600,9 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	opts := helm.Options{
 		Chart:                 vc.Release.Chart.Name,
 		Repo:                  vc.Release.Chart.Repository,
-		CaFile:                vc.Release.Chart.CAFile,
-		InsecureSkipTLSVerify: vc.Release.Chart.InsecureSkipTLSVerify,
+		Registry:              vc.HelmConfig.Registry,
+		CaFile:                vc.HelmConfig.CAFile,
+		InsecureSkipTLSVerify: vc.HelmConfig.InsecureSkipTLSVerify,
 		Version:               vc.Release.Chart.Version,
 		Values:                finalValues,
 		CreateNamespace:       true,
@@ -622,8 +613,8 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	}
 
 	var cleanupLocalChart bool
-	if strings.HasPrefix(opts.Repo, oci.Scheme) {
-		log.InfoCLI("\n==== Pulling validator Helm chart from OCI repository %s ====", opts.Repo)
+	if strings.HasPrefix(opts.Registry, oci.Scheme) {
+		log.InfoCLI("\n==== Pulling validator Helm chart from OCI registry %s ====", opts.Registry)
 
 		opts.Path = fmt.Sprintf("%s/%s", c.RunLoc, opts.Chart)
 		opts.Version = strings.TrimPrefix(opts.Version, "v")
@@ -636,7 +627,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 			return fmt.Errorf("failed to create OCI client: %w", err)
 		}
 		ociOpts := oci.ImageOptions{
-			Ref:     fmt.Sprintf("%s/%s:%s", strings.TrimPrefix(opts.Repo, oci.Scheme), opts.Chart, opts.Version),
+			Ref:     fmt.Sprintf("%s/%s:%s", strings.TrimPrefix(opts.Registry, oci.Scheme), opts.Chart, opts.Version),
 			OutDir:  opts.Path,
 			OutFile: opts.Chart,
 		}

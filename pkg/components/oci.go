@@ -17,20 +17,15 @@ type OciConfig struct {
 
 // ConfigureOciPlugin configures the OCI plugin.
 func ConfigureOciPlugin(vc *ValidatorConfig, config OciConfig) {
-	// TODO: properly handle TLS, helm, and air-gap config
+	// TODO: prompt for chart version if !vc.UseFixedVersions
 	vc.OCIPlugin = &OCIPluginConfig{
 		Enabled: true,
 		Release: &vapi.HelmRelease{
 			Chart: vapi.HelmChart{
-				Name:                  cfg.ValidatorPluginOci,
-				Repository:            fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, cfg.ValidatorPluginOci),
-				Version:               cfg.ValidatorChartVersions[cfg.ValidatorPluginOci],
-				InsecureSkipTLSVerify: true,
+				Name:       cfg.ValidatorPluginOci,
+				Repository: cfg.ValidatorPluginOci,
+				Version:    cfg.ValidatorChartVersions[cfg.ValidatorPluginOci],
 			},
-		},
-		ReleaseSecret: &Secret{
-			Name:      fmt.Sprintf("validator-helm-release-%s", cfg.ValidatorPluginOci),
-			BasicAuth: &BasicAuth{},
 		},
 		Validator: &oci_api.OciValidatorSpec{
 			OciRegistryRules: generateOciRegistryRules(config.HostRefs),

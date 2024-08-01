@@ -15,6 +15,7 @@ import (
 )
 
 var awsDummyConfig = &components.ValidatorConfig{
+	HelmConfig: &v1alpha1.HelmConfig{},
 	RegistryConfig: &components.RegistryConfig{
 		Enabled: false,
 	},
@@ -22,7 +23,6 @@ var awsDummyConfig = &components.ValidatorConfig{
 		Release: &v1alpha1.HelmRelease{
 			Chart: v1alpha1.HelmChart{},
 		},
-		ReleaseSecret: &components.Secret{},
 		Validator: &aws.AwsValidatorSpec{
 			Auth: aws.AwsAuth{},
 		},

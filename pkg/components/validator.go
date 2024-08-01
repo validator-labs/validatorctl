@@ -23,6 +23,7 @@ import (
 
 // ValidatorConfig represents the validator configuration.
 type ValidatorConfig struct {
+	HelmConfig       *validator.HelmConfig  `yaml:"helmConfig"`
 	Release          *validator.HelmRelease `yaml:"helmRelease"`
 	ReleaseSecret    *Secret                `yaml:"helmReleaseSecret"`
 	KindConfig       KindConfig             `yaml:"kindConfig"`
@@ -44,7 +45,8 @@ type ValidatorConfig struct {
 func NewValidatorConfig() *ValidatorConfig {
 	return &ValidatorConfig{
 		// Base config
-		Release: &validator.HelmRelease{},
+		HelmConfig: &validator.HelmConfig{},
+		Release:    &validator.HelmRelease{},
 		ReleaseSecret: &Secret{
 			BasicAuth: &BasicAuth{},
 			Data:      make(map[string]string),
@@ -66,19 +68,11 @@ func NewValidatorConfig() *ValidatorConfig {
 		},
 		// Plugin config
 		AWSPlugin: &AWSPluginConfig{
-			Release: &validator.HelmRelease{},
-			ReleaseSecret: &Secret{
-				BasicAuth: &BasicAuth{},
-				Data:      make(map[string]string),
-			},
+			Release:   &validator.HelmRelease{},
 			Validator: &aws.AwsValidatorSpec{},
 		},
 		AzurePlugin: &AzurePluginConfig{
-			Release: &validator.HelmRelease{},
-			ReleaseSecret: &Secret{
-				BasicAuth: &BasicAuth{},
-				Data:      make(map[string]string),
-			},
+			Release:                &validator.HelmRelease{},
 			Validator:              &azure.AzureValidatorSpec{},
 			RuleTypes:              make(map[int]string),
 			PlacementTypes:         make(map[int]string),
@@ -87,29 +81,17 @@ func NewValidatorConfig() *ValidatorConfig {
 		},
 		NetworkPlugin: &NetworkPluginConfig{
 			Release: &validator.HelmRelease{},
-			ReleaseSecret: &Secret{
-				BasicAuth: &BasicAuth{},
-				Data:      make(map[string]string),
-			},
 			Validator: &network.NetworkValidatorSpec{
 				CACerts: network.CACertificates{},
 			},
 		},
 		OCIPlugin: &OCIPluginConfig{
-			Release: &validator.HelmRelease{},
-			ReleaseSecret: &Secret{
-				BasicAuth: &BasicAuth{},
-				Data:      make(map[string]string),
-			},
+			Release:     &validator.HelmRelease{},
 			Validator:   &oci.OciValidatorSpec{},
 			CaCertPaths: make(map[int]string),
 		},
 		VspherePlugin: &VspherePluginConfig{
-			Release: &validator.HelmRelease{},
-			ReleaseSecret: &Secret{
-				BasicAuth: &BasicAuth{},
-				Data:      make(map[string]string),
-			},
+			Release:   &validator.HelmRelease{},
 			Validator: &vsphereapi.VsphereValidatorSpec{},
 			Account:   &vsphere.CloudAccount{},
 		},
@@ -207,6 +189,30 @@ type RegistryConfig struct {
 	Registry *Registry `yaml:"registry"`
 }
 
+// ToHelmConfig converts the RegistryConfig to a HelmConfig.
+func (c *RegistryConfig) ToHelmConfig() *validator.HelmConfig {
+	hc := &validator.HelmConfig{
+		Registry:              c.Registry.ChartEndpoint(),
+		InsecureSkipTLSVerify: c.Registry.InsecureSkipTLSVerify,
+	}
+
+	if c.Registry.CACert != nil {
+		hc.CAFile = c.Registry.CACert.Path
+	}
+
+	if c.BasicAuthEnabled() {
+		hc.AuthSecretName = cfg.ValidatorHelmReleaseName
+	}
+
+	return hc
+}
+
+// BasicAuthEnabled returns true if basic auth is enabled on the RegistryConfig.
+func (c *RegistryConfig) BasicAuthEnabled() bool {
+	return c.Registry.BasicAuth != nil &&
+		(c.Registry.BasicAuth.Username != "" || c.Registry.BasicAuth.Password != "")
+}
+
 // KindConfig represents the kind configuration.
 type KindConfig struct {
 	UseKindCluster  bool   `yaml:"useKindCluster"`
@@ -266,7 +272,6 @@ func (c *SinkConfig) decrypt() error {
 type AWSPluginConfig struct {
 	Enabled            bool                   `yaml:"enabled"`
 	Release            *validator.HelmRelease `yaml:"helmRelease"`
-	ReleaseSecret      *Secret                `yaml:"helmReleaseSecret"`
 	AccessKeyID        string                 `yaml:"accessKeyId,omitempty"`
 	SecretAccessKey    string                 `yaml:"secretAccessKey,omitempty"`
 	SessionToken       string                 `yaml:"sessionToken,omitempty"`
@@ -275,12 +280,6 @@ type AWSPluginConfig struct {
 }
 
 func (c *AWSPluginConfig) encrypt() error {
-	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt release secret configuration")
-		}
-	}
-
 	accessKey, err := crypto.EncryptB64([]byte(c.AccessKeyID))
 	if err != nil {
 		return errors.Wrap(err, "failed to encrypt access key id")
@@ -303,12 +302,6 @@ func (c *AWSPluginConfig) encrypt() error {
 }
 
 func (c *AWSPluginConfig) decrypt() error {
-	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt release secret configuration")
-		}
-	}
-
 	bytes, err := crypto.DecryptB64(c.AccessKeyID)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt access key id")
@@ -334,7 +327,6 @@ func (c *AWSPluginConfig) decrypt() error {
 type AzurePluginConfig struct {
 	Enabled                bool                                 `yaml:"enabled"`
 	Release                *validator.HelmRelease               `yaml:"helmRelease"`
-	ReleaseSecret          *Secret                              `yaml:"helmReleaseSecret"`
 	ServiceAccountName     string                               `yaml:"serviceAccountName,omitempty"`
 	TenantID               string                               `yaml:"tenantId"`
 	ClientID               string                               `yaml:"clientId"`
@@ -347,12 +339,6 @@ type AzurePluginConfig struct {
 }
 
 func (c *AzurePluginConfig) encrypt() error {
-	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt release secret configuration")
-		}
-	}
-
 	clientSecret, err := crypto.EncryptB64([]byte(c.ClientSecret))
 	if err != nil {
 		return errors.Wrap(err, "failed to encrypt Azure Client Secret")
@@ -363,12 +349,6 @@ func (c *AzurePluginConfig) encrypt() error {
 }
 
 func (c *AzurePluginConfig) decrypt() error {
-	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt release secret configuration")
-		}
-	}
-
 	bytes, err := crypto.DecryptB64(c.ClientSecret)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt Azure Client Secret")
@@ -389,27 +369,16 @@ type AzureStaticDeploymentValues struct {
 
 // NetworkPluginConfig represents the network plugin configuration.
 type NetworkPluginConfig struct {
-	Enabled       bool                          `yaml:"enabled"`
-	Release       *validator.HelmRelease        `yaml:"helmRelease"`
-	ReleaseSecret *Secret                       `yaml:"helmReleaseSecret"`
-	Validator     *network.NetworkValidatorSpec `yaml:"validator"`
+	Enabled   bool                          `yaml:"enabled"`
+	Release   *validator.HelmRelease        `yaml:"helmRelease"`
+	Validator *network.NetworkValidatorSpec `yaml:"validator"`
 }
 
 func (c *NetworkPluginConfig) encrypt() error {
-	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt release secret configuration")
-		}
-	}
 	return nil
 }
 
 func (c *NetworkPluginConfig) decrypt() error {
-	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt release secret configuration")
-		}
-	}
 	return nil
 }
 
@@ -417,7 +386,6 @@ func (c *NetworkPluginConfig) decrypt() error {
 type OCIPluginConfig struct {
 	Enabled          bool                   `yaml:"enabled"`
 	Release          *validator.HelmRelease `yaml:"helmRelease"`
-	ReleaseSecret    *Secret                `yaml:"helmReleaseSecret"`
 	Secrets          []*Secret              `yaml:"secrets,omitempty"`
 	PublicKeySecrets []*PublicKeySecret     `yaml:"publicKeySecrets,omitempty"`
 	CaCertPaths      map[int]string         `yaml:"caCertPaths,omitempty"`
@@ -425,11 +393,6 @@ type OCIPluginConfig struct {
 }
 
 func (c *OCIPluginConfig) encrypt() error {
-	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt release secret configuration")
-		}
-	}
 	for _, s := range c.Secrets {
 		if s != nil {
 			if err := s.encrypt(); err != nil {
@@ -441,11 +404,6 @@ func (c *OCIPluginConfig) encrypt() error {
 }
 
 func (c *OCIPluginConfig) decrypt() error {
-	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt release secret configuration")
-		}
-	}
 	for _, s := range c.Secrets {
 		if s != nil {
 			if err := s.decrypt(); err != nil {
@@ -460,7 +418,6 @@ func (c *OCIPluginConfig) decrypt() error {
 type VspherePluginConfig struct {
 	Enabled                     bool                             `yaml:"enabled"`
 	Release                     *validator.HelmRelease           `yaml:"helmRelease"`
-	ReleaseSecret               *Secret                          `yaml:"helmReleaseSecret"`
 	Account                     *vsphere.CloudAccount            `yaml:"account"`
 	Validator                   *vsphereapi.VsphereValidatorSpec `yaml:"validator"`
 	VsphereEntityPrivilegeRules []VsphereEntityPrivilegeRule     `yaml:"vsphereEntityPrivilegeRules"`
@@ -469,11 +426,6 @@ type VspherePluginConfig struct {
 }
 
 func (c *VspherePluginConfig) encrypt() error {
-	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt release secret configuration")
-		}
-	}
 	if c.Account != nil {
 		password, err := crypto.EncryptB64([]byte(c.Account.Password))
 		if err != nil {
@@ -485,11 +437,6 @@ func (c *VspherePluginConfig) encrypt() error {
 }
 
 func (c *VspherePluginConfig) decrypt() error {
-	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt release secret configuration")
-		}
-	}
 	if c.Account != nil {
 		bytes, err := crypto.DecryptB64(c.Account.Password)
 		if err != nil {
@@ -649,10 +596,9 @@ func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) {
 	// TODO: properly handle TLS, helm, and air-gap config
 	vc.Release = &validator.HelmRelease{
 		Chart: validator.HelmChart{
-			Name:                  cfg.Validator,
-			Repository:            fmt.Sprintf("%s/%s", cfg.ValidatorHelmRepository, cfg.Validator),
-			Version:               cfg.ValidatorChartVersions[cfg.Validator],
-			InsecureSkipTLSVerify: true,
+			Name:       cfg.Validator,
+			Repository: cfg.Validator,
+			Version:    cfg.ValidatorChartVersions[cfg.Validator],
 		},
 	}
 	vc.ReleaseSecret = &Secret{

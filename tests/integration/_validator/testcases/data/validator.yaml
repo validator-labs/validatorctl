@@ -1,21 +1,36 @@
+helmConfig:
+  registry: https://validator-labs.github.io
+  insecureSkipVerify: false
 helmRelease:
   chart:
     name: validator
-    repository: https://validator-labs.github.io/validator
-    version: v0.0.50
-    insecureSkipVerify: true
+    repository: validator
+    version: v0.1.0
   values: ""
 helmReleaseSecret:
-  name: ""
-  caCertFile: ""
+  name: validator-helm-release-validator
+  basicAuth:
+    username: ""
+    password: ""
   exists: false
-imageRegistry: quay.io/validator-labs
-useFixedVersion: false
-registryConfig:
-  enabled: false
 kindConfig:
   useKindCluster: true
   kindClusterName: "<kind_cluster_name>"
+registryConfig:
+  enabled: false
+  registry:
+    host: ""
+    port: 0
+    basicAuth:
+      username: ""
+      password: ""
+    insecureSkipTLSVerify: false
+    caCert:
+      data: ""
+      name: ""
+      path: ""
+    baseContentPath: ""
+    isAirgapped: false
 sinkConfig:
   enabled: true
   createSecret: true
@@ -30,25 +45,22 @@ sinkConfig:
 proxyConfig:
   enabled: false
   env:
+    podCIDR: 172.16.0.0/20
     proxyCaCert:
       data: ""
       name: ""
       path: ""
-    podCIDR: 172.16.0.0/20
     serviceIPRange: 10.155.0.0/24
+imageRegistry: quay.io/validator-labs
+useFixedVersions: false
 awsPlugin:
   enabled: true
   helmRelease:
     chart:
       name: validator-plugin-aws
-      repository: https://validator-labs.github.io/validator-plugin-aws
+      repository: validator-plugin-aws
       version: v0.1.2
-      insecureSkipVerify: true
     values: ""
-  helmReleaseSecret:
-    name: ""
-    caCertFile: ""
-    exists: false
   accessKeyId: a0XCQd+Emx7/bwAaTyY13ipTRychb4MiQw==
   secretAccessKey: IrGIW8FPVuOxVDRWQUdTa22SDf1MQ2PBw0kdngVq+w==
   validator:
@@ -160,14 +172,9 @@ networkPlugin:
   helmRelease:
     chart:
       name: validator-plugin-network
-      repository: https://validator-labs.github.io/validator-plugin-network
+      repository: validator-plugin-network
       version: v0.0.21
-      insecureSkipVerify: true
     values: ""
-  helmReleaseSecret:
-    name: ""
-    caCertFile: ""
-    exists: false
   validator:
     dnsRules:
     - name: resolve foo
@@ -193,14 +200,9 @@ ociPlugin:
   helmRelease:
     chart:
       name: validator-plugin-oci
-      repository: https://validator-labs.github.io/validator-plugin-oci
+      repository: validator-plugin-oci
       version: v0.0.12
-      insecureSkipVerify: true
     values: ""
-  helmReleaseSecret:
-    name: ""
-    caCertFile: ""
-    exists: false
   secrets:
   - name: oci-creds
     username: user1
@@ -228,14 +230,9 @@ vspherePlugin:
   helmRelease:
     chart:
       name: validator-plugin-vsphere
-      repository: https://validator-labs.github.io/validator-plugin-vsphere
+      repository: validator-plugin-vsphere
       version: v0.0.28
-      insecureSkipVerify: true
     values: ""
-  helmReleaseSecret:
-    name: ""
-    caCertFile: ""
-    exists: false
   account:
     insecure: true
     password: vn0cCP3U08iqDUwwCgBFWBbfekA+4TTe
@@ -526,14 +523,10 @@ azurePlugin:
   helmRelease:
     chart:
       name: validator-plugin-azure
-      repository: https://validator-labs.github.io/validator-plugin-azure
+      repository: validator-plugin-azure
       version: v0.0.14
       insecureSkipVerify: true
     values: ""
-  helmReleaseSecret:
-    name: ""
-    caCertFile: ""
-    exists: false
   tenantId: d551b7b1-78ae-43df-9d61-4935c843a454
   clientId: d551b7b1-78ae-43df-9d61-4935c843a454
   clientSecret: qC9aFbiDg/O2Ef31aqEBrbYXb/I+t+qXA4swfguuEBRRAQ==

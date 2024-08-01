@@ -34,7 +34,7 @@ func readAwsPluginInstall(vc *components.ValidatorConfig, k8sClient kubernetes.I
 	log.Header("AWS Plugin Installation Configuration")
 	c := vc.AWSPlugin
 
-	if err := readHelmRelease(cfg.ValidatorPluginAws, k8sClient, vc, c.Release, c.ReleaseSecret); err != nil {
+	if err := readHelmRelease(cfg.ValidatorPluginAws, vc, c.Release); err != nil {
 		return fmt.Errorf("failed to read Helm release: %w", err)
 	}
 	if err := readAwsCredentials(c, k8sClient); err != nil {
