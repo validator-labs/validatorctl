@@ -2,8 +2,9 @@ package validator
 
 import (
 	"reflect"
+	"strings"
 
-	vpnetworkapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
+	network "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
@@ -14,7 +15,7 @@ import (
 )
 
 type networkRule interface {
-	*vpnetworkapi.DNSRule | *vpnetworkapi.ICMPRule | *vpnetworkapi.IPRangeRule | *vpnetworkapi.MTURule | *vpnetworkapi.TCPConnRule
+	*network.DNSRule | *network.ICMPRule | *network.IPRangeRule | *network.MTURule | *network.TCPConnRule | *network.HTTPFileRule
 }
 
 func readNetworkPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
@@ -42,9 +43,91 @@ func readNetworkPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 	if err := configureTCPConnRules(c, &ruleNames); err != nil {
 		return err
 	}
+	if err := configureHTTPFileRules(c, &ruleNames); err != nil {
+		return err
+	}
+
+	if len(c.Validator.TCPConnRules) > 0 || len(c.Validator.HTTPFileRules) > 0 {
+		if err := readCACertificates(c); err != nil {
+			return err
+		}
+	}
 
 	if c.Validator.ResultCount() == 0 {
 		return errNoRulesEnabled
+	}
+	return nil
+}
+
+// readCACertificates reads CA certificates for TLS verification.
+// Certs are always overwritten / reconfiguration intentionally unsupported.
+func readCACertificates(c *components.NetworkPluginConfig) error {
+	if err := readLocalCACertificates(c); err != nil {
+		return err
+	}
+	if err := readSecretCACertificates(c); err != nil {
+		return err
+	}
+	return nil
+}
+
+func readLocalCACertificates(c *components.NetworkPluginConfig) error {
+	c.Validator.CACerts.Certs = make([]network.Certificate, 0)
+
+	addCerts, err := prompts.ReadBool("Add CA certificate(s) for TLS verification", true)
+	if err != nil {
+		return err
+	}
+	if !addCerts {
+		return nil
+	}
+	for {
+		_, _, caBytes, err := prompts.ReadCACert("CA certificate for TLS verification", "", "")
+		if err != nil {
+			return err
+		}
+		c.Validator.CACerts.Certs = append(c.Validator.CACerts.Certs, network.Certificate(caBytes))
+
+		add, err := prompts.ReadBool("Add another CA certificate", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+func readSecretCACertificates(c *components.NetworkPluginConfig) error {
+	c.Validator.CACerts.SecretRefs = make([]network.CASecretReference, 0)
+
+	addCerts, err := prompts.ReadBool("Add CA certificate secret reference(s) for TLS verification", true)
+	if err != nil {
+		return err
+	}
+	if !addCerts {
+		return nil
+	}
+	for {
+		ref := network.CASecretReference{}
+		ref.Name, err = prompts.ReadK8sName("CA secret name", "", false)
+		if err != nil {
+			return err
+		}
+		ref.Key, err = prompts.ReadText("Key for CA certificate in secret", "ca.crt", false, -1)
+		if err != nil {
+			return err
+		}
+		c.Validator.CACerts.SecretRefs = append(c.Validator.CACerts.SecretRefs, ref)
+
+		add, err := prompts.ReadBool("Add another CA certificate secret reference", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
 	}
 	return nil
 }
@@ -71,7 +154,7 @@ func configureDNSRules(c *components.NetworkPluginConfig, ruleNames *[]string) e
 	}
 	addRules := true
 	if c.Validator.DNSRules == nil {
-		c.Validator.DNSRules = make([]vpnetworkapi.DNSRule, 0)
+		c.Validator.DNSRules = make([]network.DNSRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another DNS rule", false)
 		if err != nil {
@@ -82,7 +165,7 @@ func configureDNSRules(c *components.NetworkPluginConfig, ruleNames *[]string) e
 		return nil
 	}
 	for {
-		if err := readDNSRule(c, &vpnetworkapi.DNSRule{}, -1, ruleNames); err != nil {
+		if err := readDNSRule(c, &network.DNSRule{}, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another DNS rule", false)
@@ -118,7 +201,7 @@ func configureIcmpRules(c *components.NetworkPluginConfig, ruleNames *[]string) 
 	}
 	addRules := true
 	if c.Validator.ICMPRules == nil {
-		c.Validator.ICMPRules = make([]vpnetworkapi.ICMPRule, 0)
+		c.Validator.ICMPRules = make([]network.ICMPRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another ICMP rule", false)
 		if err != nil {
@@ -129,7 +212,7 @@ func configureIcmpRules(c *components.NetworkPluginConfig, ruleNames *[]string) 
 		return nil
 	}
 	for {
-		if err := readIcmpRule(c, &vpnetworkapi.ICMPRule{}, -1, ruleNames); err != nil {
+		if err := readIcmpRule(c, &network.ICMPRule{}, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another ICMP rule", false)
@@ -166,7 +249,7 @@ func configureIPRangeRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 	}
 	addRules := true
 	if c.Validator.IPRangeRules == nil {
-		c.Validator.IPRangeRules = make([]vpnetworkapi.IPRangeRule, 0)
+		c.Validator.IPRangeRules = make([]network.IPRangeRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another IP range rule", false)
 		if err != nil {
@@ -177,7 +260,7 @@ func configureIPRangeRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 		return nil
 	}
 	for {
-		if err := readIPRangeRule(c, &vpnetworkapi.IPRangeRule{}, -1, ruleNames); err != nil {
+		if err := readIPRangeRule(c, &network.IPRangeRule{}, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another IP range rule", false)
@@ -214,7 +297,7 @@ func configureMtuRules(c *components.NetworkPluginConfig, ruleNames *[]string) e
 	}
 	addRules := true
 	if c.Validator.MTURules == nil {
-		c.Validator.MTURules = make([]vpnetworkapi.MTURule, 0)
+		c.Validator.MTURules = make([]network.MTURule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another MTU rule", false)
 		if err != nil {
@@ -225,7 +308,7 @@ func configureMtuRules(c *components.NetworkPluginConfig, ruleNames *[]string) e
 		return nil
 	}
 	for {
-		if err := readMtuRule(c, &vpnetworkapi.MTURule{}, -1, ruleNames); err != nil {
+		if err := readMtuRule(c, &network.MTURule{}, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another MTU rule", false)
@@ -262,7 +345,7 @@ func configureTCPConnRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 	}
 	addRules := true
 	if c.Validator.TCPConnRules == nil {
-		c.Validator.TCPConnRules = make([]vpnetworkapi.TCPConnRule, 0)
+		c.Validator.TCPConnRules = make([]network.TCPConnRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another TCP connection rule", false)
 		if err != nil {
@@ -273,10 +356,58 @@ func configureTCPConnRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 		return nil
 	}
 	for {
-		if err := readTCPConnRule(c, &vpnetworkapi.TCPConnRule{}, -1, ruleNames); err != nil {
+		if err := readTCPConnRule(c, &network.TCPConnRule{}, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another TCP connection rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+// nolint:dupl
+func configureHTTPFileRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
+	log.InfoCLI(`
+	HTTP file rules ensure that specific files are accessible via HTTP HEAD requests,
+	optionally with basic authentication.
+	`)
+
+	validateFiles, err := prompts.ReadBool("Enable HTTP file validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateFiles {
+		c.Validator.HTTPFileRules = nil
+		return nil
+	}
+	for i, r := range c.Validator.HTTPFileRules {
+		r := r
+		if err := readHTTPFileRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.Validator.HTTPFileRules == nil {
+		c.Validator.HTTPFileRules = make([]network.HTTPFileRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another HTTP file rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readHTTPFileRule(c, &network.HTTPFileRule{}, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another HTTP file rule", false)
 		if err != nil {
 			return err
 		}
@@ -302,7 +433,7 @@ func initNetworkRule[R networkRule](r R, ruleType string, ruleNames *[]string) e
 	return nil
 }
 
-func readDNSRule(c *components.NetworkPluginConfig, r *vpnetworkapi.DNSRule, idx int, ruleNames *[]string) error {
+func readDNSRule(c *components.NetworkPluginConfig, r *network.DNSRule, idx int, ruleNames *[]string) error {
 	err := initNetworkRule(r, "DNS", ruleNames)
 	if err != nil {
 		return err
@@ -323,7 +454,7 @@ func readDNSRule(c *components.NetworkPluginConfig, r *vpnetworkapi.DNSRule, idx
 	return nil
 }
 
-func readIcmpRule(c *components.NetworkPluginConfig, r *vpnetworkapi.ICMPRule, idx int, ruleNames *[]string) error {
+func readIcmpRule(c *components.NetworkPluginConfig, r *network.ICMPRule, idx int, ruleNames *[]string) error {
 	err := initNetworkRule(r, "ICMP", ruleNames)
 	if err != nil {
 		return err
@@ -340,7 +471,7 @@ func readIcmpRule(c *components.NetworkPluginConfig, r *vpnetworkapi.ICMPRule, i
 	return nil
 }
 
-func readIPRangeRule(c *components.NetworkPluginConfig, r *vpnetworkapi.IPRangeRule, idx int, ruleNames *[]string) error {
+func readIPRangeRule(c *components.NetworkPluginConfig, r *network.IPRangeRule, idx int, ruleNames *[]string) error {
 	err := initNetworkRule(r, "IP range", ruleNames)
 	if err != nil {
 		return err
@@ -361,7 +492,7 @@ func readIPRangeRule(c *components.NetworkPluginConfig, r *vpnetworkapi.IPRangeR
 	return nil
 }
 
-func readMtuRule(c *components.NetworkPluginConfig, r *vpnetworkapi.MTURule, idx int, ruleNames *[]string) error {
+func readMtuRule(c *components.NetworkPluginConfig, r *network.MTURule, idx int, ruleNames *[]string) error {
 	err := initNetworkRule(r, "MTU", ruleNames)
 	if err != nil {
 		return err
@@ -382,7 +513,7 @@ func readMtuRule(c *components.NetworkPluginConfig, r *vpnetworkapi.MTURule, idx
 	return nil
 }
 
-func readTCPConnRule(c *components.NetworkPluginConfig, r *vpnetworkapi.TCPConnRule, idx int, ruleNames *[]string) error {
+func readTCPConnRule(c *components.NetworkPluginConfig, r *network.TCPConnRule, idx int, ruleNames *[]string) error {
 	err := initNetworkRule(r, "TCP connection", ruleNames)
 	if err != nil {
 		return err
@@ -438,6 +569,44 @@ func readTCPConnRule(c *components.NetworkPluginConfig, r *vpnetworkapi.TCPConnR
 		c.Validator.TCPConnRules = append(c.Validator.TCPConnRules, *r)
 	} else {
 		c.Validator.TCPConnRules[idx] = *r
+	}
+	return nil
+}
+
+func readHTTPFileRule(c *components.NetworkPluginConfig, r *network.HTTPFileRule, idx int, ruleNames *[]string) error {
+	err := initNetworkRule(r, "HTTP file", ruleNames)
+	if err != nil {
+		return err
+	}
+	r.Paths, err = prompts.ReadURLSlice("Paths", strings.Join(r.Paths, "\n"), "Invalid path; must be a valid URL", false)
+	if err != nil {
+		return err
+	}
+	if r.AuthSecretRef == nil {
+		r.AuthSecretRef = &network.BasicAuthSecretReference{}
+	}
+	r.AuthSecretRef.Name, err = prompts.ReadK8sName("Secret name for basic authentication", r.AuthSecretRef.Name, true)
+	if err != nil {
+		return err
+	}
+	if r.AuthSecretRef.Name != "" {
+		r.AuthSecretRef.UsernameKey, err = prompts.ReadText("Key for username in secret", r.AuthSecretRef.UsernameKey, false, -1)
+		if err != nil {
+			return err
+		}
+		r.AuthSecretRef.PasswordKey, err = prompts.ReadText("Key for password in secret", r.AuthSecretRef.PasswordKey, false, -1)
+		if err != nil {
+			return err
+		}
+	}
+	r.InsecureSkipTLSVerify, err = prompts.ReadBool("Skip TLS certificate verification", true)
+	if err != nil {
+		return err
+	}
+	if idx == -1 {
+		c.Validator.HTTPFileRules = append(c.Validator.HTTPFileRules, *r)
+	} else {
+		c.Validator.HTTPFileRules[idx] = *r
 	}
 	return nil
 }

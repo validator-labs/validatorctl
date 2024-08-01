@@ -19,7 +19,7 @@ require (
 	github.com/validator-labs/validator v0.0.50
 	github.com/validator-labs/validator-plugin-aws v0.1.2
 	github.com/validator-labs/validator-plugin-azure v0.0.14
-	github.com/validator-labs/validator-plugin-network v0.0.20
+	github.com/validator-labs/validator-plugin-network v0.0.22-0.20240801153219-c280e896939b
 	github.com/validator-labs/validator-plugin-oci v0.0.12
 	github.com/validator-labs/validator-plugin-vsphere v0.0.28
 	github.com/vmware/govmomi v0.39.0
@@ -220,3 +220,5 @@ require (
 	sigs.k8s.io/release-utils v0.8.3 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
+
+replace github.com/spectrocloud-labs/prompts-tui => ../../spectrocloud-labs/prompts-tui

@@ -65,7 +65,7 @@ func Test_readAwsPlugin(t *testing.T) {
 		},
 	}
 	for _, tt := range tts {
-		prompts.Tui = &mocks.MockTUI{ReturnVals: tt.returnVals}
+		prompts.Tui = &mocks.MockTUI{Values: tt.returnVals}
 		t.Run(tt.name, func(t *testing.T) {
 			err := readAwsPlugin(tt.vc, tt.k8sClient)
 			if (err != nil) != tt.wantErr {
