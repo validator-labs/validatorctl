@@ -136,3 +136,8 @@ func HeaderCustom(s string, bgColor, textColor pterm.Color) {
 		Println(s)
 	fmt.Fprintf(os.Stdout, "\n") // nolint:errcheck
 }
+
+// Out returns the io.Writer used to write messages to the console
+func Out() *os.File {
+	return os.Stdout
+}
