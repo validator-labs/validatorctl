@@ -128,12 +128,12 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 		"bar",                          // Alertmanager password
 
 	}
+	tuiSliceVals := [][]string{}
 
-	//tuiVals = t.baseHelmValues(ctx, tuiVals)
 	tuiVals = t.validatorValues(ctx, tuiVals)
-	tuiVals = t.awsPluginValues(ctx, tuiVals)
+	tuiVals, tuiSliceVals = t.awsPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals = t.azurePluginValues(ctx, tuiVals)
-	tuiVals = t.networkPluginValues(ctx, tuiVals)
+	tuiVals, tuiSliceVals = t.networkPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals = t.ociPluginValues(ctx, tuiVals)
 	tuiVals = t.vspherePluginValues(ctx, tuiVals)
 
@@ -143,29 +143,13 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 		"n", // reconfigure plugin(s)
 	}...)
 
-	prompts.Tui = &tuimocks.MockTUI{ReturnVals: tuiVals}
+	prompts.Tui = &tuimocks.MockTUI{
+		Values:      tuiVals,
+		SliceValues: tuiSliceVals,
+	}
 
 	return common.ExecCLI(interactiveCmd, buffer, t.log)
 }
-
-/*
-func (t *ValidatorTest) baseHelmValues(ctx *test.TestContext, tuiVals []string) []string {
-	baseVals := []string{
-		cfg.ValidatorHelmRepository, // validator helm chart repo
-		"y",                         // insecure skip verify
-		"y",                         // use basic auth
-		"bob",                       // release secret username
-		"dog",                       // release secret password
-	}
-	if string_utils.IsDevVersion(ctx.Get("version")) {
-		baseVals = slices.Insert(baseVals, 1,
-			cfg.ValidatorChartVersions[cfg.Validator], // validator helm chart version
-		)
-	}
-	tuiVals = append(tuiVals, baseVals...)
-	return tuiVals
-}
-*/
 
 func (t *ValidatorTest) validatorValues(ctx *test.TestContext, tuiVals []string) []string {
 	if string_utils.IsDevVersion(ctx.Get("version")) {
@@ -175,8 +159,8 @@ func (t *ValidatorTest) validatorValues(ctx *test.TestContext, tuiVals []string)
 	return tuiVals
 }
 
-func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, tuiVals []string) []string {
-	awsVals := []string{
+func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+	awsVals := []any{
 		"y",                       // enable AWS plugin
 		"n",                       // use implicit auth
 		"aws-creds",               // AWS secret name
@@ -208,34 +192,42 @@ func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, tuiVals []string)
 		"n",                       // add another IAM group rule
 		"y",                       // enable IAM policy validation
 		"arn:aws:iam::account-num:policy/some-policy", // IAM policy ARN
-		"Local Filepath",          // Policy Document Source
-		t.filePath("policy.json"), // Policy Document File
-		"n",                       // add another policy document
-		"n",                       // add another IAM policy rule
-		"y",                       // enable service quota validation
-		"EC2",                     // rule name
-		"EC2-VPC Elastic IPs",     // service quota type
-		"us-west-2",               // service quota region #1
-		"5",                       // service quota buffer #1
-		"n",                       // add another service quota rule
-		"y",                       // enable subnet tag validation
-		"subnet",                  // tag resource type
-		"elb tag rule",            // rule name
-		"us-west-2",               // subnet tag region #1
-		"foo",                     // subnet tag key #1
-		"bar",                     // subnet tag value #1
-		"baz",                     // subnet arn #1
-		"n",                       // add another subnet arn
-		"n",                       // add another subnet tag rule
-		"n",                       // add another tag rule
+		"Local Filepath",           // Policy Document Source
+		t.filePath("policy.json"),  // Policy Document File
+		"n",                        // add another policy document
+		"n",                        // add another IAM policy rule
+		"y",                        // enable service quota validation
+		"EC2",                      // rule name
+		"EC2-VPC Elastic IPs",      // service quota type
+		"us-west-2",                // service quota region #1
+		"5",                        // service quota buffer #1
+		"n",                        // add another service quota rule
+		"y",                        // enable subnet tag validation
+		"subnet",                   // tag resource type
+		"elb tag rule",             // rule name
+		"us-west-2",                // subnet tag region #1
+		"foo",                      // subnet tag key #1
+		"bar",                      // subnet tag value #1
+		[]string{"arn-1"},          // subnet arns
+		"n",                        // add another subnet tag rule
+		"n",                        // add another tag rule
+		"y",                        // enable AMI validation
+		"ami rule",                 // rule name
+		"us-west-2",                // ami region
+		[]string{"ami-1", "ami-2"}, // AMI ids
+		"y",                        // add an AMI filter
+		"foo",                      // filter tag
+		[]string{"bar", "baz"},     // filter values
+		"n",                        // is this a tag filter
+		"n",                        // add another filter
+		[]string{""},               // owners
+		"n",                        // add another AMI rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		awsVals = slices.Insert(awsVals, 1,
-			cfg.ValidatorChartVersions[cfg.ValidatorPluginAws], // validator-plugin-aws helm chart version
-		)
+		awsVals = append(awsVals[:2], awsVals[1:]...)
+		awsVals[1] = cfg.ValidatorChartVersions[cfg.ValidatorPluginAws] // validator-plugin-aws helm chart version
 	}
-	tuiVals = append(tuiVals, awsVals...)
-	return tuiVals
+	return interleave(vals, sliceVals, awsVals)
 }
 
 func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []string) []string {
@@ -261,44 +253,54 @@ func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []strin
 	return tuiVals
 }
 
-func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, tuiVals []string) []string {
-	networkVals := []string{
-		"y",           // enable Network plugin
-		"y",           // enable DNS validation
-		"resolve foo", // DNS rule name
-		"foo",         // DNS host
-		"",            // DNS nameserver
-		"n",           // add another DNS rule
-		"y",           // enable ICMP validation
-		"ping foo",    // ICMP rule name
-		"foo",         // ICMP host
-		"n",           // add another ICMP rule
-		"y",           // enable IP range validation
-		"check ips",   // IP range rule name
-		"10.10.10.10", // first IPv4 in range
-		"10",          // length of IPv4 range
-		"n",           // add another IP range rule
-		"y",           // enable MTU validation
-		"check mtu",   // MTU rule name
-		"foo",         // MTU host
-		"1500",        // minimum MTU
-		"n",           // add another MTU rule
-		"y",           // enable TCP connection validation
-		"check tcp",   // TCP connection rule name
-		"foo",         // TCP connection host
-		"80",          // TCP connection port
-		"n",           // add another port
-		"y",           // InsecureSkipTLSVerify
-		"5",           // TCP connection timeout
-		"n",           // add another TCP connection rule
+func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+	networkVals := []any{
+		"y",                              // enable Network plugin
+		"y",                              // enable DNS validation
+		"resolve foo",                    // DNS rule name
+		"foo",                            // DNS host
+		"",                               // DNS nameserver
+		"n",                              // add another DNS rule
+		"y",                              // enable ICMP validation
+		"ping foo",                       // ICMP rule name
+		"foo",                            // ICMP host
+		"n",                              // add another ICMP rule
+		"y",                              // enable IP range validation
+		"check ips",                      // IP range rule name
+		"10.10.10.10",                    // first IPv4 in range
+		"10",                             // length of IPv4 range
+		"n",                              // add another IP range rule
+		"y",                              // enable MTU validation
+		"check mtu",                      // MTU rule name
+		"foo",                            // MTU host
+		"1500",                           // minimum MTU
+		"n",                              // add another MTU rule
+		"y",                              // enable TCP connection validation
+		"check tcp",                      // TCP connection rule name
+		"foo",                            // TCP connection host
+		[]string{"80"},                   // TCP connection ports
+		"y",                              // InsecureSkipTLSVerify
+		"5",                              // TCP connection timeout
+		"n",                              // add another TCP connection rule
+		"y",                              // enable HTTP file validation
+		[]string{"https://foo.com/file"}, // paths
+		"n",                              // add another path
+		"http-secret",                    // secret name for basic auth
+		"username",                       // username key
+		"password",                       // password key
+		"y",                              // skip TLS verification
+		"n",                              // add another HTTP file rule
+		"n",                              // add local CA certs
+		"y",                              // add CA cert secret refs
+		"ca-certs",                       // secret name
+		"ca.crt",                         // cert key
+		"n",                              // add another CA cert secret ref
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		networkVals = slices.Insert(networkVals, 1,
-			cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork], // validator-plugin-network helm chart version
-		)
+		networkVals = append(networkVals[:2], networkVals[1:]...)
+		networkVals[1] = cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork] // validator-plugin-network helm chart version
 	}
-	tuiVals = append(tuiVals, networkVals...)
-	return tuiVals
+	return interleave(vals, sliceVals, networkVals)
 }
 
 func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, tuiVals []string) []string {
@@ -407,6 +409,18 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, tuiVals []str
 	return tuiVals
 }
 
+func interleave(vals []string, sliceVals [][]string, inputVals []any) ([]string, [][]string) {
+	for _, val := range inputVals {
+		switch v := val.(type) {
+		case string:
+			vals = append(vals, v)
+		case []string:
+			sliceVals = append(sliceVals, v)
+		}
+	}
+	return vals, sliceVals
+}
+
 func (t *ValidatorTest) testDeploySilent() (tr *test.TestResult) {
 	if err := t.updateTestData(); err != nil {
 		return test.Failure(err.Error())
@@ -441,7 +455,7 @@ func (t *ValidatorTest) testUpdatePasswords() (tr *test.TestResult) {
 	}
 
 	prompts.Tui = &tuimocks.MockTUI{
-		ReturnVals: []string{
+		Values: []string{
 			// Helm config
 			cfg.ValidatorHelmRegistry, // Helm registry
 			"y",                       // Allow Insecure Connection (Bypass x509 Verification)

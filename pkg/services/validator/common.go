@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 
 	"emperror.dev/errors"
 	"k8s.io/client-go/kubernetes"
@@ -232,4 +233,13 @@ func intToStringDefault(x int) string {
 		s = strconv.FormatInt(int64(x), 10)
 	}
 	return s
+}
+
+func intsToStringDefault(xs []int) string {
+	ss := make([]string, 0, len(xs))
+	for _, x := range xs {
+		s := strconv.FormatInt(int64(x), 10)
+		ss = append(ss, s)
+	}
+	return strings.Join(ss, "\n")
 }

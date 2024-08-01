@@ -42,7 +42,7 @@ var (
 
 func setup(returnVals []string) {
 	tui = prompts.Tui
-	prompts.Tui = &tuimocks.MockTUI{ReturnVals: returnVals}
+	prompts.Tui = &tuimocks.MockTUI{Values: returnVals}
 
 	vSphereDriverFunc = clouds.GetVSphereDriver
 	clouds.GetVSphereDriver = func(account *vsphere.CloudAccount) (vsphere.Driver, error) {

@@ -80,8 +80,10 @@ func NewValidatorConfig() *ValidatorConfig {
 			StaticDeploymentValues: make(map[int]*AzureStaticDeploymentValues),
 		},
 		NetworkPlugin: &NetworkPluginConfig{
-			Release:   &validator.HelmRelease{},
-			Validator: &network.NetworkValidatorSpec{},
+			Release: &validator.HelmRelease{},
+			Validator: &network.NetworkValidatorSpec{
+				CACerts: network.CACertificates{},
+			},
 		},
 		OCIPlugin: &OCIPluginConfig{
 			Release:     &validator.HelmRelease{},
