@@ -192,13 +192,14 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
 	log.Header("Validator Plugin Configuration")
 	log.InfoCLI(`
-	You will be prompted for the following configuration:
+	You will be prompted for to configure Validator plugin rule(s).
 
-	  - Validator plugin rule(s) to apply to a Kubernetes cluster
+	Custom Resouces containing plugin rules will be applied to the
+	Kubernetes cluster specified by the KUBECONFIG environment variable.
 
-	    Note: Failures will occur if you attempt to apply a rule to a
-		Kubernetes cluster that does not already have the corresponding
-		validator plugin installed.
+	Note: Failures will occur if you attempt to apply a rule to a
+	Kubernetes cluster that does not already have the corresponding
+	validator plugin installed.
 
 	If you make a mistake at any point you will have to option
 	to revisit any configuration step at the end.
