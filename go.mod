@@ -12,8 +12,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pterm/pterm v0.12.79
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spectrocloud-labs/prompts-tui v0.1.0
 	github.com/spectrocloud-labs/embeddedfs v0.1.0
+	github.com/spectrocloud-labs/prompts-tui v0.1.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/validator-labs/validator v0.0.50
