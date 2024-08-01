@@ -594,7 +594,6 @@ func SaveValidatorConfig(c *ValidatorConfig, tc *cfg.TaskConfig) error {
 // ConfigureBaseValidator configures the base validator configuration
 func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) {
 	// TODO: properly handle TLS, helm, and air-gap config
-	// TODO: add vc.HelmConfig????
 	vc.Release = &validator.HelmRelease{
 		Chart: validator.HelmChart{
 			Name:       cfg.Validator,
