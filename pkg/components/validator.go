@@ -189,7 +189,7 @@ type RegistryConfig struct {
 	Registry *Registry `yaml:"registry"`
 }
 
-// ToHelmConfig converts the RegistryConfgi to a HelmConfig.
+// ToHelmConfig converts the RegistryConfig to a HelmConfig.
 func (c *RegistryConfig) ToHelmConfig() *validator.HelmConfig {
 	hc := &validator.HelmConfig{
 		Registry:              c.Registry.ChartEndpoint(),
