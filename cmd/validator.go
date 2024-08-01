@@ -26,8 +26,9 @@ func NewDeployValidatorCmd() *cobra.Command {
 
 For more information about validator, see: https://github.com/validator-labs/validator.
 `,
-		Args:         cobra.NoArgs,
-		SilenceUsage: false,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
@@ -69,8 +70,9 @@ func NewUpgradeValidatorCmd() *cobra.Command {
 
 For more information about validator, see: https://github.com/validator-labs/validator.
 `,
-		Args:         cobra.NoArgs,
-		SilenceUsage: false,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
@@ -100,11 +102,12 @@ func NewUndeployValidatorCmd() *cobra.Command {
 	var deleteCluster bool
 
 	cmd := &cobra.Command{
-		Use:          "uninstall",
-		Short:        "Uninstall validator & all validator plugin(s)",
-		Long:         "Uninstall validator & all validator plugin(s)",
-		Args:         cobra.NoArgs,
-		SilenceUsage: false,
+		Use:           "uninstall",
+		Short:         "Uninstall validator & all validator plugin(s)",
+		Long:          "Uninstall validator & all validator plugin(s)",
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
@@ -141,8 +144,9 @@ func NewDescribeValidationResultsCmd() *cobra.Command {
 Validation results in the cluster specified by the KUBECONFIG environment variable will be described.
 If the --config-file flag is specified, the KUBECONFIG specified in the validator configuration file will be used instead.
 `,
-		Args:         cobra.NoArgs,
-		SilenceUsage: false,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
@@ -172,8 +176,9 @@ func NewValidatorDocsCmd() *cobra.Command {
 
 For more information about validator, see: https://github.com/validator-labs/validator.
 `,
-		Args:         cobra.NoArgs,
-		SilenceUsage: false,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			args := map[string]interface{}{
 				"Version":          Version,
