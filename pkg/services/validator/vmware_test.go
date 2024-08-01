@@ -18,6 +18,7 @@ import (
 )
 
 var vSphereDummyConfig = &components.ValidatorConfig{
+	HelmConfig: &v1alpha1.HelmConfig{},
 	RegistryConfig: &components.RegistryConfig{
 		Enabled: false,
 	},
@@ -67,9 +68,7 @@ func Test_readVspherePlugin(t *testing.T) {
 			name: "Fail - no rules",
 			vc:   deepcopy.Copy(vSphereDummyConfig).(*components.ValidatorConfig),
 			returnVals: []string{
-				cfg.ValidatorHelmRepository,                            // validator-plugin-vsphere helm chart repo
 				cfg.ValidatorChartVersions[cfg.ValidatorPluginVsphere], // validator-plugin-vsphere helm chart version
-				"y",                // Re-use validator chart security configuration
 				"vsphere-creds",    // vSphere secret name
 				"fake.vsphere.com", // vSphere domain
 				"bob@vsphere.com",  // vSphere username

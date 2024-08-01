@@ -16,6 +16,7 @@ import (
 )
 
 var awsDummyConfig = &components.ValidatorConfig{
+	HelmConfig: &v1alpha1.HelmConfig{},
 	RegistryConfig: &components.RegistryConfig{
 		Enabled: false,
 	},
@@ -46,9 +47,7 @@ func Test_readAwsPlugin(t *testing.T) {
 			name: "Fail - no rules",
 			vc:   deepcopy.Copy(awsDummyConfig).(*components.ValidatorConfig),
 			returnVals: []string{
-				cfg.ValidatorHelmRepository,                        // validator-plugin-aws helm chart repo
 				cfg.ValidatorChartVersions[cfg.ValidatorPluginAws], // validator-plugin-aws helm chart version
-				"y",         // Re-use validator chart security configuration
 				"y",         // use implicit auth
 				"",          // service account name
 				"us-east-1", // region
