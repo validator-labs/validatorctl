@@ -59,13 +59,14 @@ func Test_readAwsPlugin(t *testing.T) {
 				"n",         // enable IAM policy validation
 				"n",         // enable service quota validation
 				"n",         // enable tag validation
+				"n",         // enable AMI validation
 			},
 			wantErr: true,
 			err:     errNoRulesEnabled,
 		},
 	}
 	for _, tt := range tts {
-		prompts.Tui = &mocks.MockTUI{ReturnVals: tt.returnVals}
+		prompts.Tui = &mocks.MockTUI{Values: tt.returnVals}
 		t.Run(tt.name, func(t *testing.T) {
 			err := readAwsPlugin(tt.vc, tt.k8sClient)
 			if (err != nil) != tt.wantErr {

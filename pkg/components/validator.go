@@ -91,7 +91,9 @@ func NewValidatorConfig() *ValidatorConfig {
 				BasicAuth: &BasicAuth{},
 				Data:      make(map[string]string),
 			},
-			Validator: &network.NetworkValidatorSpec{},
+			Validator: &network.NetworkValidatorSpec{
+				CACerts: network.CACertificates{},
+			},
 		},
 		OCIPlugin: &OCIPluginConfig{
 			Release: &validator.HelmRelease{},

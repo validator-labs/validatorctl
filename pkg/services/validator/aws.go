@@ -3,6 +3,7 @@ package validator
 import (
 	"os"
 	"reflect"
+	"strings"
 	"time"
 
 	"emperror.dev/errors"
@@ -25,7 +26,8 @@ var (
 )
 
 type awsRule interface {
-	*vpawsapi.ServiceQuotaRule | *vpawsapi.TagRule | *vpawsapi.IamRoleRule | *vpawsapi.IamUserRule | *vpawsapi.IamGroupRule | *vpawsapi.IamPolicyRule
+	*vpawsapi.ServiceQuotaRule | *vpawsapi.TagRule | *vpawsapi.AmiRule |
+		*vpawsapi.IamRoleRule | *vpawsapi.IamUserRule | *vpawsapi.IamGroupRule | *vpawsapi.IamPolicyRule
 }
 
 func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
@@ -70,6 +72,9 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 	if err := configureAwsTagRules(c, &ruleNames); err != nil {
 		return err
 	}
+	if err := configureAmiRules(c, &ruleNames); err != nil {
+		return err
+	}
 
 	if c.Validator.ResultCount() == 0 {
 		return errNoRulesEnabled
@@ -84,7 +89,7 @@ func configureIamRoleRules(c *components.AWSPluginConfig, ruleNames *[]string) e
 	specified in the provided policy document(s).
 	`)
 
-	validateRoles, err := prompts.ReadBool("Enable Iam Role validation", true)
+	validateRoles, err := prompts.ReadBool("Enable IAM Role validation", true)
 	if err != nil {
 		return err
 	}
@@ -172,7 +177,7 @@ func configureIamUserRules(c *components.AWSPluginConfig, ruleNames *[]string) e
 	specified in the provided policy document(s).
 	`)
 
-	validateUsers, err := prompts.ReadBool("Enable Iam User validation", true)
+	validateUsers, err := prompts.ReadBool("Enable IAM User validation", true)
 	if err != nil {
 		return err
 	}
@@ -260,7 +265,7 @@ func configureIamGroupRules(c *components.AWSPluginConfig, ruleNames *[]string) 
 	specified in the provided policy document(s).
 	`)
 
-	validateGroups, err := prompts.ReadBool("Enable Iam Group validation", true)
+	validateGroups, err := prompts.ReadBool("Enable IAM Group validation", true)
 	if err != nil {
 		return err
 	}
@@ -348,7 +353,7 @@ func configureIamPolicyRules(c *components.AWSPluginConfig, ruleNames *[]string)
 	specified in the provided policy document(s).
 	`)
 
-	validatePolicies, err := prompts.ReadBool("Enable Iam Policy validation", true)
+	validatePolicies, err := prompts.ReadBool("Enable IAM Policy validation", true)
 	if err != nil {
 		return err
 	}
@@ -599,6 +604,56 @@ func configureAwsTagRules(c *components.AWSPluginConfig, ruleNames *[]string) er
 	return nil
 }
 
+// nolint:dupl
+func configureAmiRules(c *components.AWSPluginConfig, ruleNames *[]string) error {
+	log.InfoCLI(`
+	AMI Rules ensure that one or more EC2 AMIs exist in a particular region.
+	AMIs can be matched by any combination of ID, owner, and filter(s).
+	Each AMI Rule is intended to match a single AMI, as an AmiRule is
+	considered successful if at least one AMI is found.
+	`)
+
+	validateTags, err := prompts.ReadBool("Enable AMI validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateTags {
+		c.Validator.AmiRules = nil
+		return nil
+	}
+	for i, r := range c.Validator.AmiRules {
+		r := r
+		if err := readAmiRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.Validator.AmiRules == nil {
+		c.Validator.AmiRules = make([]vpawsapi.AmiRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another AMI rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readAmiRule(c, nil, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add another AMI rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
 func readAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernetes.Interface) error {
 	var err error
 	c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit AWS auth", true)
@@ -781,29 +836,9 @@ func readSubnetTagRule(c *components.AWSPluginConfig, r *vpawsapi.TagRule, idx i
 			}
 			r.ARNs[i] = arn
 		}
-		addArns := true
-		if len(r.ARNs) > 0 {
-			addArns, err = prompts.ReadBool("Add another subnet ARN", false)
-			if err != nil {
-				return err
-			}
-		}
-		if addArns {
-			for {
-				arn, err := prompts.ReadText("Subnet ARN", "", false, -1)
-				if err != nil {
-					return err
-				}
-				r.ARNs = append(r.ARNs, arn)
-
-				add, err := prompts.ReadBool("Add another subnet ARN", false)
-				if err != nil {
-					return err
-				}
-				if !add {
-					break
-				}
-			}
+		r.ARNs, err = prompts.ReadTextSlice("Subnet ARNs", strings.Join(r.ARNs, "\n"), "invalid ARNs", "", false)
+		if err != nil {
+			return err
 		}
 		if idx == -1 {
 			c.Validator.TagRules = append(c.Validator.TagRules, *r)
@@ -820,4 +855,111 @@ func readSubnetTagRule(c *components.AWSPluginConfig, r *vpawsapi.TagRule, idx i
 		}
 	}
 	return nil
+}
+
+func readAmiRule(c *components.AWSPluginConfig, r *vpawsapi.AmiRule, idx int, ruleNames *[]string) error {
+	if r == nil {
+		r = &vpawsapi.AmiRule{
+			Name:    "",
+			AmiIDs:  []string{},
+			Filters: []vpawsapi.Filter{},
+			Owners:  []string{},
+		}
+	}
+	err := initAwsRule(r, "AMI", ruleNames)
+	if err != nil {
+		return err
+	}
+
+	if r.Region != "" {
+		region = r.Region
+	}
+	r.Region, err = prompts.ReadText("AMI Region", region, false, -1)
+	if err != nil {
+		return err
+	}
+
+	log.InfoCLI(`
+	AMI IDs are unique identifiers for Amazon Machine Images. AMI IDs can be omitted
+	if providing filter(s) or owner(s).
+	`)
+	r.AmiIDs, err = prompts.ReadTextSlice("AMI IDs", strings.Join(r.AmiIDs, "\n"), "Invalid AMI", "", true)
+	if err != nil {
+		return err
+	}
+
+	log.InfoCLI(`
+	Filters can be used to match a set of resources by specific criteria, such as tags,
+	attributes, or IDs. See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeImages.html
+	for a list of supported filters.
+	`)
+	for _, f := range r.Filters {
+		f := f
+		if err := readFilter(&f); err != nil {
+			return err
+		}
+	}
+	addFilters, err := prompts.ReadBool("Add an AMI filter", false)
+	if err != nil {
+		return err
+	}
+	if addFilters {
+		for {
+			f := vpawsapi.Filter{}
+			if err := readFilter(&f); err != nil {
+				return err
+			}
+			r.Filters = append(r.Filters, f)
+
+			add, err := prompts.ReadBool("Add another filter", false)
+			if err != nil {
+				return err
+			}
+			if !add {
+				break
+			}
+		}
+	}
+
+	log.InfoCLI(`
+	Owners scope the results to images with the specified owners. You can
+	specify a combination of AWS account IDs, self, amazon, and aws-marketplace.
+	If you omit this parameter, the results include all images for which you have
+	launch permissions, regardless of ownership.
+	`)
+	r.Owners, err = prompts.ReadTextSlice("Owners", strings.Join(r.Owners, "\n"), "Invalid Owners", "", true)
+	if err != nil {
+		return err
+	}
+
+	if len(r.AmiIDs) == 0 && len(r.Filters) == 0 && len(r.Owners) == 0 {
+		log.InfoCLI("At least one of AMI IDs, filters, or owners must be provided.")
+		return readAmiRule(c, r, idx, ruleNames)
+	}
+
+	if idx == -1 {
+		c.Validator.AmiRules = append(c.Validator.AmiRules, *r)
+	} else {
+		c.Validator.AmiRules[idx] = *r
+	}
+
+	return nil
+}
+
+func readFilter(f *vpawsapi.Filter) (err error) {
+	f.Key, err = prompts.ReadText("Filter Name", f.Key, false, -1)
+	if err != nil {
+		return
+	}
+	f.Values, err = prompts.ReadTextSlice(
+		"Filter Values", strings.Join(f.Values, "\n"), "Invalid filter values", "", false,
+	)
+	if err != nil {
+		return
+	}
+	f.IsTag, err = prompts.ReadBool("Is this a tag filter", f.IsTag)
+	if err != nil {
+		return
+	}
+	return
 }
