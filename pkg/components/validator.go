@@ -187,6 +187,7 @@ type RegistryConfig struct {
 	Registry *Registry `yaml:"registry"`
 }
 
+// ToHelmConfig converts the RegistryConfgi to a HelmConfig.
 func (c *RegistryConfig) ToHelmConfig() *validator.HelmConfig {
 	hc := &validator.HelmConfig{
 		Registry:              c.Registry.Endpoint(),
@@ -204,6 +205,7 @@ func (c *RegistryConfig) ToHelmConfig() *validator.HelmConfig {
 	return hc
 }
 
+// BasicAuthEnabled returns true if basic auth is enabled on the RegistryConfig.
 func (c *RegistryConfig) BasicAuthEnabled() bool {
 	return c.Registry.BasicAuth != nil &&
 		(c.Registry.BasicAuth.Username != "" || c.Registry.BasicAuth.Password != "")
