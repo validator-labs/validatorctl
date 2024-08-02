@@ -18,7 +18,7 @@ import (
 func NewInstallValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var configFile string
-	var configOnly, updatePasswords, reconfigure, check bool
+	var configOnly, updatePasswords, reconfigure, check, wait bool
 
 	cmd := &cobra.Command{
 		Use:   "install",
@@ -41,7 +41,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 				return err
 			}
 
-			if err := validator.InstallValidatorCommand(c, check, taskConfig); err != nil {
+			if err := validator.InstallValidatorCommand(c, check, wait, taskConfig); err != nil {
 				return fmt.Errorf("failed to install validator: %v", err)
 			}
 			return nil
@@ -54,6 +54,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 	flags.BoolVarP(&updatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with installation. The --config-file flag must be provided. Default: false.")
 	flags.BoolVarP(&reconfigure, "reconfigure", "r", false, "Re-configure validator and plugin(s) prior to installation. The --config-file flag must be provided. Default: false.")
 	flags.BoolVar(&check, "check", false, "Configure rules for validator plugin(s). Default: false")
+	flags.BoolVar(&wait, "wait", false, "Wait for validation to succeed and describe results. Default: false")
 
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
 
@@ -65,7 +66,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 func NewConfigureValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var configFile string
-	var configOnly, silent, updatePasswords bool
+	var configOnly, silent, updatePasswords, wait bool
 
 	cmd := &cobra.Command{
 		Use:   "check",
@@ -88,7 +89,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 				return err
 			}
 
-			if err := validator.ConfigureValidatorCommand(c, taskConfig); err != nil {
+			if err := validator.ConfigureValidatorCommand(c, wait, taskConfig); err != nil {
 				return fmt.Errorf("failed to configure validator: %v", err)
 			}
 			return nil
@@ -100,6 +101,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 	flags.BoolVarP(&configOnly, "config-only", "o", false, "Update configuration file only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&updatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&silent, "silent", "s", false, "Skip all prompts and apply configuration file directly. Default: false.")
+	flags.BoolVar(&wait, "wait", false, "Wait for validation to succeed and describe results. Default: false")
 
 	cmdutils.MarkFlagRequired(cmd, "config-file")
 

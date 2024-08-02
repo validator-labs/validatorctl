@@ -47,7 +47,7 @@ func InitWorkspace(c *cfg.Config, workspaceDir string, subdirs []string, timesta
 }
 
 // InstallValidatorCommand deploys the validator and its plugins
-func InstallValidatorCommand(c *cfg.Config, check bool, tc *cfg.TaskConfig) error {
+func InstallValidatorCommand(c *cfg.Config, check, wait bool, tc *cfg.TaskConfig) error {
 	var vc *components.ValidatorConfig
 	var err error
 	var saveConfig bool
@@ -118,14 +118,14 @@ func InstallValidatorCommand(c *cfg.Config, check bool, tc *cfg.TaskConfig) erro
 		return err
 	}
 	if check {
-		return ConfigureValidatorCommand(c, tc)
+		return ConfigureValidatorCommand(c, wait, tc)
 	}
 	return nil
 }
 
 // ConfigureValidatorCommand configures and applies validator plugin rules
 // nolint:dupl
-func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
+func ConfigureValidatorCommand(c *cfg.Config, wait bool, tc *cfg.TaskConfig) error {
 	var vc *components.ValidatorConfig
 	var err error
 	var saveConfig bool
@@ -168,7 +168,15 @@ func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		return nil
 	}
 
-	return configurePlugins(c, vc)
+	if err := configurePlugins(c, vc); err != nil {
+		return err
+	}
+	if wait {
+		log.Header("Waiting for validation to complete")
+		_, err := WatchValidationResults(tc)
+		return err
+	}
+	return nil
 }
 
 // UpgradeValidatorCommand upgrades validator and its plugins
@@ -308,7 +316,7 @@ func getValidationResultsCRDClient(tc *cfg.TaskConfig) (dynamic.NamespaceableRes
 		if err := os.Setenv("KUBECONFIG", vc.Kubeconfig); err != nil {
 			return nil, err
 		}
-		log.InfoCLI("Using kubeconfig from validator configuration file: %s", vc.Kubeconfig)
+		log.Debug("Using kubeconfig from validator configuration file: %s", vc.Kubeconfig)
 	}
 
 	gv := kube.GetGroupVersion("validation.spectrocloud.labs", "v1alpha1")

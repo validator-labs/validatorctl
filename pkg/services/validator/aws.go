@@ -790,6 +790,8 @@ func readServiceQuotaRule(c *components.AWSPluginConfig, r *vpawsapi.ServiceQuot
 	}
 	if r.Region != "" {
 		region = r.Region
+	} else if c.Validator.DefaultRegion != "" {
+		region = c.Validator.DefaultRegion
 	}
 	r.Region, err = prompts.ReadText("AWS Region", region, false, -1)
 	if err != nil {
@@ -821,6 +823,8 @@ func readSubnetTagRule(c *components.AWSPluginConfig, r *vpawsapi.TagRule, idx i
 		}
 		if r.Region != "" {
 			region = r.Region
+		} else if c.Validator.DefaultRegion != "" {
+			region = c.Validator.DefaultRegion
 		}
 		r.Region, err = prompts.ReadText("AWS Region", region, false, -1)
 		if err != nil {
@@ -878,6 +882,8 @@ func readAmiRule(c *components.AWSPluginConfig, r *vpawsapi.AmiRule, idx int, ru
 
 	if r.Region != "" {
 		region = r.Region
+	} else if c.Validator.DefaultRegion != "" {
+		region = c.Validator.DefaultRegion
 	}
 	r.Region, err = prompts.ReadText("AMI Region", region, false, -1)
 	if err != nil {
