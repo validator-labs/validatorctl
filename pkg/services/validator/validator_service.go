@@ -262,14 +262,11 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
 	log.Header("Validator Plugin Configuration")
 	log.InfoCLI(`
-	You will be prompted for to configure Validator plugin rule(s).
+	You will be prompted for to configure Validator plugin rules
+	for each enabled plugin in your validator configuration file.
 
 	Custom Resouces containing plugin rules will be applied to the
 	Kubernetes cluster specified by the KUBECONFIG environment variable.
-
-	Note: Failures will occur if you attempt to apply a rule to a
-	Kubernetes cluster that does not already have the corresponding
-	validator plugin installed.
 
 	If you make a mistake at any point you will have to option
 	to revisit any configuration step at the end.
@@ -291,49 +288,25 @@ func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components
 	}
 	log.InfoCLI("")
 
-	vc.AWSPlugin.Enabled, err = prompts.ReadBool("Configure AWS plugin rule(s)", true)
-	if err != nil {
-		return err
-	}
 	if vc.AWSPlugin.Enabled {
 		if err = readAwsPluginRules(vc, kClient); err != nil {
 			return err
 		}
-	}
-
-	vc.AzurePlugin.Enabled, err = prompts.ReadBool("Configure Azure plugin rule(s)", true)
-	if err != nil {
-		return err
 	}
 	if vc.AzurePlugin.Enabled {
 		if err = readAzurePluginRules(vc, kClient); err != nil {
 			return err
 		}
 	}
-
-	vc.NetworkPlugin.Enabled, err = prompts.ReadBool("Configure Network plugin rule(s)", true)
-	if err != nil {
-		return err
-	}
 	if vc.NetworkPlugin.Enabled {
 		if err = readNetworkPluginRules(vc, kClient); err != nil {
 			return err
 		}
 	}
-
-	vc.OCIPlugin.Enabled, err = prompts.ReadBool("Configure OCI plugin rule(s)", true)
-	if err != nil {
-		return err
-	}
 	if vc.OCIPlugin.Enabled {
 		if err = readOciPluginRules(vc, kClient); err != nil {
 			return err
 		}
-	}
-
-	vc.VspherePlugin.Enabled, err = prompts.ReadBool("Configure vSphere plugin rule(s)", true)
-	if err != nil {
-		return err
 	}
 	if vc.VspherePlugin.Enabled {
 		if err = readVspherePluginRules(vc, kClient); err != nil {

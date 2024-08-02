@@ -168,7 +168,7 @@ func ConfigureValidatorCommand(c *cfg.Config, wait bool, tc *cfg.TaskConfig) err
 		return nil
 	}
 
-	if err := configurePlugins(c, vc); err != nil {
+	if err := configurePlugins(c, vc, tc); err != nil {
 		return err
 	}
 	if wait {
@@ -236,7 +236,7 @@ func DescribeValidationResultsCommand(tc *cfg.TaskConfig) error {
 
 // WatchValidationResults watches the validation results until all have either succeeded or failed
 func WatchValidationResults(tc *cfg.TaskConfig) (bool, error) {
-	log.InfoCLI("\nWatching validation results, waiting for all to succeed")
+	log.InfoCLI("\nWatching validation results, waiting for all to succeed...")
 	kClient, err := getValidationResultsCRDClient(tc)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get validation result client")
@@ -412,21 +412,21 @@ func deployValidatorAndPlugins(c *cfg.Config, vc *components.ValidatorConfig) er
 }
 
 // configurePlugins applies/updates validator CRs for each plugin
-func configurePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
+func configurePlugins(c *cfg.Config, vc *components.ValidatorConfig, tc *cfg.TaskConfig) error {
 	log.Header("Configuring validator plugin(s)")
 
 	if err := applyPlugins(c, vc); err != nil {
 		return err
 	}
 
-	log.Header("Validation In Progress")
+	log.Header("Validation in progress")
 
 	log.InfoCLI("\nPlugins will now execute validation checks.")
 	log.InfoCLI("\nYou can list validation results via the following command:")
 	log.InfoCLI("\nkubectl -n validator get validationresults --kubeconfig %s", vc.Kubeconfig)
 
 	log.InfoCLI("\nAnd you can view all validation result details via the following command:")
-	log.InfoCLI("\nkubectl -n validator describe validationresults --kubeconfig %s", vc.Kubeconfig)
+	log.InfoCLI("\nvalidator describe -f %s", tc.ConfigFile)
 	return nil
 }
 
