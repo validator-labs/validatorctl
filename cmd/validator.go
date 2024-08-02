@@ -53,13 +53,12 @@ For more information about validator, see: https://github.com/validator-labs/val
 	flags.BoolVarP(&tc.Silent, "silent", "s", false, "Skip all plugin prompts and apply configuration file directly. Only applies when --check is set. Default: false.")
 	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Only applies when --check is set. Default: false")
 
-	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
-	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
-
 	cmd.MarkFlagsMutuallyExclusive("config-only", "silent")
 	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "silent")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
+	cmd.MarkFlagsMutuallyExclusive("reconfigure", "silent")
 
 	return cmd
 }
