@@ -47,7 +47,7 @@ func InitWorkspace(c *cfg.Config, workspaceDir string, subdirs []string, timesta
 }
 
 // InstallValidatorCommand deploys the validator and its plugins
-func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
+func InstallValidatorCommand(c *cfg.Config, check bool, tc *cfg.TaskConfig) error {
 	var vc *components.ValidatorConfig
 	var err error
 	var saveConfig bool
@@ -114,7 +114,13 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		}
 	}
 
-	return deployValidatorAndPlugins(c, vc)
+	if err := deployValidatorAndPlugins(c, vc); err != nil {
+		return err
+	}
+	if check {
+		return ConfigureValidatorCommand(c, tc)
+	}
+	return nil
 }
 
 // ConfigureValidatorCommand configures and applies validator plugin rules
@@ -405,13 +411,14 @@ func configurePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		return err
 	}
 
-	log.InfoCLI("\nPlugins will now execute validation checks.")
+	log.Header("Validation In Progress")
 
+	log.InfoCLI("\nPlugins will now execute validation checks.")
 	log.InfoCLI("\nYou can list validation results via the following command:")
-	log.InfoCLI("kubectl -n validator get validationresults --kubeconfig %s", vc.Kubeconfig)
+	log.InfoCLI("\nkubectl -n validator get validationresults --kubeconfig %s", vc.Kubeconfig)
 
 	log.InfoCLI("\nAnd you can view all validation result details via the following command:")
-	log.InfoCLI("kubectl -n validator describe validationresults --kubeconfig %s", vc.Kubeconfig)
+	log.InfoCLI("\nkubectl -n validator describe validationresults --kubeconfig %s", vc.Kubeconfig)
 	return nil
 }
 
@@ -814,6 +821,6 @@ func createKindCluster(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if err := os.Setenv("KUBECONFIG", vc.Kubeconfig); err != nil {
 		return errors.Wrap(err, "failed to set KUBECONFIG env var")
 	}
-	log.InfoCLI("\nCreated kind cluster. kubeconfig: %s", vc.Kubeconfig)
+	log.InfoCLI("\nCreated kind cluster; kubeconfig: %s", vc.Kubeconfig)
 	return nil
 }

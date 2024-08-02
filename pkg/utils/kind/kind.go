@@ -54,6 +54,7 @@ func StartCluster(name, kindConfig, kubeconfig string) error {
 		"create", "cluster", "--name", name,
 		"--kubeconfig", kubeconfig, "--config", kindConfig,
 	}
+	log.InfoCLI("\nExecuting kind %s", args)
 	cmd := exec.Command(exec_utils.Kind, args...) //#nosec G204
 	_, stderr, err := exec_utils.Execute(true, cmd)
 	if err != nil {

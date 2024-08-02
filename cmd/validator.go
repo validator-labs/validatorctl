@@ -18,7 +18,7 @@ import (
 func NewInstallValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var configFile string
-	var configOnly, updatePasswords, reconfigure bool
+	var configOnly, updatePasswords, reconfigure, check bool
 
 	cmd := &cobra.Command{
 		Use:   "install",
@@ -41,7 +41,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 				return err
 			}
 
-			if err := validator.InstallValidatorCommand(c, taskConfig); err != nil {
+			if err := validator.InstallValidatorCommand(c, check, taskConfig); err != nil {
 				return fmt.Errorf("failed to install validator: %v", err)
 			}
 			return nil
@@ -53,6 +53,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 	flags.BoolVarP(&configOnly, "config-only", "o", false, "Generate configuration file only. Do not proceed with installation. Default: false.")
 	flags.BoolVarP(&updatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with installation. The --config-file flag must be provided. Default: false.")
 	flags.BoolVarP(&reconfigure, "reconfigure", "r", false, "Re-configure validator and plugin(s) prior to installation. The --config-file flag must be provided. Default: false.")
+	flags.BoolVar(&check, "check", false, "Configure rules for validator plugin(s). Default: false")
 
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
 

@@ -229,7 +229,7 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
-	log.Header("Finalize Configuration")
+	log.Header("Finalize Installation Configuration")
 	restart, err := prompts.ReadBool("Restart configuration", false)
 	if err != nil {
 		return err
