@@ -31,7 +31,6 @@ type awsRule interface {
 }
 
 func readAwsPluginInstall(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
-	log.Header("AWS Plugin Installation Configuration")
 	c := vc.AWSPlugin
 
 	if err := readHelmRelease(cfg.ValidatorPluginAws, vc, c.Release); err != nil {

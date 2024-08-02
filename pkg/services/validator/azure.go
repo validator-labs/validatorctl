@@ -29,7 +29,6 @@ var (
 )
 
 func readAzurePluginInstall(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
-	log.Header("Azure Plugin Installation Configuration")
 	c := vc.AzurePlugin
 
 	if err := readHelmRelease(cfg.ValidatorPluginAzure, vc, c.Release); err != nil {

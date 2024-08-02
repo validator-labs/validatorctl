@@ -44,7 +44,6 @@ type vSphereRule interface {
 }
 
 func readVspherePluginInstall(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
-	log.Header("vSphere Plugin Installation Configuration")
 	c := vc.VspherePlugin
 
 	if err := readHelmRelease(cfg.ValidatorPluginVsphere, vc, c.Release); err != nil {
@@ -54,7 +53,6 @@ func readVspherePluginInstall(vc *components.ValidatorConfig, k8sClient kubernet
 	if err := readVsphereCredentials(c, k8sClient); err != nil {
 		return fmt.Errorf("failed to read vSphere credentials: %w", err)
 	}
-
 	vSphereCloudDriver, err := clouds.GetVSphereDriver(c.Account)
 	if err != nil {
 		return err

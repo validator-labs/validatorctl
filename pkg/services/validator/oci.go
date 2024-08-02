@@ -19,7 +19,6 @@ import (
 const notApplicable = "N/A"
 
 func readOciPluginInstall(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
-	log.Header("OCI Plugin Installation Configuration")
 	c := vc.OCIPlugin
 
 	if err := readHelmRelease(cfg.ValidatorPluginOci, vc, c.Release); err != nil {

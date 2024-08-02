@@ -20,7 +20,6 @@ type networkRule interface {
 }
 
 func readNetworkPluginInstall(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
-	log.Header("Network Plugin Installation Configuration")
 	c := vc.NetworkPlugin
 
 	if err := readHelmRelease(cfg.ValidatorPluginNetwork, vc, c.Release); err != nil {

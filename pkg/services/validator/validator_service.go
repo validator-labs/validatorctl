@@ -98,6 +98,11 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	}
 
 	log.Header("Sink Configuration")
+	log.InfoCLI(`
+	If sink configuration is provided, validator will upload all plugin validation
+	results to either Slack or Alertmanager. Results are hashed so that new events
+	are emitted only when the validation result changes.
+	`)
 	if err := readSinkConfig(vc, kClient); err != nil {
 		return err
 	}
@@ -108,7 +113,26 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	}
 
 	log.Header("Validator Plugin Installation Configuration")
+	log.InfoCLI(`
+	Validator plugins provide informative, actionable validation results pertaining
+	to infrastructure, networking, kubernetes cluster internals, and more.
 
+	Pick and choose from them to craft a validation profile that meets your
+	organization's requirements.
+	`)
+
+	log.Header("AWS Plugin")
+	log.InfoCLI(`
+	The AWS validator plugin reconciles AwsValidator custom resources to perform the
+	following validations against your AWS environment:
+
+	- Ensure that one or more EC2 AMI(s) exist in a particular region.
+	- Compare the IAM permissions associated with an IAM user / group / role / policy
+	  against an expected permission set.
+	- Compare the usage for a particular service quota against the active quota to
+	  avoid unexpectedly hitting quota limits.
+	- Compare the tags associated with a subnet against an expected tag set.
+	`)
 	vc.AWSPlugin.Enabled, err = prompts.ReadBool("Install AWS plugin", true)
 	if err != nil {
 		return err
@@ -119,6 +143,16 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
+	log.Header("Azure Plugin")
+	log.InfoCLI(`
+	The Azure validator plugin reconciles AzureValidator custom resources to perform
+	the following validations against your Azure environment:
+
+	- Compare the Azure RBAC permissions associated with a security principal against
+	  an expected permission set.
+	`)
+	// TODO: support image gallery rules
+	// - Verify that images in community image galleries exist.
 	vc.AzurePlugin.Enabled, err = prompts.ReadBool("Install Azure plugin", true)
 	if err != nil {
 		return err
@@ -129,6 +163,19 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
+	log.Header("Network Plugin")
+	log.InfoCLI(`
+	The Network validator plugin reconciles NetworkValidator custom resources to perform
+	the following validations against your network:
+
+	- Execute DNS lookups.
+	- Execute ICMP pings.
+	- Validate TCP connections to arbitrary host + port(s).
+	- Check each IP in an IP range to ensure that they're all unallocated.
+	- Check that the default NIC has an MTU greater than or equal to a specified value.
+	- Check that each file in a list of URLs is available and publicly accessible
+	  via an HTTP HEAD request, with optional basic auth.
+	`)
 	vc.NetworkPlugin.Enabled, err = prompts.ReadBool("Install Network plugin", true)
 	if err != nil {
 		return err
@@ -139,6 +186,16 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
+	log.Header("OCI Plugin")
+	log.InfoCLI(`
+	The OCI validator plugin reconciles OciValidator custom resources to perform the
+	following validations against your OCI registry:
+
+	- Validate OCI registry authentication.
+	- Validate the existence of arbitrary OCI artifacts, with optional signature
+	  verification.
+	- Validate downloading arbitrary OCI artifacts.
+	`)
 	vc.OCIPlugin.Enabled, err = prompts.ReadBool("Install OCI plugin", true)
 	if err != nil {
 		return err
@@ -149,6 +206,19 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		}
 	}
 
+	log.Header("vSphere Plugin")
+	log.InfoCLI(`
+	The vSphere validator plugin reconciles VsphereValidator custom resources to perform
+	the following validations against your vSphere environment:
+
+	- Compare the privileges associated with a user against an expected privileges set.
+	- Compare the privileges associated with a user against an expected privileges set
+	  on a particular entity (cluster, resourcepool, folder, vapp, host).
+	- Verify availability of compute resources on an ESXi host, resourcepool, or cluster.
+	- Compare the tags associated with a datacenter, cluster, host, vm, resourcepool or vm
+	  against an expected tag set.
+	- Verify that a set of ESXi hosts have valid NTP configuration.
+	`)
 	vc.VspherePlugin.Enabled, err = prompts.ReadBool("Install vSphere plugin", true)
 	if err != nil {
 		return err
