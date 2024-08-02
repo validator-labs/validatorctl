@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"emperror.dev/errors"
 	"k8s.io/client-go/kubernetes"
 
 	plug "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
@@ -29,22 +28,25 @@ var (
 	azureSecretName = "azure-creds"
 )
 
-func readAzurePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
+func readAzurePluginInstall(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
 	c := vc.AzurePlugin
 
 	if err := readHelmRelease(cfg.ValidatorPluginAzure, vc, c.Release); err != nil {
 		return fmt.Errorf("failed to read Helm release: %w", err)
 	}
-
-	log.Header("Azure Configuration")
-
 	if err := readAzureCredentials(c, k8sClient); err != nil {
-		return errors.Wrap(err, "failed to read Azure credentials")
+		return fmt.Errorf("failed to read Azure credentials: %w", err)
 	}
+
+	return nil
+}
+
+func readAzurePluginRules(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+	log.Header("Azure Plugin Rule Configuration")
 
 	// Configure RBAC rules. Unlike how other plugins are styled, no prompt for whether the user
 	// wants to configure this rule type because right now it is the only rule type for the plugin.
-	if err := configureAzureRBACRules(c); err != nil {
+	if err := configureAzureRBACRules(vc.AzurePlugin); err != nil {
 		return fmt.Errorf("failed to configure RBAC rules: %w", err)
 	}
 

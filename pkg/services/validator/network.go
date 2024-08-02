@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -18,14 +19,20 @@ type networkRule interface {
 	*network.DNSRule | *network.ICMPRule | *network.IPRangeRule | *network.MTURule | *network.TCPConnRule | *network.HTTPFileRule
 }
 
-func readNetworkPlugin(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+func readNetworkPluginInstall(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
 	c := vc.NetworkPlugin
 
 	if err := readHelmRelease(cfg.ValidatorPluginNetwork, vc, c.Release); err != nil {
-		return err
+		return fmt.Errorf("failed to read Helm release: %w", err)
 	}
 
-	log.Header("Network Configuration")
+	return nil
+}
+
+func readNetworkPluginRules(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+	log.Header("Network Plugin Rule Configuration")
+
+	c := vc.NetworkPlugin
 	ruleNames := make([]string, 0)
 
 	if err := configureDNSRules(c, &ruleNames); err != nil {
@@ -47,15 +54,16 @@ func readNetworkPlugin(vc *components.ValidatorConfig, _ kubernetes.Interface) e
 		return err
 	}
 
+	if c.Validator.ResultCount() == 0 {
+		return errNoRulesEnabled
+	}
+
 	if len(c.Validator.TCPConnRules) > 0 || len(c.Validator.HTTPFileRules) > 0 {
 		if err := readCACertificates(c); err != nil {
 			return err
 		}
 	}
 
-	if c.Validator.ResultCount() == 0 {
-		return errNoRulesEnabled
-	}
 	return nil
 }
 

@@ -43,22 +43,16 @@ type vSphereRule interface {
 		*v1alpha1.ComputeResourceRule | *v1alpha1.NTPValidationRule
 }
 
-func readVspherePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
+func readVspherePluginInstall(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
 	c := vc.VspherePlugin
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	if err := readHelmRelease(cfg.ValidatorPluginVsphere, vc, c.Release); err != nil {
-		return err
+		return fmt.Errorf("failed to read Helm release: %w", err)
 	}
-
-	log.Header("vSphere Configuration")
 
 	if err := readVsphereCredentials(c, k8sClient); err != nil {
-		return errors.Wrap(err, "failed to read vSphere credentials")
+		return fmt.Errorf("failed to read vSphere credentials: %w", err)
 	}
-
 	vSphereCloudDriver, err := clouds.GetVSphereDriver(c.Account)
 	if err != nil {
 		return err
@@ -66,7 +60,22 @@ func readVspherePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 	if err := vSphereCloudDriver.ValidateVsphereVersion(cfg.ValidatorVsphereVersionConstraint); err != nil {
 		return err
 	}
+
 	log.InfoCLI("Validated vSphere version %s", cfg.ValidatorVsphereVersionConstraint)
+	return nil
+}
+
+func readVspherePluginRules(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+	log.Header("vSphere Plugin Rule Configuration")
+	c := vc.VspherePlugin
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	vSphereCloudDriver, err := clouds.GetVSphereDriver(c.Account)
+	if err != nil {
+		return err
+	}
 
 	if c.Validator.Datacenter != "" {
 		dataCenter = c.Validator.Datacenter
@@ -97,6 +106,7 @@ func readVspherePlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Inte
 	if c.Validator.ResultCount() == 0 {
 		return errNoRulesEnabled
 	}
+
 	return nil
 }
 

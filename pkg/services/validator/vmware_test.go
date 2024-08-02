@@ -13,7 +13,6 @@ import (
 	"github.com/validator-labs/validator/api/v1alpha1"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
-	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 )
 
@@ -68,18 +67,12 @@ func Test_readVspherePlugin(t *testing.T) {
 			name: "Fail - no rules",
 			vc:   deepcopy.Copy(vSphereDummyConfig).(*components.ValidatorConfig),
 			returnVals: []string{
-				cfg.ValidatorChartVersions[cfg.ValidatorPluginVsphere], // validator-plugin-vsphere helm chart version
-				"vsphere-creds",    // vSphere secret name
-				"fake.vsphere.com", // vSphere domain
-				"bob@vsphere.com",  // vSphere username
-				"password",         // vSphere password
-				"y",                // insecure skip verify
-				"DC0",              // datacenter
-				"n",                // enable NTP validation
-				"n",                // enable role privilege validation
-				"n",                // enable entity privilege validation
-				"n",                // enable resource requirement validation
-				"n",                // enable tag validation
+				"DC0", // datacenter
+				"n",   // enable NTP validation
+				"n",   // enable role privilege validation
+				"n",   // enable entity privilege validation
+				"n",   // enable resource requirement validation
+				"n",   // enable tag validation
 			},
 			wantErr: true,
 			err:     errNoRulesEnabled,
@@ -90,7 +83,7 @@ func Test_readVspherePlugin(t *testing.T) {
 		defer teardown()
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := readVspherePlugin(tt.vc, tt.k8sClient)
+			err := readVspherePluginRules(tt.vc, tt.k8sClient)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("readVspherePlugin() error = %v, wantErr %v", err, tt.wantErr)
 				return

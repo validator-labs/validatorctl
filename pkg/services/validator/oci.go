@@ -18,14 +18,19 @@ import (
 
 const notApplicable = "N/A"
 
-func readOciPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
+func readOciPluginInstall(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
 	c := vc.OCIPlugin
 
 	if err := readHelmRelease(cfg.ValidatorPluginOci, vc, c.Release); err != nil {
-		return err
+		return fmt.Errorf("failed to read Helm release: %w", err)
 	}
 
-	log.Header("OCI Configuration")
+	return nil
+}
+
+func readOciPluginRules(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
+	log.Header("OCI Plugin Rule Configuration")
+	c := vc.OCIPlugin
 
 	authSecretNames, err := configureAuthSecrets(c, k8sClient)
 	if err != nil {

@@ -12,7 +12,6 @@ import (
 	"github.com/validator-labs/validator/api/v1alpha1"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
-	cfg "github.com/validator-labs/validatorctl/pkg/config"
 )
 
 var networkDummyConfig = &components.ValidatorConfig{
@@ -45,7 +44,6 @@ func Test_readNetworkPlugin(t *testing.T) {
 			name: "Fail - no rules",
 			vc:   deepcopy.Copy(networkDummyConfig).(*components.ValidatorConfig),
 			returnVals: []string{
-				cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork], // validator-plugin-network helm chart version
 				"n", // enable DNS validation
 				"n", // enable ICMP validation
 				"n", // enable IP range validation
@@ -60,7 +58,7 @@ func Test_readNetworkPlugin(t *testing.T) {
 	for _, tt := range tts {
 		prompts.Tui = &mocks.MockTUI{Values: tt.returnVals}
 		t.Run(tt.name, func(t *testing.T) {
-			err := readNetworkPlugin(tt.vc, tt.k8sClient)
+			err := readNetworkPluginRules(tt.vc, tt.k8sClient)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("readNetworkPlugin() error = %v, wantErr %v", err, tt.wantErr)
 				return

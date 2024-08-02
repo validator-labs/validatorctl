@@ -13,33 +13,30 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 )
 
-// NewDeployValidatorCmd returns a new cobra command for deploying the validator
-func NewDeployValidatorCmd() *cobra.Command {
+// NewInstallValidatorCmd returns a new cobra command for installing validator & validator plugin(s)
+// nolint:dupl
+func NewInstallValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
-	var configFile string
-	var configOnly, updatePasswords, reconfigure bool
+	var tc = &cfg.TaskConfig{CliVersion: Version}
 
 	cmd := &cobra.Command{
 		Use:   "install",
-		Short: "Install validator & configure validator plugin(s)",
-		Long: `Install validator & configure validator plugin(s).
+		Short: "Install validator & validator plugin(s)",
+		Long: `Install validator & validator plugin(s).
 
 For more information about validator, see: https://github.com/validator-labs/validator.
 `,
-		Args:         cobra.NoArgs,
-		SilenceUsage: false,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, configOnly, false, updatePasswords, false,
-			)
 			if err := c.Save(""); err != nil {
 				return err
 			}
-
-			if err := validator.DeployValidatorCommand(c, taskConfig, reconfigure); err != nil {
+			if err := validator.InstallValidatorCommand(c, tc); err != nil {
 				return fmt.Errorf("failed to install validator: %v", err)
 			}
 			return nil
@@ -47,12 +44,72 @@ For more information about validator, see: https://github.com/validator-labs/val
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&configFile, "config-file", "f", "", "Install using a configuration file (optional)")
-	flags.BoolVarP(&configOnly, "config-only", "o", false, "Generate configuration file only. Do not proceed with installation. Default: false.")
-	flags.BoolVarP(&updatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with installation. The --config-file flag must be provided. Default: false.")
-	flags.BoolVarP(&reconfigure, "reconfigure", "r", false, "Re-configure validator and plugin(s) prior to installation. The --config-file flag must be provided. Default: false.")
+	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Install using a configuration file (optional)")
+	flags.BoolVarP(&tc.CreateConfigOnly, "config-only", "o", false, "Generate configuration file only. Do not proceed with installation. Default: false.")
+	flags.BoolVarP(&tc.UpdatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with installation. The --config-file flag must be provided. Default: false.")
+	flags.BoolVarP(&tc.Reconfigure, "reconfigure", "r", false, "Re-configure validator and plugin(s) prior to installation. The --config-file flag must be provided. Default: false.")
 
+	flags.BoolVar(&tc.Check, "check", false, "Configure rules for validator plugin(s). Default: false")
+	flags.BoolVarP(&tc.Silent, "silent", "s", false, "Skip all plugin prompts and apply configuration file directly. Only applies when --check is set. Default: false.")
+	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Only applies when --check is set. Default: false")
+
+	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
+
+	cmd.MarkFlagsMutuallyExclusive("config-only", "silent")
+	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "silent")
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
+
+	return cmd
+}
+
+// NewConfigureValidatorCmd returns a new cobra command for configuring and applying rules for validator plugins
+// nolint:dupl
+func NewConfigureValidatorCmd() *cobra.Command {
+	c := cfgmanager.Config()
+	var tc = &cfg.TaskConfig{
+		CliVersion:  Version,
+		Reconfigure: true,
+	}
+
+	cmd := &cobra.Command{
+		Use:   "check",
+		Short: "Configure & apply rules for validator plugin(s)",
+		Long: `Configure & apply rules for validator plugin(s).
+
+For more information about validator, see: https://github.com/validator-labs/validator.
+`,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
+		},
+		RunE: func(_ *cobra.Command, _ []string) error {
+			if err := c.Save(""); err != nil {
+				return err
+			}
+			if err := validator.ConfigureValidatorCommand(c, tc); err != nil {
+				return fmt.Errorf("failed to configure validator: %v", err)
+			}
+			return nil
+		},
+	}
+
+	flags := cmd.Flags()
+	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator installation configuration file.")
+	flags.BoolVarP(&tc.CreateConfigOnly, "config-only", "o", false, "Update configuration file only. Do not proceed with checks. Default: false.")
+	flags.BoolVarP(&tc.UpdatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with checks. Default: false.")
+	flags.BoolVarP(&tc.Silent, "silent", "s", false, "Skip all prompts and apply configuration file directly. Default: false.")
+	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Default: false")
+
+	cmdutils.MarkFlagRequired(cmd, "config-file")
+
+	cmd.MarkFlagsMutuallyExclusive("config-only", "silent")
+	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "silent")
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
 
 	return cmd
 }
@@ -60,7 +117,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 // NewUpgradeValidatorCmd returns a new cobra command for upgrading the validator
 func NewUpgradeValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
-	var configFile string
+	var tc = &cfg.TaskConfig{CliVersion: Version}
 
 	cmd := &cobra.Command{
 		Use:   "upgrade",
@@ -69,16 +126,14 @@ func NewUpgradeValidatorCmd() *cobra.Command {
 
 For more information about validator, see: https://github.com/validator-labs/validator.
 `,
-		Args:         cobra.NoArgs,
-		SilenceUsage: false,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, false, false, false, false,
-			)
-			if err := validator.UpgradeValidatorCommand(c, taskConfig); err != nil {
+			if err := validator.UpgradeValidatorCommand(c, tc); err != nil {
 				return fmt.Errorf("failed to upgrade validator: %v", err)
 			}
 			return nil
@@ -86,7 +141,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&configFile, "config-file", "f", "", "Upgrade using a configuration file")
+	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Upgrade using a configuration file")
 
 	cmdutils.MarkFlagRequired(cmd, "config-file")
 
@@ -96,23 +151,20 @@ For more information about validator, see: https://github.com/validator-labs/val
 // NewUndeployValidatorCmd returns a new cobra command for undeploying the validator
 func NewUndeployValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
-	var configFile string
-	var deleteCluster bool
+	var tc = &cfg.TaskConfig{CliVersion: Version}
 
 	cmd := &cobra.Command{
-		Use:          "uninstall",
-		Short:        "Uninstall validator & all validator plugin(s)",
-		Long:         "Uninstall validator & all validator plugin(s)",
-		Args:         cobra.NoArgs,
-		SilenceUsage: false,
+		Use:           "uninstall",
+		Short:         "Uninstall validator & all validator plugin(s)",
+		Long:          "Uninstall validator & all validator plugin(s)",
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, false, false, false, false,
-			)
-			if err := validator.UndeployValidatorCommand(taskConfig, deleteCluster); err != nil {
+			if err := validator.UndeployValidatorCommand(tc); err != nil {
 				return fmt.Errorf("failed to uninstall validator: %v", err)
 			}
 			return nil
@@ -120,8 +172,8 @@ func NewUndeployValidatorCmd() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&configFile, "config-file", "f", "", "Validator configuration file (required)")
-	flags.BoolVarP(&deleteCluster, "delete-cluster", "d", true, "Delete the validator kind cluster. Does not apply if using a preexisting K8s cluster. Default: true.")
+	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file (required)")
+	flags.BoolVarP(&tc.DeleteCluster, "delete-cluster", "d", true, "Delete the validator kind cluster. Does not apply if using a preexisting K8s cluster. Default: true.")
 
 	cmdutils.MarkFlagRequired(cmd, "config-file")
 
@@ -131,7 +183,7 @@ func NewUndeployValidatorCmd() *cobra.Command {
 // NewDescribeValidationResultsCmd returns a new cobra command for describing validation results
 func NewDescribeValidationResultsCmd() *cobra.Command {
 	c := cfgmanager.Config()
-	var configFile string
+	var tc = &cfg.TaskConfig{CliVersion: Version}
 
 	cmd := &cobra.Command{
 		Use:   "describe",
@@ -141,16 +193,14 @@ func NewDescribeValidationResultsCmd() *cobra.Command {
 Validation results in the cluster specified by the KUBECONFIG environment variable will be described.
 If the --config-file flag is specified, the KUBECONFIG specified in the validator configuration file will be used instead.
 `,
-		Args:         cobra.NoArgs,
-		SilenceUsage: false,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, false, false, false, false,
-			)
-			if err := validator.DescribeValidationResultsCommand(taskConfig); err != nil {
+			if err := validator.DescribeValidationResultsCommand(tc); err != nil {
 				return fmt.Errorf("failed to describe validation results: %v", err)
 			}
 			return nil
@@ -158,7 +208,7 @@ If the --config-file flag is specified, the KUBECONFIG specified in the validato
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&configFile, "config-file", "f", "", "Validator configuration file to read kubeconfig from (optional)")
+	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file to read kubeconfig from (optional)")
 
 	return cmd
 }
@@ -172,8 +222,9 @@ func NewValidatorDocsCmd() *cobra.Command {
 
 For more information about validator, see: https://github.com/validator-labs/validator.
 `,
-		Args:         cobra.NoArgs,
-		SilenceUsage: false,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			args := map[string]interface{}{
 				"Version":          Version,

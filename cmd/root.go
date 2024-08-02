@@ -2,9 +2,6 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -34,7 +31,7 @@ func init() {
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		exit(err)
+		log.FatalCLI(err.Error())
 	}
 }
 
@@ -47,7 +44,8 @@ func InitRootCmd() *cobra.Command {
 		Long: `Welcome to the Validator CLI.
 Install validator & configure validator plugins.
 Use 'validator help <sub-command>' to explore all of the functionality the Validator CLI has to offer.`,
-		SilenceUsage: false,
+		SilenceErrors: true,
+		SilenceUsage:  false,
 	}
 
 	globalFlags := rootCmd.PersistentFlags()
@@ -56,16 +54,17 @@ Use 'validator help <sub-command>' to explore all of the functionality the Valid
 	globalFlags.StringVarP(&workspaceLoc, "workspace", "w", "", `Workspace location for staging runtime configurations and logs (default "$HOME/.validator")`)
 
 	if err := viper.BindPFlag("logLevel", globalFlags.Lookup("log-level")); err != nil {
-		exit(err)
+		log.FatalCLI("Failed to bind log-level flag", "error", err)
 	}
 
 	// Verify required binaries exist
 	if err := exec_utils.CheckBinaries(); err != nil {
-		exit(err)
+		log.FatalCLI("Failed to verify required binaries", "error", err)
 	}
 
 	// add base commands
-	rootCmd.AddCommand(NewDeployValidatorCmd())
+	rootCmd.AddCommand(NewInstallValidatorCmd())
+	rootCmd.AddCommand(NewConfigureValidatorCmd())
 	rootCmd.AddCommand(NewUpgradeValidatorCmd())
 	rootCmd.AddCommand(NewUndeployValidatorCmd())
 	rootCmd.AddCommand(NewDescribeValidationResultsCmd())
@@ -115,11 +114,6 @@ func InitConfig() {
 
 	// Instantiate config
 	if err := cfgmanager.Init(); err != nil {
-		exit(err)
+		log.FatalCLI("Failed to initialize Validator CLI config", "error", err)
 	}
-}
-
-func exit(err error) {
-	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
 }

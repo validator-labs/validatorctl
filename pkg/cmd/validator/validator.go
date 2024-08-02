@@ -46,17 +46,17 @@ func InitWorkspace(c *cfg.Config, workspaceDir string, subdirs []string, timesta
 	return nil
 }
 
-// DeployValidatorCommand deploys the validator and its plugins
-func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool) error {
+// InstallValidatorCommand deploys the validator and its plugins
+func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var vc *components.ValidatorConfig
 	var err error
 	var saveConfig bool
 
-	if tc.ConfigFile == "" && reconfigure {
+	if tc.ConfigFile == "" && tc.Reconfigure {
 		log.FatalCLI("Cannot reconfigure validator without providing a configuration file.")
 	}
 
-	if tc.ConfigFile != "" && !reconfigure {
+	if tc.ConfigFile != "" && !tc.Reconfigure {
 		// Silent Mode
 		vc, err = components.NewValidatorFromConfig(tc)
 		if err != nil {
@@ -75,7 +75,7 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 		}
 	} else {
 		// Interactive mode
-		if reconfigure {
+		if tc.Reconfigure {
 			vc, err = components.NewValidatorFromConfig(tc)
 			if err != nil {
 				return errors.Wrap(err, "failed to load validator configuration file")
@@ -89,7 +89,7 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 		vc.UseFixedVersions = !string_utils.IsDevVersion(tc.CliVersion)
 
 		if err := validator.ReadValidatorConfig(c, tc, vc); err != nil {
-			return errors.Wrap(err, "failed to create new validator configuration")
+			return errors.Wrap(err, "failed to configure validator")
 		}
 		tc.ConfigFile = filepath.Join(c.RunLoc, cfg.ValidatorConfigFile)
 		saveConfig = true
@@ -114,10 +114,72 @@ func DeployValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool)
 		}
 	}
 
-	return applyValidatorAndPlugins(c, vc)
+	if err := deployValidatorAndPlugins(c, vc); err != nil {
+		return err
+	}
+	if tc.Check {
+		return ConfigureValidatorCommand(c, tc)
+	}
+	return nil
 }
 
-// UpgradeValidatorCommand upgrades the validator and its plugins
+// ConfigureValidatorCommand configures and applies validator plugin rules
+// nolint:dupl
+func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
+	var vc *components.ValidatorConfig
+	var err error
+	var saveConfig bool
+
+	if tc.Silent {
+		// Silent Mode
+		vc, err = components.NewValidatorFromConfig(tc)
+		if err != nil {
+			return errors.Wrap(err, "failed to load validator configuration file")
+		}
+		if tc.UpdatePasswords {
+			log.Header("Updating plugin credentials in validator configuration file")
+			if err := validator.UpdateValidatorPluginCredentials(vc); err != nil {
+				return err
+			}
+			saveConfig = true
+		}
+	} else {
+		// Interactive mode
+		vc, err = components.NewValidatorFromConfig(tc)
+		if err != nil {
+			return errors.Wrap(err, "failed to load validator configuration file")
+		}
+		if err := validator.ReadValidatorPluginConfig(c, tc, vc); err != nil {
+			return errors.Wrap(err, "failed to configure validator plugin(s)")
+		}
+		saveConfig = true
+	}
+
+	// save / print validator config file
+	if saveConfig {
+		if err := components.SaveValidatorConfig(vc, tc); err != nil {
+			return err
+		}
+	} else {
+		log.InfoCLI("validator configuration file: %s", tc.ConfigFile)
+	}
+
+	if tc.CreateConfigOnly || tc.UpdatePasswords {
+		return nil
+	}
+
+	if err := configurePlugins(c, vc, tc); err != nil {
+		return err
+	}
+	if tc.Wait {
+		log.Header("Waiting for validation to complete")
+		_, err := WatchValidationResults(tc)
+		return err
+	}
+	return nil
+}
+
+// UpgradeValidatorCommand upgrades validator and its plugins
 func UpgradeValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	vc, err := components.NewValidatorFromConfig(tc)
 	if err != nil {
@@ -126,11 +188,11 @@ func UpgradeValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	if vc.Kubeconfig == "" {
 		return errors.New("invalid validator configuration: kubeconfig is required")
 	}
-	return applyValidatorAndPlugins(c, vc)
+	return deployValidatorAndPlugins(c, vc)
 }
 
-// UndeployValidatorCommand undeploys the validator and its plugins
-func UndeployValidatorCommand(tc *cfg.TaskConfig, deleteCluster bool) error {
+// UndeployValidatorCommand undeploys validator and its plugins
+func UndeployValidatorCommand(tc *cfg.TaskConfig) error {
 	vc, err := components.NewValidatorFromConfig(tc)
 	if err != nil {
 		return errors.Wrap(err, "failed to load validator configuration file")
@@ -146,7 +208,7 @@ func UndeployValidatorCommand(tc *cfg.TaskConfig, deleteCluster bool) error {
 	}
 	log.InfoCLI("\nUninstalled validator and validator plugin(s) successfully")
 
-	if vc.KindConfig.UseKindCluster && deleteCluster {
+	if vc.KindConfig.UseKindCluster && tc.DeleteCluster {
 		return kind.DeleteCluster(cfg.ValidatorKindClusterName)
 	}
 
@@ -174,7 +236,7 @@ func DescribeValidationResultsCommand(tc *cfg.TaskConfig) error {
 
 // WatchValidationResults watches the validation results until all have either succeeded or failed
 func WatchValidationResults(tc *cfg.TaskConfig) (bool, error) {
-	log.InfoCLI("\nWatching validation results, waiting for all to succeed")
+	log.InfoCLI("\nWatching validation results, waiting for all to succeed...")
 	kClient, err := getValidationResultsCRDClient(tc)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get validation result client")
@@ -254,7 +316,7 @@ func getValidationResultsCRDClient(tc *cfg.TaskConfig) (dynamic.NamespaceableRes
 		if err := os.Setenv("KUBECONFIG", vc.Kubeconfig); err != nil {
 			return nil, err
 		}
-		log.InfoCLI("Using kubeconfig from validator configuration file: %s", vc.Kubeconfig)
+		log.Debug("Using kubeconfig from validator configuration file: %s", vc.Kubeconfig)
 	}
 
 	gv := kube.GetGroupVersion("validation.spectrocloud.labs", "v1alpha1")
@@ -337,26 +399,34 @@ func buildValidationResultString(vrObj unstructured.Unstructured) (string, error
 	return sb.String(), nil
 }
 
-// applyValidatorAndPlugins installs/upgrades validator + plugin(s), then applies/updates validator CRs for each plugin
-func applyValidatorAndPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
+// deployValidatorAndPlugins installs/upgrades validator + plugin(s)
+func deployValidatorAndPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	log.Header("Installing/Upgrading validator and validator plugin(s)")
 
 	if err := applyValidator(c, vc); err != nil {
 		return err
 	}
-	log.InfoCLI("\nvalidator installed successfully")
+
+	log.InfoCLI("\nvalidator and validator plugin(s) installed successfully")
+	return nil
+}
+
+// configurePlugins applies/updates validator CRs for each plugin
+func configurePlugins(c *cfg.Config, vc *components.ValidatorConfig, tc *cfg.TaskConfig) error {
+	log.Header("Configuring validator plugin(s)")
 
 	if err := applyPlugins(c, vc); err != nil {
 		return err
 	}
-	log.Header("validator plugin(s) installed successfully")
-	log.InfoCLI("\nPlugins will now execute validation checks.")
 
+	log.Header("Validation in progress")
+
+	log.InfoCLI("\nPlugins will now execute validation checks.")
 	log.InfoCLI("\nYou can list validation results via the following command:")
-	log.InfoCLI("kubectl -n validator get validationresults --kubeconfig %s", vc.Kubeconfig)
+	log.InfoCLI("\nkubectl -n validator get validationresults --kubeconfig %s", vc.Kubeconfig)
 
 	log.InfoCLI("\nAnd you can view all validation result details via the following command:")
-	log.InfoCLI("kubectl -n validator describe validationresults --kubeconfig %s", vc.Kubeconfig)
+	log.InfoCLI("\nvalidator describe -f %s", tc.ConfigFile)
 	return nil
 }
 
@@ -759,6 +829,6 @@ func createKindCluster(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if err := os.Setenv("KUBECONFIG", vc.Kubeconfig); err != nil {
 		return errors.Wrap(err, "failed to set KUBECONFIG env var")
 	}
-	log.InfoCLI("\nCreated kind cluster. kubeconfig: %s", vc.Kubeconfig)
+	log.InfoCLI("\nCreated kind cluster; kubeconfig: %s", vc.Kubeconfig)
 	return nil
 }

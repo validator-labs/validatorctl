@@ -1,12 +1,12 @@
 package validator
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
 	"time"
 
-	"emperror.dev/errors"
 	awspolicy "github.com/L30Bola/aws-policy"
 	"k8s.io/client-go/kubernetes"
 
@@ -30,19 +30,23 @@ type awsRule interface {
 		*vpawsapi.IamRoleRule | *vpawsapi.IamUserRule | *vpawsapi.IamGroupRule | *vpawsapi.IamPolicyRule
 }
 
-func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
-	var err error
+func readAwsPluginInstall(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
 	c := vc.AWSPlugin
 
 	if err := readHelmRelease(cfg.ValidatorPluginAws, vc, c.Release); err != nil {
-		return err
+		return fmt.Errorf("failed to read Helm release: %w", err)
 	}
-
-	log.Header("AWS Configuration")
-
 	if err := readAwsCredentials(c, k8sClient); err != nil {
-		return errors.Wrap(err, "failed to read AWS credentials")
+		return fmt.Errorf("failed to read AWS credentials: %w", err)
 	}
+
+	return nil
+}
+
+func readAwsPluginRules(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+	log.Header("AWS Plugin Rule Configuration")
+	var err error
+	c := vc.AWSPlugin
 
 	if c.Validator.DefaultRegion != "" {
 		region = c.Validator.DefaultRegion
@@ -79,6 +83,7 @@ func readAwsPlugin(vc *components.ValidatorConfig, k8sClient kubernetes.Interfac
 	if c.Validator.ResultCount() == 0 {
 		return errNoRulesEnabled
 	}
+
 	return nil
 }
 
@@ -785,6 +790,8 @@ func readServiceQuotaRule(c *components.AWSPluginConfig, r *vpawsapi.ServiceQuot
 	}
 	if r.Region != "" {
 		region = r.Region
+	} else if c.Validator.DefaultRegion != "" {
+		region = c.Validator.DefaultRegion
 	}
 	r.Region, err = prompts.ReadText("AWS Region", region, false, -1)
 	if err != nil {
@@ -816,6 +823,8 @@ func readSubnetTagRule(c *components.AWSPluginConfig, r *vpawsapi.TagRule, idx i
 		}
 		if r.Region != "" {
 			region = r.Region
+		} else if c.Validator.DefaultRegion != "" {
+			region = c.Validator.DefaultRegion
 		}
 		r.Region, err = prompts.ReadText("AWS Region", region, false, -1)
 		if err != nil {
@@ -873,6 +882,8 @@ func readAmiRule(c *components.AWSPluginConfig, r *vpawsapi.AmiRule, idx int, ru
 
 	if r.Region != "" {
 		region = r.Region
+	} else if c.Validator.DefaultRegion != "" {
+		region = c.Validator.DefaultRegion
 	}
 	r.Region, err = prompts.ReadText("AMI Region", region, false, -1)
 	if err != nil {
