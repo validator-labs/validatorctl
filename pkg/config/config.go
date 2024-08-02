@@ -30,17 +30,19 @@ type TaskConfig struct {
 	CliVersion       string
 	ConfigFile       string
 	CreateConfigOnly bool
+	Reconfigure      bool
 	Silent           bool
 	UpdatePasswords  bool
 	UpdateTokens     bool
 }
 
 // NewTaskConfig creates a new TaskConfig object.
-func NewTaskConfig(cliVersion, configFile string, configOnly, silent, updatePasswords, updateTokens bool) *TaskConfig {
+func NewTaskConfig(cliVersion, configFile string, configOnly, silent, updatePasswords, updateTokens, reconfigure bool) *TaskConfig {
 	return &TaskConfig{
 		CliVersion:       cliVersion,
 		ConfigFile:       configFile,
 		CreateConfigOnly: configOnly,
+		Reconfigure:      reconfigure,
 		Silent:           silent,
 		UpdatePasswords:  updatePasswords,
 		UpdateTokens:     updateTokens,

@@ -47,16 +47,16 @@ func InitWorkspace(c *cfg.Config, workspaceDir string, subdirs []string, timesta
 }
 
 // InstallValidatorCommand deploys the validator and its plugins
-func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool) error {
+func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var vc *components.ValidatorConfig
 	var err error
 	var saveConfig bool
 
-	if tc.ConfigFile == "" && reconfigure {
+	if tc.ConfigFile == "" && tc.Reconfigure {
 		log.FatalCLI("Cannot reconfigure validator without providing a configuration file.")
 	}
 
-	if tc.ConfigFile != "" && !reconfigure {
+	if tc.ConfigFile != "" && !tc.Reconfigure {
 		// Silent Mode
 		vc, err = components.NewValidatorFromConfig(tc)
 		if err != nil {
@@ -75,7 +75,7 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool
 		}
 	} else {
 		// Interactive mode
-		if reconfigure {
+		if tc.Reconfigure {
 			vc, err = components.NewValidatorFromConfig(tc)
 			if err != nil {
 				return errors.Wrap(err, "failed to load validator configuration file")
@@ -119,16 +119,12 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool
 
 // ConfigureValidatorCommand configures and applies validator plugin rules
 // nolint:dupl
-func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bool) error {
+func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var vc *components.ValidatorConfig
 	var err error
 	var saveConfig bool
 
-	if tc.ConfigFile == "" && reconfigure {
-		log.FatalCLI("Cannot reconfigure validator plugins without providing a configuration file.")
-	}
-
-	if tc.ConfigFile != "" && !reconfigure {
+	if tc.Silent {
 		// Silent Mode
 		vc, err = components.NewValidatorFromConfig(tc)
 		if err != nil {
@@ -143,23 +139,13 @@ func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig, reconfigure bo
 		}
 	} else {
 		// Interactive mode
-		if reconfigure {
-			vc, err = components.NewValidatorFromConfig(tc)
-			if err != nil {
-				return errors.Wrap(err, "failed to load validator configuration file")
-			}
-		} else {
-			vc = components.NewValidatorConfig()
+		vc, err = components.NewValidatorFromConfig(tc)
+		if err != nil {
+			return errors.Wrap(err, "failed to load validator configuration file")
 		}
-
-		// for dev build versions, we allow selection of specific validator and plugin versions
-		// for all other builds, we set a fixed version for the validator and plugins
-		vc.UseFixedVersions = !string_utils.IsDevVersion(tc.CliVersion)
-
 		if err := validator.ReadValidatorPluginConfig(c, tc, vc); err != nil {
 			return errors.Wrap(err, "failed to configure validator plugin(s)")
 		}
-		tc.ConfigFile = filepath.Join(c.RunLoc, cfg.ValidatorConfigFile)
 		saveConfig = true
 	}
 

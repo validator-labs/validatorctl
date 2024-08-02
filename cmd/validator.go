@@ -35,13 +35,13 @@ For more information about validator, see: https://github.com/validator-labs/val
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, configOnly, false, updatePasswords, false,
+				Version, configFile, configOnly, false, updatePasswords, false, reconfigure,
 			)
 			if err := c.Save(""); err != nil {
 				return err
 			}
 
-			if err := validator.InstallValidatorCommand(c, taskConfig, reconfigure); err != nil {
+			if err := validator.InstallValidatorCommand(c, taskConfig); err != nil {
 				return fmt.Errorf("failed to install validator: %v", err)
 			}
 			return nil
@@ -64,7 +64,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 func NewConfigureValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var configFile string
-	var configOnly, updatePasswords, reconfigure bool
+	var configOnly, silent, updatePasswords bool
 
 	cmd := &cobra.Command{
 		Use:   "check",
@@ -81,13 +81,13 @@ For more information about validator, see: https://github.com/validator-labs/val
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, configOnly, false, updatePasswords, false,
+				Version, configFile, configOnly, silent, updatePasswords, false, true,
 			)
 			if err := c.Save(""); err != nil {
 				return err
 			}
 
-			if err := validator.ConfigureValidatorCommand(c, taskConfig, reconfigure); err != nil {
+			if err := validator.ConfigureValidatorCommand(c, taskConfig); err != nil {
 				return fmt.Errorf("failed to configure validator: %v", err)
 			}
 			return nil
@@ -95,12 +95,12 @@ For more information about validator, see: https://github.com/validator-labs/val
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&configFile, "config-file", "f", "", "Provide checks via a configuration file (optional)")
-	flags.BoolVarP(&configOnly, "config-only", "o", false, "Generate configuration file only. Do not proceed with installation. Default: false.")
-	flags.BoolVarP(&updatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with installation. The --config-file flag must be provided. Default: false.")
-	flags.BoolVarP(&reconfigure, "reconfigure", "r", false, "Re-configure plugin rule(s) in a configuration file. The --config-file flag must be provided. Default: false.")
+	flags.StringVarP(&configFile, "config-file", "f", "", "Validator installation configuration file.")
+	flags.BoolVarP(&configOnly, "config-only", "o", false, "Update configuration file only. Do not proceed with checks. Default: false.")
+	flags.BoolVarP(&updatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with checks. Default: false.")
+	flags.BoolVarP(&silent, "silent", "s", false, "Skip all prompts and apply configuration file directly. Default: false.")
 
-	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
+	cmdutils.MarkFlagRequired(cmd, "config-file")
 
 	return cmd
 }
@@ -125,7 +125,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, false, false, false, false,
+				Version, configFile, false, false, false, false, false,
 			)
 			if err := validator.UpgradeValidatorCommand(c, taskConfig); err != nil {
 				return fmt.Errorf("failed to upgrade validator: %v", err)
@@ -160,7 +160,7 @@ func NewUndeployValidatorCmd() *cobra.Command {
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, false, false, false, false,
+				Version, configFile, false, false, false, false, false,
 			)
 			if err := validator.UndeployValidatorCommand(taskConfig, deleteCluster); err != nil {
 				return fmt.Errorf("failed to uninstall validator: %v", err)
@@ -199,7 +199,7 @@ If the --config-file flag is specified, the KUBECONFIG specified in the validato
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			taskConfig := cfg.NewTaskConfig(
-				Version, configFile, false, false, false, false,
+				Version, configFile, false, false, false, false, false,
 			)
 			if err := validator.DescribeValidationResultsCommand(taskConfig); err != nil {
 				return fmt.Errorf("failed to describe validation results: %v", err)
