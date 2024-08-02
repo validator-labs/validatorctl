@@ -26,27 +26,17 @@ type Config struct {
 }
 
 // TaskConfig represents the validator task config.
+// CLI flags are bound to this struct.
 type TaskConfig struct {
 	CliVersion       string
 	ConfigFile       string
+	Check            bool
 	CreateConfigOnly bool
+	DeleteCluster    bool
 	Reconfigure      bool
 	Silent           bool
 	UpdatePasswords  bool
-	UpdateTokens     bool
-}
-
-// NewTaskConfig creates a new TaskConfig object.
-func NewTaskConfig(cliVersion, configFile string, configOnly, silent, updatePasswords, updateTokens, reconfigure bool) *TaskConfig {
-	return &TaskConfig{
-		CliVersion:       cliVersion,
-		ConfigFile:       configFile,
-		CreateConfigOnly: configOnly,
-		Reconfigure:      reconfigure,
-		Silent:           silent,
-		UpdatePasswords:  updatePasswords,
-		UpdateTokens:     updateTokens,
-	}
+	Wait             bool
 }
 
 // DefaultWorkspaceLoc returns the default workspace location.

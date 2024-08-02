@@ -47,7 +47,7 @@ func InitWorkspace(c *cfg.Config, workspaceDir string, subdirs []string, timesta
 }
 
 // InstallValidatorCommand deploys the validator and its plugins
-func InstallValidatorCommand(c *cfg.Config, check, wait bool, tc *cfg.TaskConfig) error {
+func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var vc *components.ValidatorConfig
 	var err error
 	var saveConfig bool
@@ -117,15 +117,15 @@ func InstallValidatorCommand(c *cfg.Config, check, wait bool, tc *cfg.TaskConfig
 	if err := deployValidatorAndPlugins(c, vc); err != nil {
 		return err
 	}
-	if check {
-		return ConfigureValidatorCommand(c, wait, tc)
+	if tc.Check {
+		return ConfigureValidatorCommand(c, tc)
 	}
 	return nil
 }
 
 // ConfigureValidatorCommand configures and applies validator plugin rules
 // nolint:dupl
-func ConfigureValidatorCommand(c *cfg.Config, wait bool, tc *cfg.TaskConfig) error {
+func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var vc *components.ValidatorConfig
 	var err error
 	var saveConfig bool
@@ -171,7 +171,7 @@ func ConfigureValidatorCommand(c *cfg.Config, wait bool, tc *cfg.TaskConfig) err
 	if err := configurePlugins(c, vc, tc); err != nil {
 		return err
 	}
-	if wait {
+	if tc.Wait {
 		log.Header("Waiting for validation to complete")
 		_, err := WatchValidationResults(tc)
 		return err
@@ -192,7 +192,7 @@ func UpgradeValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 }
 
 // UndeployValidatorCommand undeploys validator and its plugins
-func UndeployValidatorCommand(tc *cfg.TaskConfig, deleteCluster bool) error {
+func UndeployValidatorCommand(tc *cfg.TaskConfig) error {
 	vc, err := components.NewValidatorFromConfig(tc)
 	if err != nil {
 		return errors.Wrap(err, "failed to load validator configuration file")
@@ -208,7 +208,7 @@ func UndeployValidatorCommand(tc *cfg.TaskConfig, deleteCluster bool) error {
 	}
 	log.InfoCLI("\nUninstalled validator and validator plugin(s) successfully")
 
-	if vc.KindConfig.UseKindCluster && deleteCluster {
+	if vc.KindConfig.UseKindCluster && tc.DeleteCluster {
 		return kind.DeleteCluster(cfg.ValidatorKindClusterName)
 	}
 
