@@ -46,10 +46,16 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if tr := t.PreRequisite(ctx); tr.IsFailed() {
 		return tr
 	}
-	if result := t.testDeployInteractive(ctx); result.IsFailed() {
+	if result := t.testInstallInteractive(ctx); result.IsFailed() {
 		return result
 	}
-	if result := t.testDeploySilent(); result.IsFailed() {
+	if result := t.testInstallInteractiveCheck(ctx); result.IsFailed() {
+		return result
+	}
+	if result := t.testInstallSilent(); result.IsFailed() {
+		return result
+	}
+	if result := t.testInstallSilentWait(); result.IsFailed() {
 		return result
 	}
 	if result := t.testDescribe(); result.IsFailed() {
@@ -64,10 +70,7 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	return test.Success()
 }
 
-func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.TestResult) {
-
-	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "-l", "debug"})
-
+func (t *ValidatorTest) initVsphereDriver(ctx *test.TestContext) {
 	vsphereDriverMock := vsphere.MockVsphereDriver{
 		Datacenters: []string{"DC0"},
 		Clusters:    []string{"C0", "C1", "C2", "C3", "C4"},
@@ -89,15 +92,71 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 			},
 		},
 	}
-
 	vsphereDriverFunc := clouds.GetVSphereDriver
 	ctx.Put("vsphereDriverFunc", vsphereDriverFunc)
 	clouds.GetVSphereDriver = func(account *vsphere.CloudAccount) (vsphere.Driver, error) {
 		return vsphereDriverMock, nil
 	}
+}
 
-	// Base config
-	tuiVals := []string{
+func (t *ValidatorTest) testInstallInteractive(ctx *test.TestContext) (tr *test.TestResult) {
+
+	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "-l", "debug"})
+
+	// Base values
+	tuiVals := t.validatorValues(ctx)
+
+	// Install values
+	tuiVals = t.awsPluginInstallValues(ctx, tuiVals)
+	tuiVals = t.azurePluginInstallValues(ctx, tuiVals)
+	tuiVals = t.networkPluginInstallValues(ctx, tuiVals)
+	tuiVals = t.ociPluginInstallValues(ctx, tuiVals)
+	tuiVals = t.vspherePluginInstallValues(ctx, tuiVals)
+
+	// Finalization
+	tuiVals = t.finalizationValues(tuiVals)
+
+	prompts.Tui = &tuimocks.MockTUI{
+		Values: tuiVals,
+	}
+
+	return common.ExecCLI(interactiveCmd, buffer, t.log)
+}
+
+func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *test.TestResult) {
+
+	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "--check", "-l", "debug"})
+
+	// Base values
+	tuiVals := t.validatorValues(ctx)
+
+	// Install values
+	tuiVals = t.awsPluginInstallValues(ctx, tuiVals)
+	tuiVals = t.azurePluginInstallValues(ctx, tuiVals)
+	tuiVals = t.networkPluginInstallValues(ctx, tuiVals)
+	tuiVals = t.ociPluginInstallValues(ctx, tuiVals)
+	tuiVals = t.vspherePluginInstallValues(ctx, tuiVals)
+	tuiVals = t.finalizationValues(tuiVals)
+
+	// Plugin values
+	tuiSliceVals := make([][]string, 0)
+	tuiVals, tuiSliceVals = t.awsPluginValues(ctx, tuiVals, tuiSliceVals)
+	tuiVals = t.azurePluginValues(ctx, tuiVals)
+	tuiVals, tuiSliceVals = t.networkPluginValues(ctx, tuiVals, tuiSliceVals)
+	tuiVals = t.ociPluginValues(ctx, tuiVals)
+	tuiVals = t.vspherePluginValues(ctx, tuiVals)
+	tuiVals = t.finalizationValues(tuiVals)
+
+	prompts.Tui = &tuimocks.MockTUI{
+		Values:      tuiVals,
+		SliceValues: tuiSliceVals,
+	}
+
+	return common.ExecCLI(interactiveCmd, buffer, t.log)
+}
+
+func (t *ValidatorTest) validatorValues(ctx *test.TestContext) []string {
+	vals := []string{
 		// Kind
 		"y", // provision & use kind cluster
 
@@ -126,51 +185,45 @@ func (t *ValidatorTest) testDeployInteractive(ctx *test.TestContext) (tr *test.T
 		"y",                            // Alertmanager insecureSkipVerify
 		"foo",                          // Alertmanager username
 		"bar",                          // Alertmanager password
-
 	}
-	tuiSliceVals := [][]string{}
+	if string_utils.IsDevVersion(ctx.Get("version")) {
+		vals = append(vals, cfg.ValidatorChartVersions[cfg.Validator]) // validator helm chart version
+	}
+	return vals
+}
 
-	tuiVals = t.validatorValues(ctx, tuiVals)
-	tuiVals, tuiSliceVals = t.awsPluginValues(ctx, tuiVals, tuiSliceVals)
-	tuiVals = t.azurePluginValues(ctx, tuiVals)
-	tuiVals, tuiSliceVals = t.networkPluginValues(ctx, tuiVals, tuiSliceVals)
-	tuiVals = t.ociPluginValues(ctx, tuiVals)
-	tuiVals = t.vspherePluginValues(ctx, tuiVals)
-
-	// Finalization
-	tuiVals = append(tuiVals, []string{
+func (t *ValidatorTest) finalizationValues(vals []string) []string {
+	vals = append(vals, []string{
 		"n", // restart configuration
 		"n", // reconfigure plugin(s)
 	}...)
-
-	prompts.Tui = &tuimocks.MockTUI{
-		Values:      tuiVals,
-		SliceValues: tuiSliceVals,
-	}
-
-	return common.ExecCLI(interactiveCmd, buffer, t.log)
+	return vals
 }
 
-func (t *ValidatorTest) validatorValues(ctx *test.TestContext, tuiVals []string) []string {
-	if string_utils.IsDevVersion(ctx.Get("version")) {
-		tuiVals = append(tuiVals, cfg.ValidatorChartVersions[cfg.Validator]) // validator helm chart version
+func (t *ValidatorTest) awsPluginInstallValues(ctx *test.TestContext, vals []string) []string {
+	awsVals := []string{
+		"y",               // enable AWS plugin
+		"n",               // use implicit auth
+		"aws-creds",       // AWS secret name
+		"secretkey",       // AWS Secret Key ID
+		"secretaccesskey", // AWS Secret Access Key
+		"",                // AWS Session Token
+		"y",               // Configure STS
+		"arn",             // AWS STS Role Arn
+		"abc",             // AWS STS Session Name
+		"3600",            // AWS STS Duration Seconds
 	}
-
-	return tuiVals
+	if string_utils.IsDevVersion(ctx.Get("version")) {
+		awsVals = slices.Insert(awsVals, 1,
+			cfg.ValidatorChartVersions[cfg.ValidatorPluginAws], // validator-plugin-aws helm chart version
+		)
+	}
+	vals = append(vals, awsVals...)
+	return vals
 }
 
 func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
 	awsVals := []any{
-		"y",                       // enable AWS plugin
-		"n",                       // use implicit auth
-		"aws-creds",               // AWS secret name
-		"secretkey",               // AWS Secret Key ID
-		"secretaccesskey",         // AWS Secret Access Key
-		"",                        // AWS Session Token
-		"y",                       // Configure STS
-		"arn",                     // AWS STS Role Arn
-		"abc",                     // AWS STS Session Name
-		"3600",                    // AWS STS Duration Seconds
 		"us-west-2",               // default region
 		"y",                       // enable IAM role validation
 		"SpectroCloudRole",        // IAM role name
@@ -223,14 +276,10 @@ func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, vals []string, sl
 		[]string{""},               // owners
 		"n",                        // add another AMI rule
 	}
-	if string_utils.IsDevVersion(ctx.Get("version")) {
-		awsVals = append(awsVals[:2], awsVals[1:]...)
-		awsVals[1] = cfg.ValidatorChartVersions[cfg.ValidatorPluginAws] // validator-plugin-aws helm chart version
-	}
 	return interleave(vals, sliceVals, awsVals)
 }
 
-func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []string) []string {
+func (t *ValidatorTest) azurePluginInstallValues(ctx *test.TestContext, vals []string) []string {
 	azureVals := []string{
 		"y",                                    // enable plugin
 		"n",                                    // implicit plugin auth
@@ -238,24 +287,43 @@ func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, tuiVals []strin
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // tenant id
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // client id
 		"test_client_secret",                   // client secret
-		"rule-1",                               // rule name
-		"d551b7b1-78ae-43df-9d61-4935c843a454", // security principal
-		"Local Filepath",                       // Add permission sets via
-		t.filePath("azurePermissionSets.json"), // Permission sets file
-		"n",                                    // add RBAC rule
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
 		azureVals = slices.Insert(azureVals, 1,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginAzure], // validator-plugin-azure helm chart version
 		)
 	}
-	tuiVals = append(tuiVals, azureVals...)
-	return tuiVals
+	vals = append(vals, azureVals...)
+	return vals
+}
+
+func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, vals []string) []string {
+	azureVals := []string{
+		"rule-1",                               // rule name
+		"d551b7b1-78ae-43df-9d61-4935c843a454", // security principal
+		"Local Filepath",                       // Add permission sets via
+		t.filePath("azurePermissionSets.json"), // Permission sets file
+		"n",                                    // add RBAC rule
+	}
+	vals = append(vals, azureVals...)
+	return vals
+}
+
+func (t *ValidatorTest) networkPluginInstallValues(ctx *test.TestContext, vals []string) []string {
+	networkVals := []string{
+		"y", // enable Network plugin
+	}
+	if string_utils.IsDevVersion(ctx.Get("version")) {
+		networkVals = slices.Insert(networkVals, 1,
+			cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork], // validator-plugin-network helm chart version
+		)
+	}
+	vals = append(vals, networkVals...)
+	return vals
 }
 
 func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
 	networkVals := []any{
-		"y",                              // enable Network plugin
 		"y",                              // enable DNS validation
 		"resolve foo",                    // DNS rule name
 		"foo",                            // DNS host
@@ -268,7 +336,7 @@ func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, vals []string
 		"y",                              // enable IP range validation
 		"check ips",                      // IP range rule name
 		"10.10.10.10",                    // first IPv4 in range
-		"10",                             // length of IPv4 range
+		"1",                              // length of IPv4 range
 		"n",                              // add another IP range rule
 		"y",                              // enable MTU validation
 		"check mtu",                      // MTU rule name
@@ -296,16 +364,22 @@ func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, vals []string
 		"ca.crt",                         // cert key
 		"n",                              // add another CA cert secret ref
 	}
-	if string_utils.IsDevVersion(ctx.Get("version")) {
-		networkVals = append(networkVals[:2], networkVals[1:]...)
-		networkVals[1] = cfg.ValidatorChartVersions[cfg.ValidatorPluginNetwork] // validator-plugin-network helm chart version
-	}
 	return interleave(vals, sliceVals, networkVals)
 }
 
-func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, tuiVals []string) []string {
+func (t *ValidatorTest) ociPluginInstallValues(ctx *test.TestContext, vals []string) []string {
 	ociVals := []string{
-		"y",                        // enable OCI plugin
+		"y", // enable OCI plugin
+	}
+	if string_utils.IsDevVersion(ctx.Get("version")) {
+		ociVals = append(ociVals, cfg.ValidatorChartVersions[cfg.ValidatorPluginOci]) // validator-plugin-oci helm chart version
+	}
+	vals = append(vals, ociVals...)
+	return vals
+}
+
+func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string) []string {
+	ociVals := []string{
 		"y",                        // add registry credentials
 		"oci-creds",                // secret name
 		"y",                        // configure basic auth
@@ -328,23 +402,30 @@ func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, tuiVals []string)
 		"",                         // ca certificate
 		"n",                        // add another registry rule
 	}
-	if string_utils.IsDevVersion(ctx.Get("version")) {
-		ociVals = slices.Insert(ociVals, 1,
-			cfg.ValidatorChartVersions[cfg.ValidatorPluginOci], // validator-plugin-oci helm chart version
-		)
-	}
-	tuiVals = append(tuiVals, ociVals...)
-	return tuiVals
+	vals = append(vals, ociVals...)
+	return vals
 }
 
-func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, tuiVals []string) []string {
+func (t *ValidatorTest) vspherePluginInstallValues(ctx *test.TestContext, vals []string) []string {
 	vsphereVals := []string{
-		"y",                           // enable vsphere plugin
-		"vsphere-creds",               // vSphere secret name
-		"fake.vsphere.com",            // vSphere domain
-		"bob@vsphere.com",             // vSphere username
-		"password",                    // vSphere password
-		"y",                           // insecure skip verify
+		"y",                // enable vsphere plugin
+		"vsphere-creds",    // vSphere secret name
+		"fake.vsphere.com", // vSphere domain
+		"bob@vsphere.com",  // vSphere username
+		"password",         // vSphere password
+		"y",                // insecure skip verify
+	}
+	if string_utils.IsDevVersion(ctx.Get("version")) {
+		vsphereVals = slices.Insert(vsphereVals, 1,
+			cfg.ValidatorChartVersions[cfg.ValidatorPluginVsphere], // validator-plugin-vsphere helm chart version
+		)
+	}
+	vals = append(vals, vsphereVals...)
+	return vals
+}
+
+func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string) []string {
+	vsphereVals := []string{
 		"DC0",                         // datacenter
 		"y",                           // Enable NTP check
 		"ntpd",                        // NTP rule name
@@ -400,13 +481,8 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, tuiVals []str
 		"k8s-zone",                    // tag
 		"n",                           // add another tag rule
 	}
-	if string_utils.IsDevVersion(ctx.Get("version")) {
-		vsphereVals = slices.Insert(vsphereVals, 1,
-			cfg.ValidatorChartVersions[cfg.ValidatorPluginVsphere], // validator-plugin-vsphere helm chart version
-		)
-	}
-	tuiVals = append(tuiVals, vsphereVals...)
-	return tuiVals
+	vals = append(vals, vsphereVals...)
+	return vals
 }
 
 func interleave(vals []string, sliceVals [][]string, inputVals []any) ([]string, [][]string) {
@@ -421,12 +497,30 @@ func interleave(vals []string, sliceVals [][]string, inputVals []any) ([]string,
 	return vals, sliceVals
 }
 
-func (t *ValidatorTest) testDeploySilent() (tr *test.TestResult) {
-	if err := t.updateTestData(); err != nil {
+func (t *ValidatorTest) testInstallSilent() (tr *test.TestResult) {
+	kindClusterName = fmt.Sprintf("%s-%s", cfg.ValidatorKindClusterName, string_utils.RandStr(5))
+	tokens := map[string]string{
+		"<kind_cluster_name>": kindClusterName, // ensure concurrent tests use unique kind cluster names
+	}
+	if err := t.updateTestData(tokens); err != nil {
 		return test.Failure(err.Error())
 	}
 	silentCmd, buffer := common.InitCmd([]string{
 		"install", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile),
+	})
+	return common.ExecCLI(silentCmd, buffer, t.log)
+}
+
+func (t *ValidatorTest) testInstallSilentWait() (tr *test.TestResult) {
+	tokens := map[string]string{
+		"useKindCluster: true": "useKindCluster: false", // re-use the existing kind cluster
+	}
+	if err := t.updateTestData(tokens); err != nil {
+		return test.Failure(err.Error())
+	}
+	silentCmd, buffer := common.InitCmd([]string{
+		"install", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile),
+		"--check", "--silent", "--wait",
 	})
 	return common.ExecCLI(silentCmd, buffer, t.log)
 }
@@ -460,6 +554,7 @@ func (t *ValidatorTest) testUpdatePasswords() (tr *test.TestResult) {
 			cfg.ValidatorHelmRegistry, // Helm registry
 			"y",                       // Allow Insecure Connection (Bypass x509 Verification)
 			"y",                       // Use Helm basic auth
+			"n",                       // Use existing secret
 			"admin",                   // Helm username
 			"welcome",                 // Helm password
 
@@ -504,6 +599,9 @@ func (t *ValidatorTest) PreRequisite(ctx *test.TestContext) (tr *test.TestResult
 	if err := common.PreRequisiteFun()(ctx); err != nil {
 		return test.Failure(err.Error())
 	}
+
+	t.initVsphereDriver(ctx)
+
 	return test.Success()
 }
 
@@ -522,22 +620,16 @@ func (t *ValidatorTest) TearDown(ctx *test.TestContext) {
 	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account *vsphere.CloudAccount) (vsphere.Driver, error))
 }
 
-// updateTestData updates the hard-coded validator config used in silent installation tests
-func (t *ValidatorTest) updateTestData() error {
+// updateTestData updates the hard-coded validator config used for silent installation tests
+func (t *ValidatorTest) updateTestData(tokens map[string]string) error {
 	testData := t.filePath(cfg.ValidatorConfigFile)
 	bs, err := os.ReadFile(testData) //#nosec G304
 	if err != nil {
 		return err
 	}
-
-	kindClusterName = fmt.Sprintf("%s-%s", cfg.ValidatorKindClusterName, string_utils.RandStr(5))
-	tokens := map[string]string{
-		"<kind_cluster_name>": kindClusterName, // ensure concurrent tests use unique kind cluster names
-	}
 	for k, v := range tokens {
 		bs = bytes.ReplaceAll(bs, []byte(k), []byte(v))
 	}
-
 	return os.WriteFile(testData, bs, 0600)
 }
 
