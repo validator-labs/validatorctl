@@ -69,6 +69,11 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 			if err := validator.UpdateValidatorCredentials(vc); err != nil {
 				return err
 			}
+			if tc.Check {
+				if err := validator.UpdateValidatorPluginCredentials(vc); err != nil {
+					return err
+				}
+			}
 			saveConfig = true
 		}
 		if vc.Kubeconfig == "" {

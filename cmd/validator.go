@@ -92,7 +92,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator installation configuration file.")
+	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file (required).")
 	flags.BoolVarP(&tc.CreateConfigOnly, "config-only", "o", false, "Update configuration file only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&tc.UpdatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&tc.Reconfigure, "reconfigure", "r", false, "Re-configure plugin rules prior to running checks. Default: false.")
@@ -101,8 +101,8 @@ For more information about validator, see: https://github.com/validator-labs/val
 	cmdutils.MarkFlagRequired(cmd, "config-file")
 
 	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
-	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
 
 	return cmd
 }

@@ -2,6 +2,7 @@
 package validator
 
 import (
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -347,7 +348,7 @@ func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components
 func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 	if c.RegistryConfig.Enabled {
 		if err := readRegistryConfig(c); err != nil {
-			return err
+			return fmt.Errorf("failed to update registry config: %w", err)
 		}
 	}
 	k8sClient, err := k8sClientFromConfig(c)
@@ -355,7 +356,7 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 		return err
 	}
 	if err := readHelmConfig(cfg.Validator, k8sClient, c, c.ReleaseSecret); err != nil {
-		return err
+		return fmt.Errorf("failed to update Helm configuration: %w", err)
 	}
 	return nil
 }
@@ -368,24 +369,24 @@ func UpdateValidatorPluginCredentials(c *components.ValidatorConfig) error {
 	}
 	if c.AWSPlugin != nil && c.AWSPlugin.Enabled {
 		if err := readAwsCredentials(c.AWSPlugin, k8sClient); err != nil {
-			return err
+			return fmt.Errorf("failed to update AWS credentials: %w", err)
 		}
 	}
 	if c.AzurePlugin != nil && c.AzurePlugin.Enabled {
 		if err := readAzureCredentials(c.AzurePlugin, k8sClient); err != nil {
-			return err
+			return fmt.Errorf("failed to update Azure credentials: %w", err)
 		}
 	}
 	if c.OCIPlugin != nil && c.OCIPlugin.Enabled {
 		for _, secret := range c.OCIPlugin.Secrets {
 			if err := readOciSecret(secret); err != nil {
-				return err
+				return fmt.Errorf("failed to update OCI secret: %w", err)
 			}
 		}
 	}
 	if c.VspherePlugin != nil && c.VspherePlugin.Enabled {
 		if err := readVsphereCredentials(c.VspherePlugin, k8sClient); err != nil {
-			return err
+			return fmt.Errorf("failed to update vSphere credentials: %w", err)
 		}
 	}
 	return nil
