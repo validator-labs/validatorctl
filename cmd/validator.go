@@ -50,15 +50,10 @@ For more information about validator, see: https://github.com/validator-labs/val
 	flags.BoolVarP(&tc.Reconfigure, "reconfigure", "r", false, "Re-configure validator and plugin(s) prior to installation. The --config-file flag must be provided. Default: false.")
 
 	flags.BoolVar(&tc.Check, "check", false, "Configure rules for validator plugin(s). Default: false")
-	flags.BoolVarP(&tc.Silent, "silent", "s", false, "Skip all plugin prompts and apply configuration file directly. Only applies when --check is set. Default: false.")
 	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Only applies when --check is set. Default: false")
 
 	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
-
-	cmd.MarkFlagsMutuallyExclusive("config-only", "silent")
-	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
-	cmd.MarkFlagsMutuallyExclusive("update-passwords", "silent")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
 
 	return cmd
@@ -69,8 +64,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 func NewConfigureValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var tc = &cfg.TaskConfig{
-		CliVersion:  Version,
-		Reconfigure: true,
+		CliVersion: Version,
 	}
 
 	cmd := &cobra.Command{
@@ -98,17 +92,16 @@ For more information about validator, see: https://github.com/validator-labs/val
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator installation configuration file.")
+	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file (required).")
 	flags.BoolVarP(&tc.CreateConfigOnly, "config-only", "o", false, "Update configuration file only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&tc.UpdatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with checks. Default: false.")
-	flags.BoolVarP(&tc.Silent, "silent", "s", false, "Skip all prompts and apply configuration file directly. Default: false.")
+	flags.BoolVarP(&tc.Reconfigure, "reconfigure", "r", false, "Re-configure plugin rules prior to running checks. Default: false.")
 	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Default: false")
 
 	cmdutils.MarkFlagRequired(cmd, "config-file")
 
-	cmd.MarkFlagsMutuallyExclusive("config-only", "silent")
 	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
-	cmd.MarkFlagsMutuallyExclusive("update-passwords", "silent")
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
 
 	return cmd

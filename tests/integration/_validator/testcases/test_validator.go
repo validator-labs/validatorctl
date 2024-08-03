@@ -520,7 +520,7 @@ func (t *ValidatorTest) testInstallSilentWait() (tr *test.TestResult) {
 	}
 	silentCmd, buffer := common.InitCmd([]string{
 		"install", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile),
-		"--check", "--silent", "--wait",
+		"--check", "--wait",
 	})
 	return common.ExecCLI(silentCmd, buffer, t.log)
 }
