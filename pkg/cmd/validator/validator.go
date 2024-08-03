@@ -56,6 +56,8 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		log.FatalCLI("Cannot reconfigure validator without providing a configuration file.")
 	}
 
+	configProvided := tc.ConfigFile != ""
+
 	if tc.ConfigFile != "" && !tc.Reconfigure {
 		// Silent Mode
 		vc, err = components.NewValidatorFromConfig(tc)
@@ -118,6 +120,10 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		return err
 	}
 	if tc.Check {
+		if !configProvided {
+			tc.Reconfigure = true
+		}
+
 		return ConfigureValidatorCommand(c, tc)
 	}
 	return nil
@@ -130,7 +136,7 @@ func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var err error
 	var saveConfig bool
 
-	if tc.Silent {
+	if !tc.Reconfigure {
 		// Silent Mode
 		vc, err = components.NewValidatorFromConfig(tc)
 		if err != nil {
