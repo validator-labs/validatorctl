@@ -58,7 +58,7 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 
 	configProvided := tc.ConfigFile != ""
 
-	if tc.ConfigFile != "" && !tc.Reconfigure {
+	if configProvided && !tc.Reconfigure {
 		// Silent Mode
 		vc, err = components.NewValidatorFromConfig(tc)
 		if err != nil {
