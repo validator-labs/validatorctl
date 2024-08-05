@@ -120,7 +120,7 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	}
 
 	// Enable plugin(s), then read install config
-	if err := enablePlugins(tc, vc); err != nil {
+	if err := enablePlugins(tc, vc, "Install"); err != nil {
 		return err
 	}
 	if vc.AWSPlugin.Enabled {
@@ -178,7 +178,7 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	return nil
 }
 
-func enablePlugins(tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
+func enablePlugins(tc *cfg.TaskConfig, vc *components.ValidatorConfig, verb string) error {
 	var err error
 
 	log.Header("Validator Plugin Configuration")
@@ -202,7 +202,7 @@ func enablePlugins(tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
 	  avoid unexpectedly hitting quota limits.
 	- Compare the tags associated with a subnet against an expected tag set.
 	`)
-	vc.AWSPlugin.Enabled, err = prompts.ReadBool("Install AWS plugin", true)
+	vc.AWSPlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s AWS plugin", verb), true)
 	if err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func enablePlugins(tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
 	`)
 	// TODO: support image gallery rules
 	// - Verify that images in community image galleries exist.
-	vc.AzurePlugin.Enabled, err = prompts.ReadBool("Install Azure plugin", true)
+	vc.AzurePlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s Azure plugin", verb), true)
 	if err != nil {
 		return err
 	}
@@ -235,7 +235,7 @@ func enablePlugins(tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
 	- Check that each file in a list of URLs is available and publicly accessible
 	  via an HTTP HEAD request, with optional basic auth.
 	`)
-	vc.NetworkPlugin.Enabled, err = prompts.ReadBool("Install Network plugin", true)
+	vc.NetworkPlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s Network plugin", verb), true)
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func enablePlugins(tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
 	  verification.
 	- Validate downloading arbitrary OCI artifacts.
 	`)
-	vc.OCIPlugin.Enabled, err = prompts.ReadBool("Install OCI plugin", true)
+	vc.OCIPlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s OCI plugin", verb), true)
 	if err != nil {
 		return err
 	}
@@ -273,7 +273,7 @@ func enablePlugins(tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
 	  against an expected tag set.
 	- Verify that a set of ESXi hosts have valid NTP configuration.
 	`)
-	vc.VspherePlugin.Enabled, err = prompts.ReadBool("Install vSphere plugin", true)
+	vc.VspherePlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s vSphere plugin", verb), true)
 	if err != nil {
 		return err
 	}
@@ -287,7 +287,7 @@ func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components
 	var kClient kubernetes.Interface
 
 	if tc.Direct {
-		if err := enablePlugins(tc, vc); err != nil {
+		if err := enablePlugins(tc, vc, "Enable"); err != nil {
 			return err
 		}
 	} else {
@@ -351,6 +351,9 @@ func readValidatorPluginRules(tc *cfg.TaskConfig, vc *components.ValidatorConfig
 
 	Custom Resouces containing plugin rules will be applied to the
 	Kubernetes cluster specified by the KUBECONFIG environment variable.
+
+	Or, if using direct mode, rules will be evaluated in process
+	and results will be saved to disk and printed to the console.
 
 	If you make a mistake at any point you will have to option
 	to revisit any configuration step at the end.
