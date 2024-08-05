@@ -55,7 +55,6 @@ import (
 
 // InitWorkspace initializes a workspace directory with subdirectories
 func InitWorkspace(c *cfg.Config, workspaceDir string, subdirs []string, timestamped bool) error {
-	// Create workspace
 	if err := c.CreateWorkspace(workspaceDir, subdirs, timestamped); err != nil {
 		return fmt.Errorf("failed to initialize workspace: %v", err)
 	}
@@ -172,7 +171,7 @@ func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		}
 	} else {
 		// Interactive mode
-		if tc.Direct {
+		if tc.Direct && tc.ConfigFile == "" {
 			vc = components.NewValidatorConfig()
 			tc.ConfigFile = filepath.Join(c.RunLoc, cfg.ValidatorConfigFile)
 		} else {
@@ -496,6 +495,11 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.AWSPlugin.Validator,
 		}
 		vr := vres.Build(v)
+		// TODO: set TypeMeta in vres.Build
+		vr.TypeMeta = metav1.TypeMeta{
+			APIVersion: "validation.spectrocloud.labs/v1alpha1",
+			Kind:       "AwsValidator",
+		}
 		vrr := awsval.Validate(*vc.AWSPlugin.Validator, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
@@ -528,6 +532,11 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.NetworkPlugin.Validator,
 		}
 		vr := vres.Build(v)
+		// TODO: set TypeMeta in vres.Build
+		vr.TypeMeta = metav1.TypeMeta{
+			APIVersion: "validation.spectrocloud.labs/v1alpha1",
+			Kind:       "NetworkValidator",
+		}
 		vrr := netval.Validate(*vc.NetworkPlugin.Validator,
 			vc.NetworkPlugin.Validator.CACerts.RawCerts(),
 			vc.NetworkPlugin.HTTPFileAuthBytes(), l,

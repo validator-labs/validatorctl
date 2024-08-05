@@ -89,6 +89,11 @@ For more information about validator, see: https://github.com/validator-labs/val
 				if err := exec.CheckBinaries([]exec.Binary{exec.HelmBin, exec.KubectlBin}); err != nil {
 					return err
 				}
+			} else {
+				// enables 'validatorctl check --direct' without '-r'
+				if tc.ConfigFile == "" {
+					tc.Reconfigure = true
+				}
 			}
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
