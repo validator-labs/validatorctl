@@ -77,9 +77,8 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		if err := kind.ValidateClusters("Validator installation"); err != nil {
 			return err
 		}
-		// only set kubeconfig if a kind cluster will be created by the
-		// active command, per the task config flags
-		if !tc.CreateConfigOnly && !tc.Direct {
+		// only set kubeconfig if a kind cluster will be created
+		if !tc.CreateConfigOnly {
 			vc.Kubeconfig = filepath.Join(c.RunLoc, "kind-cluster.kubeconfig")
 		}
 	} else {
