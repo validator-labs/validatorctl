@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"emperror.dev/errors"
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	vtypes "github.com/validator-labs/validator/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -16,20 +17,21 @@ import (
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
+	"github.com/validator-labs/validatorctl/pkg/utils/exec"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	"github.com/validator-labs/validatorctl/pkg/utils/kube"
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 )
 
 var (
-	pluginInstallFuncs = map[string]func(*components.ValidatorConfig, kubernetes.Interface) error{
-		"AWS":     readAwsPluginInstall,
-		"Azure":   readAzurePluginInstall,
-		"Network": readNetworkPluginInstall,
-		"OCI":     readOciPluginInstall,
-		"vSphere": readVspherePluginInstall,
+	pluginInstallFuncs = map[string]func(*components.ValidatorConfig, *cfg.TaskConfig, kubernetes.Interface) error{
+		"AWS":     readAwsPlugin,
+		"Azure":   readAzurePlugin,
+		"Network": readNetworkPlugin,
+		"OCI":     readOciPlugin,
+		"vSphere": readVspherePlugin,
 	}
-	pluginRuleFuncs = map[string]func(*components.ValidatorConfig, kubernetes.Interface) error{
+	pluginRuleFuncs = map[string]func(*components.ValidatorConfig, *cfg.TaskConfig, kubernetes.Interface) error{
 		"AWS":     readAwsPluginRules,
 		"Azure":   readAzurePluginRules,
 		"Network": readNetworkPluginRules,
@@ -75,7 +77,11 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		if err := kind.ValidateClusters("Validator installation"); err != nil {
 			return err
 		}
-		vc.Kubeconfig = filepath.Join(c.RunLoc, "kind-cluster.kubeconfig")
+		// only set kubeconfig if a kind cluster will be created by the
+		// active command, per the task config flags
+		if !tc.CreateConfigOnly && !tc.Direct {
+			vc.Kubeconfig = filepath.Join(c.RunLoc, "kind-cluster.kubeconfig")
+		}
 	} else {
 		kClient, vc.Kubeconfig, err = services.ReadKubeconfig()
 		if err != nil {
@@ -113,7 +119,69 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		return err
 	}
 
-	log.Header("Validator Plugin Installation Configuration")
+	// Enable plugin(s), then read install config
+	if err := enablePlugins(tc, vc); err != nil {
+		return err
+	}
+	if vc.AWSPlugin.Enabled {
+		if err = readAwsPlugin(vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+	if vc.AzurePlugin.Enabled {
+		if err = readAzurePlugin(vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+	if vc.NetworkPlugin.Enabled {
+		if err = readNetworkPlugin(vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+	if vc.OCIPlugin.Enabled {
+		if err = readOciPlugin(vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+	if vc.VspherePlugin.Enabled {
+		if err = readVspherePlugin(vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	log.Header("Finalize Installation Configuration")
+	restart, err := prompts.ReadBool("Restart configuration", false)
+	if err != nil {
+		return err
+	}
+	if restart {
+		return ReadValidatorConfig(c, tc, vc)
+	}
+	for {
+		revisit, err := prompts.ReadBool("Reconfigure plugin(s)", false)
+		if err != nil {
+			return err
+		}
+		if revisit {
+			pluginFunc, err := prompts.Select("Plugin", plugins)
+			if err != nil {
+				return err
+			}
+			if err := pluginInstallFuncs[pluginFunc](vc, tc, kClient); err != nil {
+				return err
+			}
+			continue
+		}
+		break
+	}
+
+	return nil
+}
+
+func enablePlugins(tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
+	var err error
+
+	log.Header("Validator Plugin Configuration")
 	log.InfoCLI(`
 	Validator plugins provide informative, actionable validation results pertaining
 	to infrastructure, networking, kubernetes cluster internals, and more.
@@ -138,11 +206,6 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	if err != nil {
 		return err
 	}
-	if vc.AWSPlugin.Enabled {
-		if err = readAwsPluginInstall(vc, kClient); err != nil {
-			return err
-		}
-	}
 
 	log.Header("Azure Plugin")
 	log.InfoCLI(`
@@ -157,11 +220,6 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	vc.AzurePlugin.Enabled, err = prompts.ReadBool("Install Azure plugin", true)
 	if err != nil {
 		return err
-	}
-	if vc.AzurePlugin.Enabled {
-		if err = readAzurePluginInstall(vc, kClient); err != nil {
-			return err
-		}
 	}
 
 	log.Header("Network Plugin")
@@ -181,8 +239,8 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	if err != nil {
 		return err
 	}
-	if vc.NetworkPlugin.Enabled {
-		if err = readNetworkPluginInstall(vc, kClient); err != nil {
+	if vc.NetworkPlugin.Enabled && tc.Direct {
+		if err := exec.CheckBinaries([]exec.Binary{exec.NslookupBin, exec.PingBin}); err != nil {
 			return err
 		}
 	}
@@ -200,11 +258,6 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	vc.OCIPlugin.Enabled, err = prompts.ReadBool("Install OCI plugin", true)
 	if err != nil {
 		return err
-	}
-	if vc.OCIPlugin.Enabled {
-		if err = readOciPluginInstall(vc, kClient); err != nil {
-			return err
-		}
 	}
 
 	log.Header("vSphere Plugin")
@@ -224,95 +277,39 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	if err != nil {
 		return err
 	}
-	if vc.VspherePlugin.Enabled {
-		if err = readVspherePluginInstall(vc, kClient); err != nil {
-			return err
-		}
-	}
-
-	log.Header("Finalize Installation Configuration")
-	restart, err := prompts.ReadBool("Restart configuration", false)
-	if err != nil {
-		return err
-	}
-	if restart {
-		return ReadValidatorConfig(c, tc, vc)
-	}
-	for {
-		revisit, err := prompts.ReadBool("Reconfigure plugin(s)", false)
-		if err != nil {
-			return err
-		}
-		if revisit {
-			pluginFunc, err := prompts.Select("Plugin", plugins)
-			if err != nil {
-				return err
-			}
-			if err := pluginInstallFuncs[pluginFunc](vc, kClient); err != nil {
-				return err
-			}
-			continue
-		}
-		break
-	}
 
 	return nil
 }
 
 // ReadValidatorPluginConfig prompts the user to configure validator plugins rule(s).
 func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
-	log.Header("Validator Plugin Configuration")
-	log.InfoCLI(`
-	You will be prompted for to configure Validator plugin rules
-	for each enabled plugin in your validator configuration file.
-
-	Custom Resouces containing plugin rules will be applied to the
-	Kubernetes cluster specified by the KUBECONFIG environment variable.
-
-	If you make a mistake at any point you will have to option
-	to revisit any configuration step at the end.
-	`)
-
 	var err error
 	var kClient kubernetes.Interface
 
-	if vc.Kubeconfig == "" {
-		kClient, vc.Kubeconfig, err = services.ReadKubeconfig()
-		if err != nil {
+	if tc.Direct {
+		if err := enablePlugins(tc, vc); err != nil {
 			return err
 		}
 	} else {
-		kClient, err = kube.GetKubeClientset(vc.Kubeconfig)
-		if err != nil {
-			return err
+		if vc.Kubeconfig == "" {
+			if vc.KindConfig.UseKindCluster {
+				return errors.New(`config file has kindConfig.useKindCluster set to true, but no kubeconfig path was provided. Have you run "validator install" yet?`)
+			}
+			kClient, vc.Kubeconfig, err = services.ReadKubeconfig()
+			if err != nil {
+				return err
+			}
+		} else {
+			kClient, err = kube.GetKubeClientset(vc.Kubeconfig)
+			if err != nil {
+				return err
+			}
 		}
+		log.InfoCLI("")
 	}
-	log.InfoCLI("")
 
-	if vc.AWSPlugin.Enabled {
-		if err = readAwsPluginRules(vc, kClient); err != nil {
-			return err
-		}
-	}
-	if vc.AzurePlugin.Enabled {
-		if err = readAzurePluginRules(vc, kClient); err != nil {
-			return err
-		}
-	}
-	if vc.NetworkPlugin.Enabled {
-		if err = readNetworkPluginRules(vc, kClient); err != nil {
-			return err
-		}
-	}
-	if vc.OCIPlugin.Enabled {
-		if err = readOciPluginRules(vc, kClient); err != nil {
-			return err
-		}
-	}
-	if vc.VspherePlugin.Enabled {
-		if err = readVspherePluginRules(vc, kClient); err != nil {
-			return err
-		}
+	if err := readValidatorPluginRules(tc, vc, kClient); err != nil {
+		return err
 	}
 
 	log.Header("Finalize Plugin Rule Configuration")
@@ -333,12 +330,85 @@ func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components
 			if err != nil {
 				return err
 			}
-			if err := pluginRuleFuncs[pluginFunc](vc, kClient); err != nil {
+			if err := pluginRuleFuncs[pluginFunc](vc, tc, kClient); err != nil {
 				return err
 			}
 			continue
 		}
 		break
+	}
+
+	return nil
+}
+
+func readValidatorPluginRules(tc *cfg.TaskConfig, vc *components.ValidatorConfig, kClient kubernetes.Interface) error {
+	var err error
+
+	log.Header("Validator Plugin Configuration")
+	log.InfoCLI(`
+	You will be prompted for to configure Validator plugin rules
+	for each enabled plugin in your validator configuration file.
+
+	Custom Resouces containing plugin rules will be applied to the
+	Kubernetes cluster specified by the KUBECONFIG environment variable.
+
+	If you make a mistake at any point you will have to option
+	to revisit any configuration step at the end.
+	`)
+
+	if vc.AWSPlugin.Enabled {
+		if tc.Direct {
+			if err = readAwsPlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err = readAwsPluginRules(vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	if vc.AzurePlugin.Enabled {
+		if tc.Direct {
+			if err = readAzurePlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err = readAzurePluginRules(vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	if vc.NetworkPlugin.Enabled {
+		if tc.Direct {
+			if err = readNetworkPlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err = readNetworkPluginRules(vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	if vc.OCIPlugin.Enabled {
+		if tc.Direct {
+			if err = readOciPlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err = readOciPluginRules(vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	if vc.VspherePlugin.Enabled {
+		if tc.Direct {
+			if err = readVspherePlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err = readVspherePluginRules(vc, tc, kClient); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -362,18 +432,18 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 }
 
 // UpdateValidatorPluginCredentials updates validator plugin credentials
-func UpdateValidatorPluginCredentials(c *components.ValidatorConfig) error {
+func UpdateValidatorPluginCredentials(c *components.ValidatorConfig, tc *cfg.TaskConfig) error {
 	k8sClient, err := k8sClientFromConfig(c)
 	if err != nil {
 		return err
 	}
 	if c.AWSPlugin != nil && c.AWSPlugin.Enabled {
-		if err := readAwsCredentials(c.AWSPlugin, k8sClient); err != nil {
+		if err := readAwsCredentials(c.AWSPlugin, tc, k8sClient); err != nil {
 			return fmt.Errorf("failed to update AWS credentials: %w", err)
 		}
 	}
 	if c.AzurePlugin != nil && c.AzurePlugin.Enabled {
-		if err := readAzureCredentials(c.AzurePlugin, k8sClient); err != nil {
+		if err := readAzureCredentials(c.AzurePlugin, tc, k8sClient); err != nil {
 			return fmt.Errorf("failed to update Azure credentials: %w", err)
 		}
 	}
@@ -385,7 +455,7 @@ func UpdateValidatorPluginCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 	if c.VspherePlugin != nil && c.VspherePlugin.Enabled {
-		if err := readVsphereCredentials(c.VspherePlugin, k8sClient); err != nil {
+		if err := readVsphereCredentials(c.VspherePlugin, tc, k8sClient); err != nil {
 			return fmt.Errorf("failed to update vSphere credentials: %w", err)
 		}
 	}

@@ -9,7 +9,6 @@ import (
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	cfgmanager "github.com/validator-labs/validatorctl/pkg/config/manager"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 )
 
 var (
@@ -31,7 +30,7 @@ func init() {
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		log.FatalCLI(err.Error())
+		log.FatalCLI("failed to execute command", "error", err)
 	}
 }
 
@@ -54,12 +53,7 @@ Use 'validator help <sub-command>' to explore all of the functionality the Valid
 	globalFlags.StringVarP(&workspaceLoc, "workspace", "w", "", `Workspace location for staging runtime configurations and logs (default "$HOME/.validator")`)
 
 	if err := viper.BindPFlag("logLevel", globalFlags.Lookup("log-level")); err != nil {
-		log.FatalCLI("Failed to bind log-level flag", "error", err)
-	}
-
-	// Verify required binaries exist
-	if err := exec_utils.CheckBinaries(); err != nil {
-		log.FatalCLI("Failed to verify required binaries", "error", err)
+		log.FatalCLI("failed to bind log-level flag", "error", err)
 	}
 
 	// add base commands
@@ -108,12 +102,12 @@ func InitConfig() {
 		case viper.ConfigFileNotFoundError:
 			log.Debug("No validator cli config file detected. One will be created.")
 		default:
-			log.FatalCLI("Failed to initialize Validator CLI config", "error", err)
+			log.FatalCLI("failed to initialize Validator CLI config", "error", err)
 		}
 	}
 
 	// Instantiate config
 	if err := cfgmanager.Init(); err != nil {
-		log.FatalCLI("Failed to initialize Validator CLI config", "error", err)
+		log.FatalCLI("failed to initialize Validator CLI config", "error", err)
 	}
 }

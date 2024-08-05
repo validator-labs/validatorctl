@@ -51,10 +51,4 @@ metricsService:
     targetPort: https
   type: ClusterIP
 auth:
-  {{- if .Config.Validator.Auth.Implicit }}
-  secret: {}
-  {{- else }}
-  secret:
-    secretName: {{ .Config.Validator.Auth.SecretName }}
-  {{- end }}
   serviceAccountName: "{{ .Config.ServiceAccountName }}"

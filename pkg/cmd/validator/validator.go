@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
@@ -22,9 +23,24 @@ import (
 	"k8s.io/client-go/tools/cache"
 	toolsWatch "k8s.io/client-go/tools/watch"
 
+	awsapi "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
+	awsval "github.com/validator-labs/validator-plugin-aws/pkg/validate"
+
+	// azureapi "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
+	// azureval "github.com/validator-labs/validator-plugin-azure/pkg/validate"
+	netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
+	netval "github.com/validator-labs/validator-plugin-network/pkg/validate"
 	"github.com/validator-labs/validator-plugin-oci/pkg/oci"
+
+	// ociapi "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
+	// ocival "github.com/validator-labs/validator-plugin-oci/pkg/validate"
+	// vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	// vsphereval "github.com/validator-labs/validator-plugin-vsphere/pkg/validate"
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
 	"github.com/validator-labs/validator/pkg/helm"
+	"github.com/validator-labs/validator/pkg/sinks"
+	"github.com/validator-labs/validator/pkg/types"
+	vres "github.com/validator-labs/validator/pkg/validationresult"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -53,7 +69,7 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var saveConfig bool
 
 	if tc.ConfigFile == "" && tc.Reconfigure {
-		log.FatalCLI("Cannot reconfigure validator without providing a configuration file.")
+		log.FatalCLI("invalid arguments", "error", "cannot reconfigure validator without providing a configuration file")
 	}
 
 	configProvided := tc.ConfigFile != ""
@@ -70,7 +86,7 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 				return err
 			}
 			if tc.Check {
-				if err := validator.UpdateValidatorPluginCredentials(vc); err != nil {
+				if err := validator.UpdateValidatorPluginCredentials(vc, tc); err != nil {
 					return err
 				}
 			}
@@ -134,7 +150,7 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	return nil
 }
 
-// ConfigureValidatorCommand configures and applies validator plugin rules
+// ConfigureValidatorCommand configures and applies/executes validator plugin rules
 // nolint:dupl
 func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var vc *components.ValidatorConfig
@@ -149,16 +165,21 @@ func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		}
 		if tc.UpdatePasswords {
 			log.Header("Updating plugin credentials in validator configuration file")
-			if err := validator.UpdateValidatorPluginCredentials(vc); err != nil {
+			if err := validator.UpdateValidatorPluginCredentials(vc, tc); err != nil {
 				return err
 			}
 			saveConfig = true
 		}
 	} else {
 		// Interactive mode
-		vc, err = components.NewValidatorFromConfig(tc)
-		if err != nil {
-			return errors.Wrap(err, "failed to load validator configuration file")
+		if tc.Direct {
+			vc = components.NewValidatorConfig()
+			tc.ConfigFile = filepath.Join(c.RunLoc, cfg.ValidatorConfigFile)
+		} else {
+			vc, err = components.NewValidatorFromConfig(tc)
+			if err != nil {
+				return errors.Wrap(err, "failed to load validator configuration file")
+			}
 		}
 		if err := validator.ReadValidatorPluginConfig(c, tc, vc); err != nil {
 			return errors.Wrap(err, "failed to configure validator plugin(s)")
@@ -179,6 +200,22 @@ func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		return nil
 	}
 
+	ok, invalidPlugins := vc.EnabledPluginsHaveRules()
+	if !ok {
+		log.FatalCLI("invalid validator configuration", "error",
+			fmt.Sprintf("the following plugins are enabled, but have no rules configured: %v", invalidPlugins),
+		)
+	}
+
+	if tc.Direct {
+		return executePlugins(c, vc)
+	}
+
+	// upgrade the validator helm release so that plugin rule secrets
+	// are created, e.g., OCI registry secrets, Network basic auth secrets, etc.
+	if err := applyValidator(c, vc); err != nil {
+		return err
+	}
 	if err := configurePlugins(c, vc, tc); err != nil {
 		return err
 	}
@@ -441,6 +478,148 @@ func configurePlugins(c *cfg.Config, vc *components.ValidatorConfig, tc *cfg.Tas
 	return nil
 }
 
+func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
+	log.Header("Executing validator plugin(s)")
+
+	// TODO: restore debug log file & write to it here
+	// l := zap.New(zap.WriteTo(log.DebugOut()))
+	l := logr.Logger{}
+
+	results := make([]*vapi.ValidationResult, 0)
+
+	if vc.AWSPlugin.Enabled {
+		v := &awsapi.AwsValidator{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "aws-validator",
+				Namespace: "N/A",
+			},
+			Spec: *vc.AWSPlugin.Validator,
+		}
+		vr := vres.Build(v)
+		vrr := awsval.Validate(*vc.AWSPlugin.Validator, l)
+		if err := vres.Finalize(vr, vrr, l); err != nil {
+			return err
+		}
+		results = append(results, vr)
+	}
+
+	// if vc.AzurePlugin.Enabled {
+	// 	v := &azureapi.AzureValidator{
+	// 		ObjectMeta: metav1.ObjectMeta{
+	// 			Name:      "azure-validator",
+	// 			Namespace: "N/A",
+	// 		},
+	// 		Spec: *vc.AzurePlugin.Validator,
+	// 	}
+	// 	vr := vres.Build(v)
+	// 	vrr := azureval.Validate(*vc.AzurePlugin.Validator, nil, nil, l)
+	// 	if err := vres.Finalize(vr, vrr, l); err != nil {
+	// 		return err
+	// 	}
+	// 	results = append(results, vr)
+	// }
+
+	if vc.NetworkPlugin.Enabled {
+		v := &netapi.NetworkValidator{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "network-validator",
+				Namespace: "N/A",
+			},
+			Spec: *vc.NetworkPlugin.Validator,
+		}
+		vr := vres.Build(v)
+		vrr := netval.Validate(*vc.NetworkPlugin.Validator,
+			vc.NetworkPlugin.Validator.CACerts.RawCerts(),
+			vc.NetworkPlugin.HTTPFileAuthBytes(), l,
+		)
+		if err := vres.Finalize(vr, vrr, l); err != nil {
+			return err
+		}
+		results = append(results, vr)
+	}
+
+	// if vc.OCIPlugin.Enabled {
+	// 	v := &ociapi.OciValidator{
+	// 		ObjectMeta: metav1.ObjectMeta{
+	// 			Name:      "oci-validator",
+	// 			Namespace: "N/A",
+	// 		},
+	// 		Spec: *vc.OCIPlugin.Validator,
+	// 	}
+	// 	vr := vres.Build(v)
+	// 	vrr := ocival.Validate(*vc.OCIPlugin.Validator, nil, nil, l)
+	// 	if err := vres.Finalize(vr, vrr, l); err != nil {
+	// 		return err
+	// 	}
+	// 	results = append(results, vr)
+	// }
+
+	// if vc.VspherePlugin.Enabled {
+	// 	v := &vsphereapi.VsphereValidator{
+	// 		ObjectMeta: metav1.ObjectMeta{
+	// 			Name:      "vsphere-validator",
+	// 			Namespace: "N/A",
+	// 		},
+	// 		Spec: *vc.VspherePlugin.Validator,
+	// 	}
+	// 	vr := vres.Build(v)
+	// 	vrr := vsphereval.Validate(*vc.VspherePlugin.Validator, nil, nil, l)
+	// 	if err := vres.Finalize(vr, vrr, l); err != nil {
+	// 		return err
+	// 	}
+	// 	results = append(results, vr)
+	// }
+
+	if vc.SinkConfig.Enabled {
+		if err := emitToSink(vc, results, l); err != nil {
+			return err
+		}
+	}
+
+	// Convert results to unstructured objects
+	us := make([]unstructured.Unstructured, 0, len(results))
+	for _, vr := range results {
+		u, err := kube.ToUnstructured(vr)
+		if err != nil {
+			return err
+		}
+		us = append(us, *u)
+
+		// Write result to disk
+		bs, err := yaml.Marshal(vr)
+		if err != nil {
+			return err
+		}
+		out := filepath.Join(c.RunLoc, fmt.Sprintf("%s-validation-result.yaml", vr.Name))
+		if err := os.WriteFile(out, bs, 0644); err != nil {
+			return err
+		}
+	}
+
+	return printValidationResults(us)
+}
+
+func emitToSink(vc *components.ValidatorConfig, results []*vapi.ValidationResult, log logr.Logger) error {
+	sink := sinks.NewSink(types.SinkType(vc.SinkConfig.Type), log)
+
+	sinkConfig := make(map[string][]byte, len(vc.SinkConfig.Values))
+	for k, v := range vc.SinkConfig.Values {
+		sinkConfig[k] = []byte(v)
+	}
+
+	c := sinks.Client{}
+	if err := sink.Configure(c, sinkConfig); err != nil {
+		return fmt.Errorf("failed to configure sink: %w", err)
+	}
+	for _, vr := range results {
+		if err := sink.Emit(*vr); err != nil {
+			return fmt.Errorf("failed to emit ValidationResult to sink: %w", err)
+		}
+	}
+
+	return nil
+}
+
 func createReleaseSecretCmd(secret *components.Secret) []string {
 	args := []string{
 		"create", "secret", "generic", secret.Name, "-n", "validator",
@@ -508,7 +687,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 
 	if vc.NetworkPlugin.Enabled {
 		args := map[string]interface{}{
-			"Tag":           vc.NetworkPlugin.Release.Chart.Version,
+			"Config":        vc.NetworkPlugin,
 			"ImageRegistry": vc.ImageRegistry,
 		}
 		values, err := embed.EFS.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-network-values.tmpl")
@@ -555,7 +734,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	}
 
 	if !vc.AnyPluginEnabled() {
-		log.FatalCLI("Invalid validator config: at least one plugin must be enabled!")
+		log.FatalCLI("invalid validator config", "error", "at least one plugin must be enabled")
 	}
 
 	// concatenate base validator values w/ plugin values
@@ -565,9 +744,10 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		"ProxyConfig":   vc.ProxyConfig,
 		"SinkConfig":    vc.SinkConfig,
 		"AWSPlugin":     vc.AWSPlugin,
-		"VspherePlugin": vc.VspherePlugin,
-		"OCIPlugin":     vc.OCIPlugin,
 		"AzurePlugin":   vc.AzurePlugin,
+		"NetworkPlugin": vc.NetworkPlugin,
+		"OCIPlugin":     vc.OCIPlugin,
+		"VspherePlugin": vc.VspherePlugin,
 	}
 	if vc.ProxyConfig.Enabled {
 		args["ProxyCaCertData"] = strings.Split(vc.ProxyConfig.Env.ProxyCACert.Data, "\n")
@@ -673,7 +853,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		return err
 	}
 	if !pluginsOk {
-		return errors.New("one or more validator plugin(s) failed to install")
+		return errors.New("one or more validator plugin(s) failed to install/upgrade")
 	}
 
 	return nil

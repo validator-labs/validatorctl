@@ -36,7 +36,7 @@ func Test_readNetworkPlugin(t *testing.T) {
 		name       string
 		returnVals []string
 		vc         *components.ValidatorConfig
-		k8sClient  kubernetes.Interface
+		kClient    kubernetes.Interface
 		wantErr    bool
 		err        error
 	}{
@@ -58,7 +58,7 @@ func Test_readNetworkPlugin(t *testing.T) {
 	for _, tt := range tts {
 		prompts.Tui = &mocks.MockTUI{Values: tt.returnVals}
 		t.Run(tt.name, func(t *testing.T) {
-			err := readNetworkPluginRules(tt.vc, tt.k8sClient)
+			err := readNetworkPluginRules(tt.vc, nil, tt.kClient)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("readNetworkPlugin() error = %v, wantErr %v", err, tt.wantErr)
 				return

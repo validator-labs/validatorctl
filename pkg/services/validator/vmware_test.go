@@ -59,7 +59,7 @@ func Test_readVspherePlugin(t *testing.T) {
 		name       string
 		returnVals []string
 		vc         *components.ValidatorConfig
-		k8sClient  kubernetes.Interface
+		kClient    kubernetes.Interface
 		wantErr    bool
 		err        error
 	}{
@@ -83,7 +83,7 @@ func Test_readVspherePlugin(t *testing.T) {
 		defer teardown()
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := readVspherePluginRules(tt.vc, tt.k8sClient)
+			err := readVspherePluginRules(tt.vc, nil, tt.kClient)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("readVspherePlugin() error = %v, wantErr %v", err, tt.wantErr)
 				return

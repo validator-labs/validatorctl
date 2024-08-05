@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/mohae/deepcopy"
-	aws "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
-	"github.com/validator-labs/validator/api/v1alpha1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	"github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
+	aws "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
+	"github.com/validator-labs/validator/api/v1alpha1"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 )
@@ -38,7 +38,7 @@ func Test_readAwsPlugin(t *testing.T) {
 		name       string
 		returnVals []string
 		vc         *components.ValidatorConfig
-		k8sClient  kubernetes.Interface
+		kClient    kubernetes.Interface
 		wantErr    bool
 		err        error
 	}{
@@ -62,7 +62,7 @@ func Test_readAwsPlugin(t *testing.T) {
 	for _, tt := range tts {
 		prompts.Tui = &mocks.MockTUI{Values: tt.returnVals}
 		t.Run(tt.name, func(t *testing.T) {
-			err := readAwsPluginRules(tt.vc, tt.k8sClient)
+			err := readAwsPluginRules(tt.vc, nil, tt.kClient)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("readAwsPlugin() error = %v, wantErr %v", err, tt.wantErr)
 				return

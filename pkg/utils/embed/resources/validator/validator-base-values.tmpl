@@ -123,15 +123,34 @@ pluginSecrets:
   {{- end }}
   {{- end }}
 
-  {{- if .VspherePlugin.Validator.Auth.SecretName }}
-  vSphere:
-    secretName: {{ .VspherePlugin.Validator.Auth.SecretName }}
-    username: {{ .VspherePlugin.Account.Username | quote }}
-    password: {{ .VspherePlugin.Account.Password | quote }}
-    vcenterServer: {{ .VspherePlugin.Account.VcenterServer | quote }}
-    insecureSkipVerify: {{ .VspherePlugin.Account.Insecure | quote }}
+  {{- if .AzurePlugin.Enabled }}
+  {{- if .AzurePlugin.Validator.Auth.Implicit }}
+  azure: {}
   {{- else }}
-  vSphere: {}
+  azure:
+    secretName: {{ .AzurePlugin.Validator.Auth.SecretName }}
+    env:
+      AZURE_TENANT_ID: {{ .AzurePlugin.TenantID }}
+      AZURE_CLIENT_ID: {{ .AzurePlugin.ClientID }}
+      AZURE_CLIENT_SECRET: {{ .AzurePlugin.ClientSecret }}
+  {{- end }}
+  {{- end }}
+
+  {{- if .NetworkPlugin.Enabled }}
+  network:
+    {{- if gt (len .NetworkPlugin.HTTPFileAuths) 0 }}
+    auth:
+    {{- $httpFileRules := .NetworkPlugin.Validator.HTTPFileRules }}
+    {{- range $i, $auth := .NetworkPlugin.HTTPFileAuths }}
+      {{- with index $httpFileRules $i }}
+    - secretName: {{ .AuthSecretRef.Name }}
+      {{- end }}
+      username: {{ index $auth 0 | quote }}
+      password: {{ index $auth 1 | quote }}
+    {{- end }}
+    {{- else }}
+    auth: []
+    {{- end }}
   {{- end }}
 
   {{- if .OCIPlugin.Enabled }}
@@ -165,15 +184,13 @@ pluginSecrets:
     {{- end }}
   {{- end }}
 
-  {{- if .AzurePlugin.Enabled }}
-  {{- if .AzurePlugin.Validator.Auth.Implicit }}
-  azure: {}
+  {{- if .VspherePlugin.Validator.Auth.SecretName }}
+  vSphere:
+    secretName: {{ .VspherePlugin.Validator.Auth.SecretName }}
+    username: {{ .VspherePlugin.Account.Username | quote }}
+    password: {{ .VspherePlugin.Account.Password | quote }}
+    vcenterServer: {{ .VspherePlugin.Account.VcenterServer | quote }}
+    insecureSkipVerify: {{ .VspherePlugin.Account.Insecure | quote }}
   {{- else }}
-  azure:
-    secretName: {{ .AzurePlugin.Validator.Auth.SecretName }}
-    env:
-      AZURE_TENANT_ID: {{ .AzurePlugin.TenantID }}
-      AZURE_CLIENT_ID: {{ .AzurePlugin.ClientID }}
-      AZURE_CLIENT_SECRET: {{ .AzurePlugin.ClientSecret }}
-  {{- end }}
+  vSphere: {}
   {{- end }}

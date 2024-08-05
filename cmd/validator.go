@@ -11,6 +11,7 @@ import (
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	cmdutils "github.com/validator-labs/validatorctl/pkg/utils/cmd"
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
+	"github.com/validator-labs/validatorctl/pkg/utils/exec"
 )
 
 // NewInstallValidatorCmd returns a new cobra command for installing validator & validator plugin(s)
@@ -30,6 +31,9 @@ For more information about validator, see: https://github.com/validator-labs/val
 		SilenceErrors: true,
 		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			if err := exec.CheckBinaries(exec.AllBins); err != nil {
+				return err
+			}
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -78,6 +82,14 @@ For more information about validator, see: https://github.com/validator-labs/val
 		SilenceErrors: true,
 		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			if tc.ConfigFile == "" && !tc.Direct {
+				return fmt.Errorf(`required flag "config-file" not set`)
+			}
+			if !tc.Direct {
+				if err := exec.CheckBinaries([]exec.Binary{exec.HelmBin, exec.KubectlBin}); err != nil {
+					return err
+				}
+			}
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -92,15 +104,17 @@ For more information about validator, see: https://github.com/validator-labs/val
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file (required).")
+	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file. Required unless using --direct.")
 	flags.BoolVarP(&tc.CreateConfigOnly, "config-only", "o", false, "Update configuration file only. Do not proceed with checks. Default: false.")
+	flags.BoolVarP(&tc.Direct, "direct", "d", false, "Execute checks directly; no validator installation required. Default: false")
 	flags.BoolVarP(&tc.UpdatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&tc.Reconfigure, "reconfigure", "r", false, "Re-configure plugin rules prior to running checks. Default: false.")
 	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Default: false")
 
-	cmdutils.MarkFlagRequired(cmd, "config-file")
-
 	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
+	cmd.MarkFlagsMutuallyExclusive("direct", "config-only")
+	cmd.MarkFlagsMutuallyExclusive("direct", "update-passwords")
+	cmd.MarkFlagsMutuallyExclusive("direct", "wait")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
 
@@ -123,6 +137,9 @@ For more information about validator, see: https://github.com/validator-labs/val
 		SilenceErrors: true,
 		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			if err := exec.CheckBinaries([]exec.Binary{exec.HelmBin, exec.KubectlBin}); err != nil {
+				return err
+			}
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -154,6 +171,9 @@ func NewUndeployValidatorCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			if err := exec.CheckBinaries([]exec.Binary{exec.HelmBin, exec.KindBin}); err != nil {
+				return err
+			}
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {

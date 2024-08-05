@@ -43,29 +43,22 @@ type vSphereRule interface {
 		*v1alpha1.ComputeResourceRule | *v1alpha1.NTPValidationRule
 }
 
-func readVspherePluginInstall(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
+func readVspherePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	c := vc.VspherePlugin
 
-	if err := readHelmRelease(cfg.ValidatorPluginVsphere, vc, c.Release); err != nil {
-		return fmt.Errorf("failed to read Helm release: %w", err)
+	if !tc.Direct {
+		if err := readHelmRelease(cfg.ValidatorPluginVsphere, vc, c.Release); err != nil {
+			return fmt.Errorf("failed to read Helm release: %w", err)
+		}
 	}
-
-	if err := readVsphereCredentials(c, k8sClient); err != nil {
+	if err := readVsphereCredentials(c, tc, k8sClient); err != nil {
 		return fmt.Errorf("failed to read vSphere credentials: %w", err)
 	}
-	vSphereCloudDriver, err := clouds.GetVSphereDriver(c.Account)
-	if err != nil {
-		return err
-	}
-	if err := vSphereCloudDriver.ValidateVsphereVersion(cfg.ValidatorVsphereVersionConstraint); err != nil {
-		return err
-	}
 
-	log.InfoCLI("Validated vSphere version %s", cfg.ValidatorVsphereVersionConstraint)
 	return nil
 }
 
-func readVspherePluginRules(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+func readVspherePluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _ kubernetes.Interface) error {
 	log.Header("vSphere Plugin Rule Configuration")
 	c := vc.VspherePlugin
 
@@ -110,7 +103,7 @@ func readVspherePluginRules(vc *components.ValidatorConfig, _ kubernetes.Interfa
 	return nil
 }
 
-func readVsphereCredentials(c *components.VspherePluginConfig, k8sClient kubernetes.Interface) error {
+func readVsphereCredentials(c *components.VspherePluginConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	var err error
 
 	// always create vSphere credential secret if creating a new kind cluster
@@ -132,9 +125,11 @@ func readVsphereCredentials(c *components.VspherePluginConfig, k8sClient kuberne
 		if c.Validator.Auth.SecretName != "" {
 			vSphereSecretName = c.Validator.Auth.SecretName
 		}
-		c.Validator.Auth.SecretName, err = prompts.ReadText("vSphere credentials secret name", vSphereSecretName, false, -1)
-		if err != nil {
-			return err
+		if !tc.Direct {
+			c.Validator.Auth.SecretName, err = prompts.ReadText("vSphere credentials secret name", vSphereSecretName, false, -1)
+			if err != nil {
+				return err
+			}
 		}
 		if err := clouds.ReadVsphereAccountProps(c.Account); err != nil {
 			return err
@@ -154,6 +149,16 @@ func readVsphereCredentials(c *components.VspherePluginConfig, k8sClient kuberne
 		c.Account.Password = string(secret.Data["password"])
 		c.Account.Insecure = insecure
 	}
+
+	// validate vSphere version
+	vSphereCloudDriver, err := clouds.GetVSphereDriver(c.Account)
+	if err != nil {
+		return err
+	}
+	if err := vSphereCloudDriver.ValidateVsphereVersion(cfg.ValidatorVsphereVersionConstraint); err != nil {
+		return err
+	}
+	log.InfoCLI("Validated vSphere version %s", cfg.ValidatorVsphereVersionConstraint)
 
 	return nil
 }

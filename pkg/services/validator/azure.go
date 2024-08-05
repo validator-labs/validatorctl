@@ -28,20 +28,22 @@ var (
 	azureSecretName = "azure-creds"
 )
 
-func readAzurePluginInstall(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
+func readAzurePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	c := vc.AzurePlugin
 
-	if err := readHelmRelease(cfg.ValidatorPluginAzure, vc, c.Release); err != nil {
-		return fmt.Errorf("failed to read Helm release: %w", err)
+	if !tc.Direct {
+		if err := readHelmRelease(cfg.ValidatorPluginAzure, vc, c.Release); err != nil {
+			return fmt.Errorf("failed to read Helm release: %w", err)
+		}
 	}
-	if err := readAzureCredentials(c, k8sClient); err != nil {
+	if err := readAzureCredentials(c, tc, k8sClient); err != nil {
 		return fmt.Errorf("failed to read Azure credentials: %w", err)
 	}
 
 	return nil
 }
 
-func readAzurePluginRules(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+func readAzurePluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _ kubernetes.Interface) error {
 	log.Header("Azure Plugin Rule Configuration")
 
 	// Configure RBAC rules. Unlike how other plugins are styled, no prompt for whether the user
@@ -57,14 +59,14 @@ func readAzurePluginRules(vc *components.ValidatorConfig, _ kubernetes.Interface
 	return nil
 }
 
-func readAzureCredentials(c *components.AzurePluginConfig, k8sClient kubernetes.Interface) error {
+func readAzureCredentials(c *components.AzurePluginConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	var err error
 
 	c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit Azure auth", true)
 	if err != nil {
 		return fmt.Errorf("failed to prompt for bool for use implicit Azure auth: %w", err)
 	}
-	if c.Validator.Auth.Implicit {
+	if c.Validator.Auth.Implicit && !tc.Direct {
 		c.ServiceAccountName, err = services.ReadServiceAccount(k8sClient, cfg.Validator)
 		if err != nil {
 			return fmt.Errorf("failed to read k8s ServiceAccount: %w", err)
@@ -89,9 +91,11 @@ func readAzureCredentials(c *components.AzurePluginConfig, k8sClient kubernetes.
 			if c.Validator.Auth.SecretName != "" {
 				azureSecretName = c.Validator.Auth.SecretName
 			}
-			c.Validator.Auth.SecretName, err = prompts.ReadText("Azure credentials secret name", azureSecretName, false, -1)
-			if err != nil {
-				return fmt.Errorf("failed to prompt for text for Azure credentials secret name: %w", err)
+			if !tc.Direct {
+				c.Validator.Auth.SecretName, err = prompts.ReadText("Azure credentials secret name", azureSecretName, false, -1)
+				if err != nil {
+					return fmt.Errorf("failed to prompt for text for Azure credentials secret name: %w", err)
+				}
 			}
 			c.TenantID, err = prompts.ReadTextRegex("Azure Tenant ID", c.TenantID, mustBeValidUUID, prompts.UUIDRegex)
 			if err != nil {

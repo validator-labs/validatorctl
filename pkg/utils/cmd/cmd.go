@@ -10,6 +10,6 @@ import (
 // MarkFlagRequired marks a flag as required.
 func MarkFlagRequired(cmd *cobra.Command, name string) {
 	if err := cmd.MarkFlagRequired(name); err != nil {
-		log.FatalCLI(err.Error())
+		log.FatalCLI("failed to mark flag required", "error", err)
 	}
 }
