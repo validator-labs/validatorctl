@@ -30,10 +30,11 @@ import (
 	// azureval "github.com/validator-labs/validator-plugin-azure/pkg/validate"
 	netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	netval "github.com/validator-labs/validator-plugin-network/pkg/validate"
-	"github.com/validator-labs/validator-plugin-oci/pkg/oci"
+	ociapi "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
+	ociauth "github.com/validator-labs/validator-plugin-oci/pkg/auth"
+	ocic "github.com/validator-labs/validator-plugin-oci/pkg/ociclient"
+	ocival "github.com/validator-labs/validator-plugin-oci/pkg/validate"
 
-	// ociapi "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
-	// ocival "github.com/validator-labs/validator-plugin-oci/pkg/validate"
 	// vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
 	// vsphereval "github.com/validator-labs/validator-plugin-vsphere/pkg/validate"
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
@@ -516,7 +517,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	// 		Spec: *vc.AzurePlugin.Validator,
 	// 	}
 	// 	vr := vres.Build(v)
-	// 	vrr := azureval.Validate(*vc.AzurePlugin.Validator, nil, nil, l)
+	// 	vrr := azureval.Validate(*vc.AzurePlugin.Validator, l)
 	// 	if err := vres.Finalize(vr, vrr, l); err != nil {
 	// 		return err
 	// 	}
@@ -547,21 +548,29 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		results = append(results, vr)
 	}
 
-	// if vc.OCIPlugin.Enabled {
-	// 	v := &ociapi.OciValidator{
-	// 		ObjectMeta: metav1.ObjectMeta{
-	// 			Name:      "oci-validator",
-	// 			Namespace: "N/A",
-	// 		},
-	// 		Spec: *vc.OCIPlugin.Validator,
-	// 	}
-	// 	vr := vres.Build(v)
-	// 	vrr := ocival.Validate(*vc.OCIPlugin.Validator, nil, nil, l)
-	// 	if err := vres.Finalize(vr, vrr, l); err != nil {
-	// 		return err
-	// 	}
-	// 	results = append(results, vr)
-	// }
+	if vc.OCIPlugin.Enabled {
+		v := &ociapi.OciValidator{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "oci-validator",
+				Namespace: "N/A",
+			},
+			Spec: *vc.OCIPlugin.Validator,
+		}
+		vr := vres.Build(v)
+		// TODO: set TypeMeta in vres.Build
+		vr.TypeMeta = metav1.TypeMeta{
+			APIVersion: "validation.spectrocloud.labs/v1alpha1",
+			Kind:       "OciValidator",
+		}
+		vrr := ocival.Validate(*vc.OCIPlugin.Validator,
+			vc.OCIPlugin.BasicAuths(),
+			vc.OCIPlugin.AllPubKeys(), l,
+		)
+		if err := vres.Finalize(vr, vrr, l); err != nil {
+			return err
+		}
+		results = append(results, vr)
+	}
 
 	// if vc.VspherePlugin.Enabled {
 	// 	v := &vsphereapi.VsphereValidator{
@@ -572,7 +581,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	// 		Spec: *vc.VspherePlugin.Validator,
 	// 	}
 	// 	vr := vres.Build(v)
-	// 	vrr := vsphereval.Validate(*vc.VspherePlugin.Validator, nil, nil, l)
+	// 	vrr := vsphereval.Validate(*vc.VspherePlugin.Validator, l)
 	// 	if err := vres.Finalize(vr, vrr, l); err != nil {
 	// 		return err
 	// 	}
@@ -814,21 +823,22 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	}
 
 	var cleanupLocalChart bool
-	if strings.HasPrefix(opts.Registry, oci.Scheme) {
+	if strings.HasPrefix(opts.Registry, ocic.Scheme) {
 		log.InfoCLI("\n==== Pulling validator Helm chart from OCI registry %s ====", opts.Registry)
 
 		opts.Path = fmt.Sprintf("%s/%s", c.RunLoc, opts.Chart)
 		opts.Version = strings.TrimPrefix(opts.Version, "v")
 
-		ociClient, err := oci.NewOCIClient(
-			oci.WithMultiAuth(),
-			oci.WithTLSConfig(opts.InsecureSkipTLSVerify, "", opts.CaFile),
+		ociClient, err := ocic.NewOCIClient(
+			ocic.WithBasicAuth(opts.Username, opts.Password),
+			ocic.WithMultiAuth(ociauth.GetKeychain(opts.Registry)),
+			ocic.WithTLSConfig(opts.InsecureSkipTLSVerify, "", opts.CaFile),
 		)
 		if err != nil {
 			return fmt.Errorf("failed to create OCI client: %w", err)
 		}
-		ociOpts := oci.ImageOptions{
-			Ref:     fmt.Sprintf("%s/%s:%s", strings.TrimPrefix(opts.Registry, oci.Scheme), opts.Chart, opts.Version),
+		ociOpts := ocic.ImageOptions{
+			Ref:     fmt.Sprintf("%s/%s:%s", strings.TrimPrefix(opts.Registry, ocic.Scheme), opts.Chart, opts.Version),
 			OutDir:  opts.Path,
 			OutFile: opts.Chart,
 		}

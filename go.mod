@@ -20,7 +20,7 @@ require (
 	github.com/validator-labs/validator-plugin-aws v0.1.3-0.20240805205201-38c4079ecb5b
 	github.com/validator-labs/validator-plugin-azure v0.0.14
 	github.com/validator-labs/validator-plugin-network v0.0.22-0.20240805205227-36f75641a23b
-	github.com/validator-labs/validator-plugin-oci v0.0.12
+	github.com/validator-labs/validator-plugin-oci v0.0.13-0.20240805230648-fd92ec85f8a5
 	github.com/validator-labs/validator-plugin-vsphere v0.0.28
 	github.com/vmware/govmomi v0.39.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
