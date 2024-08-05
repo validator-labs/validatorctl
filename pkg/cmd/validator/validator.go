@@ -25,9 +25,8 @@ import (
 
 	awsapi "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
 	awsval "github.com/validator-labs/validator-plugin-aws/pkg/validate"
-
-	// azureapi "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
-	// azureval "github.com/validator-labs/validator-plugin-azure/pkg/validate"
+	azureapi "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
+	azureval "github.com/validator-labs/validator-plugin-azure/pkg/validate"
 	netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	netval "github.com/validator-labs/validator-plugin-network/pkg/validate"
 	ociapi "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
@@ -508,21 +507,26 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		results = append(results, vr)
 	}
 
-	// if vc.AzurePlugin.Enabled {
-	// 	v := &azureapi.AzureValidator{
-	// 		ObjectMeta: metav1.ObjectMeta{
-	// 			Name:      "azure-validator",
-	// 			Namespace: "N/A",
-	// 		},
-	// 		Spec: *vc.AzurePlugin.Validator,
-	// 	}
-	// 	vr := vres.Build(v)
-	// 	vrr := azureval.Validate(*vc.AzurePlugin.Validator, l)
-	// 	if err := vres.Finalize(vr, vrr, l); err != nil {
-	// 		return err
-	// 	}
-	// 	results = append(results, vr)
-	// }
+	if vc.AzurePlugin.Enabled {
+		v := &azureapi.AzureValidator{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "azure-validator",
+				Namespace: "N/A",
+			},
+			Spec: *vc.AzurePlugin.Validator,
+		}
+		vr := vres.Build(v)
+		// TODO: set TypeMeta in vres.Build
+		vr.TypeMeta = metav1.TypeMeta{
+			APIVersion: "validation.spectrocloud.labs/v1alpha1",
+			Kind:       "AzureValidator",
+		}
+		vrr := azureval.Validate(*vc.AzurePlugin.Validator, l)
+		if err := vres.Finalize(vr, vrr, l); err != nil {
+			return err
+		}
+		results = append(results, vr)
+	}
 
 	if vc.NetworkPlugin.Enabled {
 		v := &netapi.NetworkValidator{

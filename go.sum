@@ -41,6 +41,14 @@ github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.7.0 h1:tfLQ34V6F7tVSwoTf/4lH
 github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.7.0/go.mod h1:9kIvujWAA58nmPmWB1m23fyWic1kYZMxD9CxaWn4Qpg=
 github.com/Azure/azure-sdk-for-go/sdk/internal v1.10.0 h1:ywEEhmNahHBihViHepv3xPBn1663uRv2t2q/ESv9seY=
 github.com/Azure/azure-sdk-for-go/sdk/internal v1.10.0/go.mod h1:iZDifYGJTIgIIkYRNWPENUnqx6bJ2xnSDFI2tjwZNuY=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2 v2.2.0 h1:Hp+EScFOu9HeCbeW8WU2yQPJd4gGwhMgKxWe+G6jNzw=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2 v2.2.0/go.mod h1:/pz8dyNQe+Ey3yBp/XuYz7oqX8YDNWVpPB0hH3XWfbc=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6 v6.0.0 h1:ubTqH0Sqcc7KgjHGKstw446zi7SurSXESKgd4hJea7w=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6 v6.0.0/go.mod h1:zflC9v4VfViJrSvcvplqws/yGXVbUEMZi/iHpZdSPWA=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/internal/v3 v3.1.0 h1:2qsIIvxVT+uE6yrNldntJKlLRgxGbZ85kgtz5SNBhMw=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/internal/v3 v3.1.0/go.mod h1:AW8VEadnhw9xox+VaVd9sP7NjzOAnaZBLRH6Tq3cJ38=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0 h1:Dd+RhdJn0OTtVGaeDLZpcumkIVCtA/3/Fo42+eoYvVM=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0/go.mod h1:5kakwfW5CjC9KK+Q4wjXAg+ShuIm2mBMua0ZFj2C8PE=
 github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.1.0 h1:DRiANoJTiW6obBQe3SqZizkuV1PEgfiiGivmVocDy64=
 github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.1.0/go.mod h1:qLIye2hwb/ZouqhpSD9Zn3SJipvpEnz1Ywl3VUk9Y0s=
 github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/internal v1.0.0 h1:D3occbWoio4EBLkbkevetNMAVX197GkzbUMtqjGWn80=
@@ -744,8 +752,8 @@ github.com/validator-labs/validator v0.1.1 h1:BzUWeSAP5eGHX2oOulJWZxXr+Zz6Uh6ZqP
 github.com/validator-labs/validator v0.1.1/go.mod h1:to8CMM+LlTcEzbqxVyHND9/uJO2+ORTFk9ovqVOnCU8=
 github.com/validator-labs/validator-plugin-aws v0.1.3-0.20240805205201-38c4079ecb5b h1:UtjCBd0CIbU6lbQHjkstlwpjBUWeFfIzkUJPdWtzkeg=
 github.com/validator-labs/validator-plugin-aws v0.1.3-0.20240805205201-38c4079ecb5b/go.mod h1:aY+4x9iA76XzjjS7fTXWJPytxCFospvzIOhJgnlpkq0=
-github.com/validator-labs/validator-plugin-azure v0.0.14 h1:/PVhAw3Ug4oJz5iRy+Qw8vKYYHd+gOBbXI5AH6GyYHg=
-github.com/validator-labs/validator-plugin-azure v0.0.14/go.mod h1:ik7XNToFzdojBqDM5MUvSRSd+eDJBHJjyfK8uA3J9QY=
+github.com/validator-labs/validator-plugin-azure v0.0.15-0.20240805234007-91b05fbabc54 h1:/kYX3cDcQBSkEj2+Xpvmd0Ur9hRK3Y3c1f6Dyo037vA=
+github.com/validator-labs/validator-plugin-azure v0.0.15-0.20240805234007-91b05fbabc54/go.mod h1:7XVYQDtfQK9A+1RV6e09NKMs4Z6XGwDj2X0ToUZ34ro=
 github.com/validator-labs/validator-plugin-network v0.0.22-0.20240805205227-36f75641a23b h1:tjLG7YFnF8qGuK4YtpnrdbZWkXKcvrDyL+j8NRpse1o=
 github.com/validator-labs/validator-plugin-network v0.0.22-0.20240805205227-36f75641a23b/go.mod h1:0zlqCtTNHxPAp7jKN/1abzRBXRXvBNWSQzVEhkQCrXg=
 github.com/validator-labs/validator-plugin-oci v0.0.13-0.20240805230648-fd92ec85f8a5 h1:Fq3+hrcgNfJX0fSHKC27r/AdqDo0kQP8BqSFH3woBnk=
