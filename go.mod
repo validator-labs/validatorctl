@@ -16,10 +16,10 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.1.1-0.20240805155030-056ee62b788e
-	github.com/validator-labs/validator-plugin-aws v0.1.2
+	github.com/validator-labs/validator v0.1.1
+	github.com/validator-labs/validator-plugin-aws v0.1.3-0.20240805205201-38c4079ecb5b
 	github.com/validator-labs/validator-plugin-azure v0.0.14
-	github.com/validator-labs/validator-plugin-network v0.0.22-0.20240801153219-c280e896939b
+	github.com/validator-labs/validator-plugin-network v0.0.22-0.20240805205227-36f75641a23b
 	github.com/validator-labs/validator-plugin-oci v0.0.12
 	github.com/validator-labs/validator-plugin-vsphere v0.0.28
 	github.com/vmware/govmomi v0.39.0
@@ -243,12 +243,3 @@ require (
 )
 
 // replace github.com/spectrocloud-labs/prompts-tui => ../../spectrocloud-labs/prompts-tui
-
-replace (
-	github.com/validator-labs/validator => ../validator
-	github.com/validator-labs/validator-plugin-aws => ../validator-plugin-aws
-	// github.com/validator-labs/validator-plugin-azure => ../validator-plugin-azure
-	github.com/validator-labs/validator-plugin-network => ../validator-plugin-network
-// github.com/validator-labs/validator-plugin-oci => ../validator-plugin-oci
-// github.com/validator-labs/validator-plugin-vsphere => ../validator-plugin-vsphere
-)
