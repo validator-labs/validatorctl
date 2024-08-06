@@ -33,9 +33,8 @@ import (
 	ociauth "github.com/validator-labs/validator-plugin-oci/pkg/auth"
 	ocic "github.com/validator-labs/validator-plugin-oci/pkg/ociclient"
 	ocival "github.com/validator-labs/validator-plugin-oci/pkg/validate"
-
-	// vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
-	// vsphereval "github.com/validator-labs/validator-plugin-vsphere/pkg/validate"
+	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	vsphereval "github.com/validator-labs/validator-plugin-vsphere/pkg/validate"
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
 	"github.com/validator-labs/validator/pkg/helm"
 	"github.com/validator-labs/validator/pkg/sinks"
@@ -45,6 +44,7 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
+	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/services/validator"
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
@@ -576,21 +576,33 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		results = append(results, vr)
 	}
 
-	// if vc.VspherePlugin.Enabled {
-	// 	v := &vsphereapi.VsphereValidator{
-	// 		ObjectMeta: metav1.ObjectMeta{
-	// 			Name:      "vsphere-validator",
-	// 			Namespace: "N/A",
-	// 		},
-	// 		Spec: *vc.VspherePlugin.Validator,
-	// 	}
-	// 	vr := vres.Build(v)
-	// 	vrr := vsphereval.Validate(*vc.VspherePlugin.Validator, l)
-	// 	if err := vres.Finalize(vr, vrr, l); err != nil {
-	// 		return err
-	// 	}
-	// 	results = append(results, vr)
-	// }
+	if vc.VspherePlugin.Enabled {
+		v := &vsphereapi.VsphereValidator{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "vsphere-validator",
+				Namespace: "N/A",
+			},
+			Spec: *vc.VspherePlugin.Validator,
+		}
+		vr := vres.Build(v)
+		// TODO: set TypeMeta in vres.Build
+		vr.TypeMeta = metav1.TypeMeta{
+			APIVersion: "validation.spectrocloud.labs/v1alpha1",
+			Kind:       "VsphereValidator",
+		}
+		driver, err := clouds.GetVSphereCloudDriver(vc.VspherePlugin.Account)
+		if err != nil {
+			return err
+		}
+		vrr, err := vsphereval.Validate(context.Background(), *vc.VspherePlugin.Validator, driver, l)
+		if err != nil {
+			return err
+		}
+		if err := vres.Finalize(vr, vrr, l); err != nil {
+			return err
+		}
+		results = append(results, vr)
+	}
 
 	if vc.SinkConfig.Enabled {
 		if err := emitToSink(vc, results, l); err != nil {

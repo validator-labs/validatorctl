@@ -77,6 +77,16 @@ func getVSphereDriver(account *vsphere.CloudAccount) (vsphere.Driver, error) {
 	return vsphere.NewVSphereDriver(account.VcenterServer, account.Username, account.Password, "", logr.Logger{})
 }
 
+// GetVSphereCloudDriver returns a vSphere cloud driver
+func GetVSphereCloudDriver(account *vsphere.CloudAccount) (*vsphere.CloudDriver, error) {
+	vsphereCloudDriver, err := getVSphereDriver(account)
+	if err != nil {
+		return nil, err
+	}
+	driver, _ := vsphereCloudDriver.(*vsphere.CloudDriver)
+	return driver, nil
+}
+
 // ValidateCloudAccountVsphere validates that the provided vSphere cloud account is valid
 func ValidateCloudAccountVsphere(account *vsphere.CloudAccount) error {
 	driver, err := GetVSphereDriver(account)
