@@ -18,10 +18,10 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/validator-labs/validator v0.1.1
 	github.com/validator-labs/validator-plugin-aws v0.1.3
-	github.com/validator-labs/validator-plugin-azure v0.0.15-0.20240806004448-58989c04eb1e
+	github.com/validator-labs/validator-plugin-azure v0.0.15
 	github.com/validator-labs/validator-plugin-network v0.0.22
 	github.com/validator-labs/validator-plugin-oci v0.0.13
-	github.com/validator-labs/validator-plugin-vsphere v0.0.29-0.20240806003016-58ce818d3d30
+	github.com/validator-labs/validator-plugin-vsphere v0.0.29
 	github.com/vmware/govmomi v0.39.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	gopkg.in/yaml.v2 v2.4.0
