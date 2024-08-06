@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.1.0](https://github.com/validator-labs/validatorctl/compare/v0.0.6...v0.1.0) (2024-08-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* split plugin rule configuration and installation into separate commands  ([#121](https://github.com/validator-labs/validatorctl/issues/121))
+
+### Features
+
+* add docs command; refactor to use embeddedfs pkg ([#116](https://github.com/validator-labs/validatorctl/issues/116)) ([dbe19c5](https://github.com/validator-labs/validatorctl/commit/dbe19c5b4d84d8142bb94956400b8625fb25a91f))
+* read CA certs for network rules, add HTTPFileRules, AMIRules ([#117](https://github.com/validator-labs/validatorctl/issues/117)) ([0c4487f](https://github.com/validator-labs/validatorctl/commit/0c4487fc27d636ff21a791f5bfb75cd9576880a7))
+* support direct rule evaluation with `validator check --direct` ([#127](https://github.com/validator-labs/validatorctl/issues/127)) ([f1fb0d6](https://github.com/validator-labs/validatorctl/commit/f1fb0d663a86da4798bd4f4a6462b6871b02fcd5))
+
+
+### Docs
+
+* added subcommands docs page ([#110](https://github.com/validator-labs/validatorctl/issues/110)) ([9fa23dc](https://github.com/validator-labs/validatorctl/commit/9fa23dcba0796a81859f595fc0c667dc557af993))
+
+
+### Dependency Updates
+
+* **deps:** update github.com/validator-labs/validator-plugin-azure digest to ba947e3 ([#134](https://github.com/validator-labs/validatorctl/issues/134)) ([2a1058d](https://github.com/validator-labs/validatorctl/commit/2a1058d5241d239eea763b44efbfd68b327a4fd3))
+* **deps:** update github.com/validator-labs/validator-plugin-vsphere digest to 9b1f05b ([#135](https://github.com/validator-labs/validatorctl/issues/135)) ([253f328](https://github.com/validator-labs/validatorctl/commit/253f328f05efff65e9906239f6850d08b77a359b))
+
+
+### Refactoring
+
+* remove -s flag ([#126](https://github.com/validator-labs/validatorctl/issues/126)) ([9373e02](https://github.com/validator-labs/validatorctl/commit/9373e021e5a22cf1547cd57604df07ff725b86e3))
+* simplify helm prompts ([#115](https://github.com/validator-labs/validatorctl/issues/115)) ([8ce75a1](https://github.com/validator-labs/validatorctl/commit/8ce75a1e763ff5dd459056fcd424409be2261a33))
+* split plugin rule configuration and installation into separate commands  ([#121](https://github.com/validator-labs/validatorctl/issues/121)) ([6eaee77](https://github.com/validator-labs/validatorctl/commit/6eaee77fd8158ac2f43be8b1111175e1e9ef6b0f))
+
 ## [0.0.6](https://github.com/validator-labs/validatorctl/compare/v0.0.5...v0.0.6) (2024-07-26)
 
 
