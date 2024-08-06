@@ -18,7 +18,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/validator-labs/validator v0.1.1
 	github.com/validator-labs/validator-plugin-aws v0.1.3
-	github.com/validator-labs/validator-plugin-azure v0.0.16-0.20240806163202-6299c8bc3351
+	github.com/validator-labs/validator-plugin-azure v0.0.16-0.20240806164052-ba947e3262ec
 	github.com/validator-labs/validator-plugin-network v0.0.22
 	github.com/validator-labs/validator-plugin-oci v0.0.13
 	github.com/validator-labs/validator-plugin-vsphere v0.0.30-0.20240806164459-9b1f05bd3c24
