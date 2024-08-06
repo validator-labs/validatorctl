@@ -44,7 +44,6 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/services/validator"
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
@@ -598,14 +597,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			APIVersion: "validation.spectrocloud.labs/v1alpha1",
 			Kind:       "VsphereValidator",
 		}
-		driver, err := clouds.GetVSphereCloudDriver(vc.VspherePlugin.Account)
-		if err != nil {
-			return err
-		}
-		vrr, err := vsphereval.Validate(context.Background(), *vc.VspherePlugin.Validator, driver, l)
-		if err != nil {
-			return err
-		}
+		vrr := vsphereval.Validate(context.Background(), *vc.VspherePlugin.Validator, vc.VspherePlugin.Account, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
