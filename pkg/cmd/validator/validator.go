@@ -521,7 +521,10 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			APIVersion: "validation.spectrocloud.labs/v1alpha1",
 			Kind:       "AzureValidator",
 		}
-		vrr := azureval.Validate(*vc.AzurePlugin.Validator, l)
+		vrr, err := azureval.Validate(context.Background(), *vc.AzurePlugin.Validator, l)
+		if err != nil {
+			return err
+		}
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
