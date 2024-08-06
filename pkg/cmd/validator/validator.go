@@ -628,7 +628,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			return err
 		}
 		out := filepath.Join(c.RunLoc, fmt.Sprintf("%s-validation-result.yaml", vr.Name))
-		if err := os.WriteFile(out, bs, 0644); err != nil {
+		if err := os.WriteFile(out, bs, 0600); err != nil {
 			return err
 		}
 	}
