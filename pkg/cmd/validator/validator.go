@@ -601,6 +601,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		results = append(results, vr)
 	}
 
+	// Optionally emit results to a sink
 	if vc.SinkConfig.Enabled {
 		if err := emitToSink(vc, results, l); err != nil {
 			return err
@@ -638,8 +639,8 @@ func emitToSink(vc *components.ValidatorConfig, results []*vapi.ValidationResult
 		sinkConfig[k] = []byte(v)
 	}
 
-	c := sinks.Client{}
-	if err := sink.Configure(c, sinkConfig); err != nil {
+	c := sinks.NewClient(30 * time.Second)
+	if err := sink.Configure(*c, sinkConfig); err != nil {
 		return fmt.Errorf("failed to configure sink: %w", err)
 	}
 	for _, vr := range results {

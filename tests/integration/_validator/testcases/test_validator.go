@@ -58,6 +58,9 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testInstallSilentWait(); result.IsFailed() {
 		return result
 	}
+	if result := t.testCheckDirect(); result.IsFailed() {
+		return result
+	}
 	if result := t.testDescribe(); result.IsFailed() {
 		return result
 	}
@@ -529,6 +532,24 @@ func (t *ValidatorTest) testInstallSilentWait() (tr *test.TestResult) {
 		"--check", "--wait",
 	})
 	return common.ExecCLI(silentCmd, buffer, t.log)
+}
+
+func (t *ValidatorTest) testCheckDirect() (tr *test.TestResult) {
+	t.log.Printf("Executing testCheckDirect")
+
+	tokens := map[string]string{
+		`sinkConfig:
+  enabled: true`: `sinkConfig:
+  enabled: false`, // disable sink
+	}
+	if err := t.updateTestData(tokens); err != nil {
+		return test.Failure(err.Error())
+	}
+
+	checkCmd, buffer := common.InitCmd([]string{
+		"check", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile), "--direct",
+	})
+	return common.ExecCLI(checkCmd, buffer, t.log)
 }
 
 func (t *ValidatorTest) testDescribe() (tr *test.TestResult) {

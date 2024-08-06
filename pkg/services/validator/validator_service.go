@@ -169,6 +169,19 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	return nil
 }
 
+// handlePlugins supports three distinct logical flows:
+// 1. validator install
+//   - prompt to enable plugins
+//   - verb is Install & tc.Direct will never be true, so readXYZPlugin calls are never hit
+//
+// 2. validator check (without --direct)
+//   - no prompt to enable plugins as they're already enabled in the validator config file
+//   - verb is Enable & tc.Direct is false, so readXYZPlugin are never called, but readXYZPluginRules are
+//
+// 3. validator check --direct
+//   - prompt to enable plugins (since we don't have a validator config file)
+//   - verb is Enable & tc.Direct is true, so readXYZPlugin and readXYZPluginRules are called
+//
 // nolint:gocyclo
 func handlePlugins(vc *components.ValidatorConfig, tc *cfg.TaskConfig, kClient kubernetes.Interface, verb string, enablePlugins bool, funcMap pluginFuncMap) error {
 	var err error
