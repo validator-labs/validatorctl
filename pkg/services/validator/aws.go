@@ -497,6 +497,7 @@ func readIamPolicy() (vpawsapi.PolicyDocument, error) {
 func convertStatements(statements []awspolicy.Statement) []vpawsapi.StatementEntry {
 	result := make([]vpawsapi.StatementEntry, 0, len(statements))
 	for _, s := range statements {
+		s := s
 		result = append(result, vpawsapi.StatementEntry{
 			Condition: vpawsapi.Condition(s.Condition),
 			Effect:    s.Effect,

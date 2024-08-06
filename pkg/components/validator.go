@@ -466,8 +466,9 @@ type OCIPluginConfig struct {
 
 // BasicAuths returns a slice of basic authentication details for each secret.
 func (c *OCIPluginConfig) BasicAuths() [][]string {
-	auths := make([][]string, 0, len(c.Secrets))
+	auths := make([][]string, len(c.Secrets))
 	for i, s := range c.Secrets {
+		s := s
 		if s.BasicAuth != nil {
 			auths[i] = []string{s.BasicAuth.Username, s.BasicAuth.Password}
 		} else {
@@ -479,8 +480,9 @@ func (c *OCIPluginConfig) BasicAuths() [][]string {
 
 // AllPubKeys returns a slice of public keys for each public key secret.
 func (c *OCIPluginConfig) AllPubKeys() [][][]byte {
-	pubKeys := make([][][]byte, 0, len(c.PublicKeySecrets))
+	pubKeys := make([][][]byte, len(c.PublicKeySecrets))
 	for i, s := range c.PublicKeySecrets {
+		s := s
 		keys := make([][]byte, 0, len(s.Keys))
 		for i, k := range s.Keys {
 			keys[i] = []byte(k)
