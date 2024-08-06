@@ -8,33 +8,43 @@ import (
 	"strconv"
 	"strings"
 
+	"emperror.dev/errors"
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	vtypes "github.com/validator-labs/validator/pkg/types"
 	"k8s.io/client-go/kubernetes"
+
+	awsconsts "github.com/validator-labs/validator-plugin-aws/pkg/constants"
+	azureconsts "github.com/validator-labs/validator-plugin-azure/pkg/constants"
+	netconsts "github.com/validator-labs/validator-plugin-network/pkg/constants"
+	ociconsts "github.com/validator-labs/validator-plugin-oci/pkg/constants"
+	vsphereconsts "github.com/validator-labs/validator-plugin-vsphere/pkg/constants"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
+	"github.com/validator-labs/validatorctl/pkg/utils/exec"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	"github.com/validator-labs/validatorctl/pkg/utils/kube"
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 )
 
+type pluginFuncMap map[string]func(*components.ValidatorConfig, *cfg.TaskConfig, kubernetes.Interface) error
+
 var (
-	pluginInstallFuncs = map[string]func(*components.ValidatorConfig, kubernetes.Interface) error{
-		"AWS":     readAwsPluginInstall,
-		"Azure":   readAzurePluginInstall,
-		"Network": readNetworkPluginInstall,
-		"OCI":     readOciPluginInstall,
-		"vSphere": readVspherePluginInstall,
+	pluginInstallFuncs = pluginFuncMap{
+		awsconsts.PluginCode:     readAwsPlugin,
+		azureconsts.PluginCode:   readAzurePlugin,
+		netconsts.PluginCode:     readNetworkPlugin,
+		ociconsts.PluginCode:     readOciPlugin,
+		vsphereconsts.PluginCode: readVspherePlugin,
 	}
-	pluginRuleFuncs = map[string]func(*components.ValidatorConfig, kubernetes.Interface) error{
-		"AWS":     readAwsPluginRules,
-		"Azure":   readAzurePluginRules,
-		"Network": readNetworkPluginRules,
-		"OCI":     readOciPluginRules,
-		"vSphere": readVspherePluginRules,
+	pluginRuleFuncs = pluginFuncMap{
+		awsconsts.PluginCode:     readAwsPluginRules,
+		azureconsts.PluginCode:   readAzurePluginRules,
+		netconsts.PluginCode:     readNetworkPluginRules,
+		ociconsts.PluginCode:     readOciPluginRules,
+		vsphereconsts.PluginCode: readVspherePluginRules,
 	}
 	plugins = make([]string, 0, len(pluginInstallFuncs))
 )
@@ -75,7 +85,10 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		if err := kind.ValidateClusters("Validator installation"); err != nil {
 			return err
 		}
-		vc.Kubeconfig = filepath.Join(c.RunLoc, "kind-cluster.kubeconfig")
+		// only set kubeconfig if a kind cluster will be created
+		if !tc.CreateConfigOnly {
+			vc.Kubeconfig = filepath.Join(c.RunLoc, "kind-cluster.kubeconfig")
+		}
 	} else {
 		kClient, vc.Kubeconfig, err = services.ReadKubeconfig()
 		if err != nil {
@@ -113,7 +126,7 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		return err
 	}
 
-	log.Header("Validator Plugin Installation Configuration")
+	log.Header("Validator Plugin Configuration")
 	log.InfoCLI(`
 	Validator plugins provide informative, actionable validation results pertaining
 	to infrastructure, networking, kubernetes cluster internals, and more.
@@ -122,112 +135,9 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	organization's requirements.
 	`)
 
-	log.Header("AWS Plugin")
-	log.InfoCLI(`
-	The AWS validator plugin reconciles AwsValidator custom resources to perform the
-	following validations against your AWS environment:
-
-	- Ensure that one or more EC2 AMI(s) exist in a particular region.
-	- Compare the IAM permissions associated with an IAM user / group / role / policy
-	  against an expected permission set.
-	- Compare the usage for a particular service quota against the active quota to
-	  avoid unexpectedly hitting quota limits.
-	- Compare the tags associated with a subnet against an expected tag set.
-	`)
-	vc.AWSPlugin.Enabled, err = prompts.ReadBool("Install AWS plugin", true)
-	if err != nil {
+	// Enable plugin(s) & read install config
+	if err := handlePlugins(vc, tc, kClient, "Install", true, pluginInstallFuncs); err != nil {
 		return err
-	}
-	if vc.AWSPlugin.Enabled {
-		if err = readAwsPluginInstall(vc, kClient); err != nil {
-			return err
-		}
-	}
-
-	log.Header("Azure Plugin")
-	log.InfoCLI(`
-	The Azure validator plugin reconciles AzureValidator custom resources to perform
-	the following validations against your Azure environment:
-
-	- Compare the Azure RBAC permissions associated with a security principal against
-	  an expected permission set.
-	`)
-	// TODO: support image gallery rules
-	// - Verify that images in community image galleries exist.
-	vc.AzurePlugin.Enabled, err = prompts.ReadBool("Install Azure plugin", true)
-	if err != nil {
-		return err
-	}
-	if vc.AzurePlugin.Enabled {
-		if err = readAzurePluginInstall(vc, kClient); err != nil {
-			return err
-		}
-	}
-
-	log.Header("Network Plugin")
-	log.InfoCLI(`
-	The Network validator plugin reconciles NetworkValidator custom resources to perform
-	the following validations against your network:
-
-	- Execute DNS lookups.
-	- Execute ICMP pings.
-	- Validate TCP connections to arbitrary host + port(s).
-	- Check each IP in an IP range to ensure that they're all unallocated.
-	- Check that the default NIC has an MTU greater than or equal to a specified value.
-	- Check that each file in a list of URLs is available and publicly accessible
-	  via an HTTP HEAD request, with optional basic auth.
-	`)
-	vc.NetworkPlugin.Enabled, err = prompts.ReadBool("Install Network plugin", true)
-	if err != nil {
-		return err
-	}
-	if vc.NetworkPlugin.Enabled {
-		if err = readNetworkPluginInstall(vc, kClient); err != nil {
-			return err
-		}
-	}
-
-	log.Header("OCI Plugin")
-	log.InfoCLI(`
-	The OCI validator plugin reconciles OciValidator custom resources to perform the
-	following validations against your OCI registry:
-
-	- Validate OCI registry authentication.
-	- Validate the existence of arbitrary OCI artifacts, with optional signature
-	  verification.
-	- Validate downloading arbitrary OCI artifacts.
-	`)
-	vc.OCIPlugin.Enabled, err = prompts.ReadBool("Install OCI plugin", true)
-	if err != nil {
-		return err
-	}
-	if vc.OCIPlugin.Enabled {
-		if err = readOciPluginInstall(vc, kClient); err != nil {
-			return err
-		}
-	}
-
-	log.Header("vSphere Plugin")
-	log.InfoCLI(`
-	The vSphere validator plugin reconciles VsphereValidator custom resources to perform
-	the following validations against your vSphere environment:
-
-	- Compare the privileges associated with a user against an expected privileges set.
-	- Compare the privileges associated with a user against an expected privileges set
-	  on a particular entity (cluster, resourcepool, folder, vapp, host).
-	- Verify availability of compute resources on an ESXi host, resourcepool, or cluster.
-	- Compare the tags associated with a datacenter, cluster, host, vm, resourcepool or vm
-	  against an expected tag set.
-	- Verify that a set of ESXi hosts have valid NTP configuration.
-	`)
-	vc.VspherePlugin.Enabled, err = prompts.ReadBool("Install vSphere plugin", true)
-	if err != nil {
-		return err
-	}
-	if vc.VspherePlugin.Enabled {
-		if err = readVspherePluginInstall(vc, kClient); err != nil {
-			return err
-		}
 	}
 
 	log.Header("Finalize Installation Configuration")
@@ -244,11 +154,11 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 			return err
 		}
 		if revisit {
-			pluginFunc, err := prompts.Select("Plugin", plugins)
+			pluginCode, err := prompts.Select("Plugin", plugins)
 			if err != nil {
 				return err
 			}
-			if err := pluginInstallFuncs[pluginFunc](vc, kClient); err != nil {
+			if err := pluginInstallFuncs[pluginCode](vc, tc, kClient); err != nil {
 				return err
 			}
 			continue
@@ -259,11 +169,212 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 	return nil
 }
 
+// handlePlugins supports three distinct logical flows:
+// 1. validator install
+//   - prompt to enable plugins
+//   - verb is Install & tc.Direct will never be true, so readXYZPlugin calls are never hit
+//
+// 2. validator check (without --direct)
+//   - no prompt to enable plugins as they're already enabled in the validator config file
+//   - verb is Enable & tc.Direct is false, so readXYZPlugin are never called, but readXYZPluginRules are
+//
+// 3. validator check --direct
+//   - prompt to enable plugins (since we don't have a validator config file)
+//   - verb is Enable & tc.Direct is true, so readXYZPlugin and readXYZPluginRules are called
+//
+// nolint:gocyclo
+func handlePlugins(vc *components.ValidatorConfig, tc *cfg.TaskConfig, kClient kubernetes.Interface, verb string, enablePlugins bool, funcMap pluginFuncMap) error {
+	var err error
+
+	if enablePlugins {
+		log.Header("AWS Plugin")
+		log.InfoCLI(`
+	The AWS validator plugin reconciles AwsValidator custom resources to perform the
+	following validations against your AWS environment:
+
+	- Ensure that one or more EC2 AMI(s) exist in a particular region.
+	- Compare the IAM permissions associated with an IAM user / group / role / policy
+	  against an expected permission set.
+	- Compare the usage for a particular service quota against the active quota to
+	  avoid unexpectedly hitting quota limits.
+	- Compare the tags associated with a subnet against an expected tag set.
+		`)
+		vc.AWSPlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s AWS plugin", verb), true)
+		if err != nil {
+			return err
+		}
+	}
+	if vc.AWSPlugin.Enabled {
+		if tc.Direct {
+			if err = readAwsPlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err := funcMap[awsconsts.PluginCode](vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	// TODO: support image gallery rules
+	// - Verify that images in community image galleries exist.
+	if enablePlugins {
+		log.Header("Azure Plugin")
+		log.InfoCLI(`
+	The Azure validator plugin reconciles AzureValidator custom resources to perform
+	the following validations against your Azure environment:
+
+	- Compare the Azure RBAC permissions associated with a security principal against
+	  an expected permission set.
+		`)
+		vc.AzurePlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s Azure plugin", verb), true)
+		if err != nil {
+			return err
+		}
+	}
+	if vc.AzurePlugin.Enabled {
+		if tc.Direct {
+			if err = readAzurePlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err := funcMap[azureconsts.PluginCode](vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	if enablePlugins {
+		log.Header("Network Plugin")
+		log.InfoCLI(`
+	The Network validator plugin reconciles NetworkValidator custom resources to perform
+	the following validations against your network:
+
+	- Execute DNS lookups.
+	- Execute ICMP pings.
+	- Validate TCP connections to arbitrary host + port(s).
+	- Check each IP in an IP range to ensure that they're all unallocated.
+	- Check that the default NIC has an MTU greater than or equal to a specified value.
+	- Check that each file in a list of URLs is available and publicly accessible
+	  via an HTTP HEAD request, with optional basic auth.
+		`)
+		vc.NetworkPlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s Network plugin", verb), true)
+		if err != nil {
+			return err
+		}
+	}
+	if vc.NetworkPlugin.Enabled {
+		if tc.Direct {
+			if err := exec.CheckBinaries([]exec.Binary{exec.NslookupBin, exec.PingBin}); err != nil {
+				return err
+			}
+			if err = readNetworkPlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err := funcMap[netconsts.PluginCode](vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	if enablePlugins {
+		log.Header("OCI Plugin")
+		log.InfoCLI(`
+	The OCI validator plugin reconciles OciValidator custom resources to perform the
+	following validations against your OCI registry:
+
+	- Validate OCI registry authentication.
+	- Validate the existence of arbitrary OCI artifacts, with optional signature
+	  verification.
+	- Validate downloading arbitrary OCI artifacts.
+		`)
+		vc.OCIPlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s OCI plugin", verb), true)
+		if err != nil {
+			return err
+		}
+	}
+	if vc.OCIPlugin.Enabled {
+		if tc.Direct {
+			if err = readOciPlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err := funcMap[ociconsts.PluginCode](vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	if enablePlugins {
+		log.Header("vSphere Plugin")
+		log.InfoCLI(`
+	The vSphere validator plugin reconciles VsphereValidator custom resources to perform
+	the following validations against your vSphere environment:
+
+	- Compare the privileges associated with a user against an expected privileges set.
+	- Compare the privileges associated with a user against an expected privileges set
+	  on a particular entity (cluster, resourcepool, folder, vapp, host).
+	- Verify availability of compute resources on an ESXi host, resourcepool, or cluster.
+	- Compare the tags associated with a datacenter, cluster, host, vm, resourcepool or vm
+	  against an expected tag set.
+	- Verify that a set of ESXi hosts have valid NTP configuration.
+		`)
+		vc.VspherePlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s vSphere plugin", verb), true)
+		if err != nil {
+			return err
+		}
+	}
+	if vc.VspherePlugin.Enabled {
+		if tc.Direct {
+			if err = readVspherePlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err := funcMap[vsphereconsts.PluginCode](vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // ReadValidatorPluginConfig prompts the user to configure validator plugins rule(s).
 func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.ValidatorConfig) error {
+	var err error
+	var enablePlugins bool
+	var kClient kubernetes.Interface
+
+	if tc.Direct {
+		enablePlugins = true
+	} else {
+		if vc.Kubeconfig == "" {
+			if vc.KindConfig.UseKindCluster {
+				return errors.New(`config file has kindConfig.useKindCluster set to true, but no kubeconfig path was provided. Have you run "validator install" yet?`)
+			}
+			kClient, vc.Kubeconfig, err = services.ReadKubeconfig()
+			if err != nil {
+				return err
+			}
+		} else {
+			kClient, err = kube.GetKubeClientset(vc.Kubeconfig)
+			if err != nil {
+				return err
+			}
+		}
+		log.InfoCLI("")
+	}
+
 	log.Header("Validator Plugin Configuration")
-	log.InfoCLI(`
-	You will be prompted for to configure Validator plugin rules
+	if tc.Direct {
+		log.InfoCLI(`
+	You will be prompted to enable validator plugins and 
+	configure rules for each enabled plugin. The rules will be
+	evaluated directly, in-process. Results will be saved to
+	disk and printed to the console.
+
+	If you make a mistake at any point you will have to option
+	to revisit any configuration step at the end.
+		`)
+	} else {
+		log.InfoCLI(`
+	You will be prompted to configure validator plugin rules
 	for each enabled plugin in your validator configuration file.
 
 	Custom Resouces containing plugin rules will be applied to the
@@ -271,48 +382,13 @@ func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components
 
 	If you make a mistake at any point you will have to option
 	to revisit any configuration step at the end.
-	`)
+		`)
+	}
 
-	var err error
-	var kClient kubernetes.Interface
-
-	if vc.Kubeconfig == "" {
-		kClient, vc.Kubeconfig, err = services.ReadKubeconfig()
-		if err != nil {
-			return err
-		}
-	} else {
-		kClient, err = kube.GetKubeClientset(vc.Kubeconfig)
-		if err != nil {
-			return err
-		}
-	}
-	log.InfoCLI("")
-
-	if vc.AWSPlugin.Enabled {
-		if err = readAwsPluginRules(vc, kClient); err != nil {
-			return err
-		}
-	}
-	if vc.AzurePlugin.Enabled {
-		if err = readAzurePluginRules(vc, kClient); err != nil {
-			return err
-		}
-	}
-	if vc.NetworkPlugin.Enabled {
-		if err = readNetworkPluginRules(vc, kClient); err != nil {
-			return err
-		}
-	}
-	if vc.OCIPlugin.Enabled {
-		if err = readOciPluginRules(vc, kClient); err != nil {
-			return err
-		}
-	}
-	if vc.VspherePlugin.Enabled {
-		if err = readVspherePluginRules(vc, kClient); err != nil {
-			return err
-		}
+	// If direct, enable plugin(s) & read partial install config & rule config.
+	// If not direct, read rule config for enabled plugin(s).
+	if err := handlePlugins(vc, tc, kClient, "Enable", enablePlugins, pluginRuleFuncs); err != nil {
+		return err
 	}
 
 	log.Header("Finalize Plugin Rule Configuration")
@@ -329,11 +405,11 @@ func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components
 			return err
 		}
 		if revisit {
-			pluginFunc, err := prompts.Select("Plugin", plugins)
+			pluginCode, err := prompts.Select("Plugin", plugins)
 			if err != nil {
 				return err
 			}
-			if err := pluginRuleFuncs[pluginFunc](vc, kClient); err != nil {
+			if err := pluginRuleFuncs[pluginCode](vc, tc, kClient); err != nil {
 				return err
 			}
 			continue
@@ -362,18 +438,18 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 }
 
 // UpdateValidatorPluginCredentials updates validator plugin credentials
-func UpdateValidatorPluginCredentials(c *components.ValidatorConfig) error {
+func UpdateValidatorPluginCredentials(c *components.ValidatorConfig, tc *cfg.TaskConfig) error {
 	k8sClient, err := k8sClientFromConfig(c)
 	if err != nil {
 		return err
 	}
 	if c.AWSPlugin != nil && c.AWSPlugin.Enabled {
-		if err := readAwsCredentials(c.AWSPlugin, k8sClient); err != nil {
+		if err := readAwsCredentials(c.AWSPlugin, tc, k8sClient); err != nil {
 			return fmt.Errorf("failed to update AWS credentials: %w", err)
 		}
 	}
 	if c.AzurePlugin != nil && c.AzurePlugin.Enabled {
-		if err := readAzureCredentials(c.AzurePlugin, k8sClient); err != nil {
+		if err := readAzureCredentials(c.AzurePlugin, tc, k8sClient); err != nil {
 			return fmt.Errorf("failed to update Azure credentials: %w", err)
 		}
 	}
@@ -385,7 +461,7 @@ func UpdateValidatorPluginCredentials(c *components.ValidatorConfig) error {
 		}
 	}
 	if c.VspherePlugin != nil && c.VspherePlugin.Enabled {
-		if err := readVsphereCredentials(c.VspherePlugin, k8sClient); err != nil {
+		if err := readVsphereCredentials(c.VspherePlugin, tc, k8sClient); err != nil {
 			return fmt.Errorf("failed to update vSphere credentials: %w", err)
 		}
 	}

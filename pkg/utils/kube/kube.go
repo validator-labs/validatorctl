@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"golang.org/x/exp/slices"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -110,7 +112,7 @@ func getDynamicClient() (dynamic.Interface, error) {
 }
 
 func getConfig() (*rest.Config, error) {
-	// If an env variable is specified with the config locaiton, use that
+	// If an env variable is specified with the config location, use that
 	if len(os.Getenv("KUBECONFIG")) > 0 {
 		return clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
 	}
@@ -125,7 +127,6 @@ func getConfig() (*rest.Config, error) {
 			return c, nil
 		}
 	}
-
 	return nil, fmt.Errorf("could not locate a kubeconfig")
 }
 
@@ -141,7 +142,11 @@ func getDynamicClientForConfig(config *rest.Config) (dynamic.Interface, error) {
 func getConfigFromKubeconfig(kubeconfig, masterURL string) (*rest.Config, error) {
 	// If a flag is specified with the config location, use that
 	if len(kubeconfig) > 0 {
-		return clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
+		cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
+		if err != nil {
+			return cfg, err
+		}
+		return cfg, os.Setenv("KUBECONFIG", kubeconfig)
 	}
 	// If an env variable is specified with the config locaiton, use that
 	if len(os.Getenv("KUBECONFIG")) > 0 {
@@ -160,4 +165,26 @@ func getConfigFromKubeconfig(kubeconfig, masterURL string) (*rest.Config, error)
 	}
 
 	return nil, fmt.Errorf("could not locate a kubeconfig")
+}
+
+// ToUnstructured converts an arbitrary struct to an unstructured object.
+func ToUnstructured(obj interface{}) (*unstructured.Unstructured, error) {
+	m, err := toMap(obj)
+	if err != nil {
+		return nil, err
+	}
+	u := &unstructured.Unstructured{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(m, u); err != nil {
+		return nil, fmt.Errorf("failed to convert map to Unstructured: %w", err)
+	}
+	return u, nil
+}
+
+// toMap converts an arbitrary struct to an unstructured map.
+func toMap(obj interface{}) (map[string]interface{}, error) {
+	out, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert obj to unstructured: %w", err)
+	}
+	return out, nil
 }

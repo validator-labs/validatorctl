@@ -33,7 +33,7 @@ controllerManager:
         - ALL
     image:
       repository: {{ printf "%s/validator-plugin-network" .ImageRegistry }}
-      tag: {{ .Tag }}
+      tag: {{ .Config.Release.Chart.Version }}
     resources:
       limits:
         cpu: 500m

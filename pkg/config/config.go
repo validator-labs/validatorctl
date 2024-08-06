@@ -33,6 +33,7 @@ type TaskConfig struct {
 	Check            bool
 	CreateConfigOnly bool
 	DeleteCluster    bool
+	Direct           bool
 	Reconfigure      bool
 	UpdatePasswords  bool
 	Wait             bool

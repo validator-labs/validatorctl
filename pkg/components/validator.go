@@ -35,10 +35,10 @@ type ValidatorConfig struct {
 	UseFixedVersions bool                   `yaml:"useFixedVersions"`
 
 	AWSPlugin     *AWSPluginConfig     `yaml:"awsPlugin,omitempty"`
+	AzurePlugin   *AzurePluginConfig   `yaml:"azurePlugin,omitempty"`
 	NetworkPlugin *NetworkPluginConfig `yaml:"networkPlugin,omitempty"`
 	OCIPlugin     *OCIPluginConfig     `yaml:"ociPlugin,omitempty"`
 	VspherePlugin *VspherePluginConfig `yaml:"vspherePlugin,omitempty"`
-	AzurePlugin   *AzurePluginConfig   `yaml:"azurePlugin,omitempty"`
 }
 
 // NewValidatorConfig creates a new ValidatorConfig object.
@@ -80,7 +80,8 @@ func NewValidatorConfig() *ValidatorConfig {
 			StaticDeploymentValues: make(map[int]*AzureStaticDeploymentValues),
 		},
 		NetworkPlugin: &NetworkPluginConfig{
-			Release: &validator.HelmRelease{},
+			Release:       &validator.HelmRelease{},
+			HTTPFileAuths: make([][]string, 0),
 			Validator: &network.NetworkValidatorSpec{
 				CACerts: network.CACertificates{},
 			},
@@ -101,6 +102,34 @@ func NewValidatorConfig() *ValidatorConfig {
 // AnyPluginEnabled returns true if any plugin is enabled.
 func (c *ValidatorConfig) AnyPluginEnabled() bool {
 	return c.AWSPlugin.Enabled || c.NetworkPlugin.Enabled || c.VspherePlugin.Enabled || c.OCIPlugin.Enabled || c.AzurePlugin.Enabled
+}
+
+// EnabledPluginsHaveRules returns true if all enabled plugins have at least one rule configured.
+func (c *ValidatorConfig) EnabledPluginsHaveRules() (bool, []string) {
+	var ok bool
+	invalidPlugins := []string{}
+	if c.AWSPlugin.Enabled && c.AWSPlugin.Validator.ResultCount() == 0 {
+		invalidPlugins = append(invalidPlugins, c.AWSPlugin.Validator.PluginCode())
+	}
+	if c.AzurePlugin.Enabled && c.AzurePlugin.Validator.ResultCount() == 0 {
+		invalidPlugins = append(invalidPlugins, "Azure")
+		// invalidPlugins = append(invalidPlugins, c.AzurePlugin.Validator.PluginCode())
+	}
+	if c.NetworkPlugin.Enabled && c.NetworkPlugin.Validator.ResultCount() == 0 {
+		invalidPlugins = append(invalidPlugins, c.NetworkPlugin.Validator.PluginCode())
+	}
+	if c.OCIPlugin.Enabled && c.OCIPlugin.Validator.ResultCount() == 0 {
+		invalidPlugins = append(invalidPlugins, "OCI")
+		// invalidPlugins = append(invalidPlugins, c.OCIPlugin.Validator.PluginCode())
+	}
+	if c.VspherePlugin.Enabled && c.VspherePlugin.Validator.ResultCount() == 0 {
+		invalidPlugins = append(invalidPlugins, "vSphere")
+		// invalidPlugins = append(invalidPlugins, c.VspherePlugin.Validator.PluginCode())
+	}
+	if len(invalidPlugins) == 0 {
+		ok = true
+	}
+	return ok, invalidPlugins
 }
 
 // nolint:dupl
@@ -369,16 +398,59 @@ type AzureStaticDeploymentValues struct {
 
 // NetworkPluginConfig represents the network plugin configuration.
 type NetworkPluginConfig struct {
-	Enabled   bool                          `yaml:"enabled"`
-	Release   *validator.HelmRelease        `yaml:"helmRelease"`
-	Validator *network.NetworkValidatorSpec `yaml:"validator"`
+	Enabled       bool                          `yaml:"enabled"`
+	Release       *validator.HelmRelease        `yaml:"helmRelease"`
+	HTTPFileAuths [][]string                    `yaml:"httpFileAuths,omitempty"`
+	Validator     *network.NetworkValidatorSpec `yaml:"validator"`
+}
+
+// AddDummyHTTPFileAuth adds a dummy HTTP file auth to the NetworkPluginConfig.
+// This keeps the slice in sync when reconfiguring the plugin.
+func (c *NetworkPluginConfig) AddDummyHTTPFileAuth() {
+	c.HTTPFileAuths = append(c.HTTPFileAuths, []string{"", ""})
+}
+
+// HTTPFileAuthBytes converts a slice of basic authentication details from
+// a [][]string to a [][][]byte. The former is required for YAML marshalling,
+// encryption, and decryption, while the latter is required by the plugin's
+// Validate method.
+// TODO: refactor Network plugin to use [][]string.
+func (c *NetworkPluginConfig) HTTPFileAuthBytes() [][][]byte {
+	auths := make([][][]byte, len(c.HTTPFileAuths))
+	for i, auth := range c.HTTPFileAuths {
+		auths[i] = [][]byte{
+			[]byte(auth[0]),
+			[]byte(auth[1]),
+		}
+	}
+	return auths
 }
 
 func (c *NetworkPluginConfig) encrypt() error {
+	if c.HTTPFileAuths == nil {
+		return nil
+	}
+	for i, auth := range c.HTTPFileAuths {
+		password, err := crypto.EncryptB64([]byte(auth[1]))
+		if err != nil {
+			return fmt.Errorf("failed to encrypt password': %w", err)
+		}
+		c.HTTPFileAuths[i][1] = password
+	}
 	return nil
 }
 
 func (c *NetworkPluginConfig) decrypt() error {
+	if c.HTTPFileAuths == nil {
+		return nil
+	}
+	for i, auth := range c.HTTPFileAuths {
+		bytes, err := crypto.DecryptB64(auth[1])
+		if err != nil {
+			return fmt.Errorf("failed to decrypt password: %w", err)
+		}
+		c.HTTPFileAuths[i][1] = string(*bytes)
+	}
 	return nil
 }
 
@@ -390,6 +462,34 @@ type OCIPluginConfig struct {
 	PublicKeySecrets []*PublicKeySecret     `yaml:"publicKeySecrets,omitempty"`
 	CaCertPaths      map[int]string         `yaml:"caCertPaths,omitempty"`
 	Validator        *oci.OciValidatorSpec  `yaml:"validator"`
+}
+
+// BasicAuths returns a slice of basic authentication details for each secret.
+func (c *OCIPluginConfig) BasicAuths() [][]string {
+	auths := make([][]string, len(c.Secrets))
+	for i, s := range c.Secrets {
+		s := s
+		if s.BasicAuth != nil {
+			auths[i] = []string{s.BasicAuth.Username, s.BasicAuth.Password}
+		} else {
+			auths[i] = []string{"", ""}
+		}
+	}
+	return auths
+}
+
+// AllPubKeys returns a slice of public keys for each public key secret.
+func (c *OCIPluginConfig) AllPubKeys() [][][]byte {
+	pubKeys := make([][][]byte, len(c.PublicKeySecrets))
+	for i, s := range c.PublicKeySecrets {
+		s := s
+		keys := make([][]byte, len(s.Keys))
+		for i, k := range s.Keys {
+			keys[i] = []byte(k)
+		}
+		pubKeys[i] = keys
+	}
+	return pubKeys
 }
 
 func (c *OCIPluginConfig) encrypt() error {

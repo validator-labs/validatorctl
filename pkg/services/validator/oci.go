@@ -18,25 +18,27 @@ import (
 
 const notApplicable = "N/A"
 
-func readOciPluginInstall(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+func readOciPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, _ kubernetes.Interface) error {
 	c := vc.OCIPlugin
 
-	if err := readHelmRelease(cfg.ValidatorPluginOci, vc, c.Release); err != nil {
-		return fmt.Errorf("failed to read Helm release: %w", err)
+	if !tc.Direct {
+		if err := readHelmRelease(cfg.ValidatorPluginOci, vc, c.Release); err != nil {
+			return fmt.Errorf("failed to read Helm release: %w", err)
+		}
 	}
 
 	return nil
 }
 
-func readOciPluginRules(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
+func readOciPluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, kClient kubernetes.Interface) error {
 	log.Header("OCI Plugin Rule Configuration")
 	c := vc.OCIPlugin
 
-	authSecretNames, err := configureAuthSecrets(c, k8sClient)
+	authSecretNames, err := configureAuthSecrets(c, kClient)
 	if err != nil {
 		return err
 	}
-	sigVerificationSecretNames, err := configureSigVerificationSecrets(c, k8sClient)
+	sigVerificationSecretNames, err := configureSigVerificationSecrets(c, kClient)
 	if err != nil {
 		return err
 	}
@@ -53,7 +55,7 @@ func readOciPluginRules(vc *components.ValidatorConfig, k8sClient kubernetes.Int
 
 // nolint:dupl
 // configureAuthSecrets prompts the user to configure credentials for OCI registries.
-func configureAuthSecrets(c *components.OCIPluginConfig, k8sClient kubernetes.Interface) ([]string, error) {
+func configureAuthSecrets(c *components.OCIPluginConfig, kClient kubernetes.Interface) ([]string, error) {
 	log.InfoCLI("Optionally configure secret(s) for private OCI registry authentication.")
 
 	var err error
@@ -101,8 +103,8 @@ func configureAuthSecrets(c *components.OCIPluginConfig, k8sClient kubernetes.In
 		secretNames = append(secretNames, s.Name)
 	}
 
-	if k8sClient != nil {
-		existingSecrets, err := services.GetSecretsWithKeys(k8sClient, cfg.Validator, cfg.ValidatorBasicAuthKeys)
+	if kClient != nil {
+		existingSecrets, err := services.GetSecretsWithKeys(kClient, cfg.Validator, cfg.ValidatorBasicAuthKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +119,7 @@ func configureAuthSecrets(c *components.OCIPluginConfig, k8sClient kubernetes.In
 
 // nolint:dupl
 // configureSigVerificationSecrets prompts the user to configure secrets containing public keys for use in signature verification.
-func configureSigVerificationSecrets(c *components.OCIPluginConfig, k8sClient kubernetes.Interface) ([]string, error) {
+func configureSigVerificationSecrets(c *components.OCIPluginConfig, kClient kubernetes.Interface) ([]string, error) {
 	log.InfoCLI("Optionally configure secret(s) for OCI artifact signature verification.")
 
 	var err error
@@ -165,8 +167,8 @@ func configureSigVerificationSecrets(c *components.OCIPluginConfig, k8sClient ku
 		secretNames = append(secretNames, s.Name)
 	}
 
-	if k8sClient != nil {
-		existingSecrets, err := services.GetSecretsWithRegexKeys(k8sClient, cfg.Validator, cfg.ValidatorPluginOciSigVerificationKeysRegex)
+	if kClient != nil {
+		existingSecrets, err := services.GetSecretsWithRegexKeys(kClient, cfg.Validator, cfg.ValidatorPluginOciSigVerificationKeysRegex)
 		if err != nil {
 			return nil, err
 		}
@@ -300,6 +302,9 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 		}
 	}
 
+	if c.CaCertPaths == nil {
+		c.CaCertPaths = make(map[int]string, 0)
+	}
 	caCertPath := c.CaCertPaths[idx]
 	caCertPath, _, caCertData, err := prompts.ReadCACert("Registry CA certificate filepath", caCertPath, "")
 	if err != nil {

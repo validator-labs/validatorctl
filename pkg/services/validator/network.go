@@ -13,23 +13,26 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
+	"github.com/validator-labs/validatorctl/pkg/services"
 )
 
 type networkRule interface {
 	*network.DNSRule | *network.ICMPRule | *network.IPRangeRule | *network.MTURule | *network.TCPConnRule | *network.HTTPFileRule
 }
 
-func readNetworkPluginInstall(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+func readNetworkPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, _ kubernetes.Interface) error {
 	c := vc.NetworkPlugin
 
-	if err := readHelmRelease(cfg.ValidatorPluginNetwork, vc, c.Release); err != nil {
-		return fmt.Errorf("failed to read Helm release: %w", err)
+	if !tc.Direct {
+		if err := readHelmRelease(cfg.ValidatorPluginNetwork, vc, c.Release); err != nil {
+			return fmt.Errorf("failed to read Helm release: %w", err)
+		}
 	}
 
 	return nil
 }
 
-func readNetworkPluginRules(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+func readNetworkPluginRules(vc *components.ValidatorConfig, tc *cfg.TaskConfig, kClient kubernetes.Interface) error {
 	log.Header("Network Plugin Rule Configuration")
 
 	c := vc.NetworkPlugin
@@ -50,7 +53,7 @@ func readNetworkPluginRules(vc *components.ValidatorConfig, _ kubernetes.Interfa
 	if err := configureTCPConnRules(c, &ruleNames); err != nil {
 		return err
 	}
-	if err := configureHTTPFileRules(c, &ruleNames); err != nil {
+	if err := configureHTTPFileRules(c, tc, &ruleNames, kClient); err != nil {
 		return err
 	}
 
@@ -59,7 +62,7 @@ func readNetworkPluginRules(vc *components.ValidatorConfig, _ kubernetes.Interfa
 	}
 
 	if len(c.Validator.TCPConnRules) > 0 || len(c.Validator.HTTPFileRules) > 0 {
-		if err := readCACertificates(c); err != nil {
+		if err := readCACertificates(c, tc); err != nil {
 			return err
 		}
 	}
@@ -69,12 +72,14 @@ func readNetworkPluginRules(vc *components.ValidatorConfig, _ kubernetes.Interfa
 
 // readCACertificates reads CA certificates for TLS verification.
 // Certs are always overwritten / reconfiguration intentionally unsupported.
-func readCACertificates(c *components.NetworkPluginConfig) error {
+func readCACertificates(c *components.NetworkPluginConfig, tc *cfg.TaskConfig) error {
 	if err := readLocalCACertificates(c); err != nil {
 		return err
 	}
-	if err := readSecretCACertificates(c); err != nil {
-		return err
+	if !tc.Direct {
+		if err := readSecretCACertificates(c); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -379,7 +384,7 @@ func configureTCPConnRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 }
 
 // nolint:dupl
-func configureHTTPFileRules(c *components.NetworkPluginConfig, ruleNames *[]string) error {
+func configureHTTPFileRules(c *components.NetworkPluginConfig, tc *cfg.TaskConfig, ruleNames *[]string, kClient kubernetes.Interface) error {
 	log.InfoCLI(`
 	HTTP file rules ensure that specific files are accessible via HTTP HEAD requests,
 	optionally with basic authentication.
@@ -395,7 +400,7 @@ func configureHTTPFileRules(c *components.NetworkPluginConfig, ruleNames *[]stri
 	}
 	for i, r := range c.Validator.HTTPFileRules {
 		r := r
-		if err := readHTTPFileRule(c, &r, i, ruleNames); err != nil {
+		if err := readHTTPFileRule(c, tc, &r, i, ruleNames, kClient); err != nil {
 			return err
 		}
 	}
@@ -412,7 +417,7 @@ func configureHTTPFileRules(c *components.NetworkPluginConfig, ruleNames *[]stri
 		return nil
 	}
 	for {
-		if err := readHTTPFileRule(c, &network.HTTPFileRule{}, -1, ruleNames); err != nil {
+		if err := readHTTPFileRule(c, tc, &network.HTTPFileRule{}, -1, ruleNames, kClient); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another HTTP file rule", false)
@@ -550,7 +555,7 @@ func readTCPConnRule(c *components.NetworkPluginConfig, r *network.TCPConnRule, 
 	return nil
 }
 
-func readHTTPFileRule(c *components.NetworkPluginConfig, r *network.HTTPFileRule, idx int, ruleNames *[]string) error {
+func readHTTPFileRule(c *components.NetworkPluginConfig, tc *cfg.TaskConfig, r *network.HTTPFileRule, idx int, ruleNames *[]string, kClient kubernetes.Interface) error {
 	err := initNetworkRule(r, "HTTP file", ruleNames)
 	if err != nil {
 		return err
@@ -559,22 +564,16 @@ func readHTTPFileRule(c *components.NetworkPluginConfig, r *network.HTTPFileRule
 	if err != nil {
 		return err
 	}
-	if r.AuthSecretRef == nil {
-		r.AuthSecretRef = &network.BasicAuthSecretReference{}
-	}
-	r.AuthSecretRef.Name, err = prompts.ReadK8sName("Secret name for basic authentication", r.AuthSecretRef.Name, true)
+	configureAuth, err := prompts.ReadBool("Configure basic authentication for this HTTP file rule", false)
 	if err != nil {
 		return err
 	}
-	if r.AuthSecretRef.Name != "" {
-		r.AuthSecretRef.UsernameKey, err = prompts.ReadText("Key for username in secret", r.AuthSecretRef.UsernameKey, false, -1)
-		if err != nil {
+	if configureAuth {
+		if err := readHTTPFileRuleCredentials(c, tc, r, idx, kClient); err != nil {
 			return err
 		}
-		r.AuthSecretRef.PasswordKey, err = prompts.ReadText("Key for password in secret", r.AuthSecretRef.PasswordKey, false, -1)
-		if err != nil {
-			return err
-		}
+	} else {
+		c.AddDummyHTTPFileAuth()
 	}
 	r.InsecureSkipTLSVerify, err = prompts.ReadBool("Skip TLS certificate verification", true)
 	if err != nil {
@@ -585,5 +584,72 @@ func readHTTPFileRule(c *components.NetworkPluginConfig, r *network.HTTPFileRule
 	} else {
 		c.Validator.HTTPFileRules[idx] = *r
 	}
+	return nil
+}
+
+func readHTTPFileRuleCredentials(c *components.NetworkPluginConfig, tc *cfg.TaskConfig, r *network.HTTPFileRule, idx int, kClient kubernetes.Interface) error {
+	var err error
+	var username, password string
+	createSecret := true
+
+	if r.AuthSecretRef == nil {
+		r.AuthSecretRef = &network.BasicAuthSecretReference{}
+	}
+	if idx == -1 {
+		// preallocate space if appending a new rule
+		idx = len(c.HTTPFileAuths)
+		c.AddDummyHTTPFileAuth()
+	}
+	if len(c.HTTPFileAuths) > idx {
+		username = c.HTTPFileAuths[idx][0]
+		password = c.HTTPFileAuths[idx][1]
+	}
+
+	if kClient != nil {
+		log.InfoCLI(`
+	Either specify basic authentication credentials or provide the name of a
+	secret in the target K8s cluster's %s namespace and its keys that map to
+	basic authentication credentials.
+	`, cfg.Validator,
+		)
+		createSecret, err = prompts.ReadBool("Create HTTP file credential secret", false)
+		if err != nil {
+			return err
+		}
+	}
+
+	if createSecret {
+		if !tc.Direct {
+			r.AuthSecretRef.Name, err = prompts.ReadK8sName("Secret name for basic authentication", r.AuthSecretRef.Name, false)
+			if err != nil {
+				return err
+			}
+		}
+		r.AuthSecretRef.UsernameKey = "username"
+		r.AuthSecretRef.PasswordKey = "password"
+
+		username, password, err = prompts.ReadBasicCreds("Username", "Password", username, password, false, false)
+		if err != nil {
+			return err
+		}
+		c.HTTPFileAuths[idx] = []string{username, password}
+	} else {
+		usernameKey, err := prompts.ReadText("Key for username in secret", r.AuthSecretRef.UsernameKey, false, -1)
+		if err != nil {
+			return err
+		}
+		passwordKey, err := prompts.ReadText("Key for password in secret", r.AuthSecretRef.PasswordKey, false, -1)
+		if err != nil {
+			return err
+		}
+		secret, err := services.ReadSecret(kClient, cfg.Validator, false, []string{usernameKey, passwordKey})
+		if err != nil {
+			return err
+		}
+		r.AuthSecretRef.Name = secret.Name
+		r.AuthSecretRef.UsernameKey = usernameKey
+		r.AuthSecretRef.PasswordKey = passwordKey
+	}
+
 	return nil
 }

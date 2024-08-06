@@ -30,20 +30,22 @@ type awsRule interface {
 		*vpawsapi.IamRoleRule | *vpawsapi.IamUserRule | *vpawsapi.IamGroupRule | *vpawsapi.IamPolicyRule
 }
 
-func readAwsPluginInstall(vc *components.ValidatorConfig, k8sClient kubernetes.Interface) error {
+func readAwsPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	c := vc.AWSPlugin
 
-	if err := readHelmRelease(cfg.ValidatorPluginAws, vc, c.Release); err != nil {
-		return fmt.Errorf("failed to read Helm release: %w", err)
+	if !tc.Direct {
+		if err := readHelmRelease(cfg.ValidatorPluginAws, vc, c.Release); err != nil {
+			return fmt.Errorf("failed to read Helm release: %w", err)
+		}
 	}
-	if err := readAwsCredentials(c, k8sClient); err != nil {
+	if err := readAwsCredentials(c, tc, k8sClient); err != nil {
 		return fmt.Errorf("failed to read AWS credentials: %w", err)
 	}
 
 	return nil
 }
 
-func readAwsPluginRules(vc *components.ValidatorConfig, _ kubernetes.Interface) error {
+func readAwsPluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _ kubernetes.Interface) error {
 	log.Header("AWS Plugin Rule Configuration")
 	var err error
 	c := vc.AWSPlugin
@@ -495,6 +497,7 @@ func readIamPolicy() (vpawsapi.PolicyDocument, error) {
 func convertStatements(statements []awspolicy.Statement) []vpawsapi.StatementEntry {
 	result := make([]vpawsapi.StatementEntry, 0, len(statements))
 	for _, s := range statements {
+		s := s
 		result = append(result, vpawsapi.StatementEntry{
 			Condition: vpawsapi.Condition(s.Condition),
 			Effect:    s.Effect,
@@ -659,13 +662,13 @@ func configureAmiRules(c *components.AWSPluginConfig, ruleNames *[]string) error
 	return nil
 }
 
-func readAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernetes.Interface) error {
+func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	var err error
 	c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit AWS auth", true)
 	if err != nil {
 		return err
 	}
-	if c.Validator.Auth.Implicit {
+	if c.Validator.Auth.Implicit && !tc.Direct {
 		c.ServiceAccountName, err = services.ReadServiceAccount(k8sClient, cfg.Validator)
 		if err != nil {
 			return err
@@ -692,9 +695,11 @@ func readAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernetes.Inte
 		if c.Validator.Auth.SecretName != "" {
 			awsSecretName = c.Validator.Auth.SecretName
 		}
-		c.Validator.Auth.SecretName, err = prompts.ReadText("AWS credentials secret name", awsSecretName, false, -1)
-		if err != nil {
-			return err
+		if !tc.Direct {
+			c.Validator.Auth.SecretName, err = prompts.ReadText("AWS credentials secret name", awsSecretName, false, -1)
+			if err != nil {
+				return err
+			}
 		}
 		c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
 		if err != nil {

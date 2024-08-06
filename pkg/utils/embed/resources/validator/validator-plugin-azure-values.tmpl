@@ -50,3 +50,5 @@ metricsService:
     protocol: TCP
     targetPort: https
   type: ClusterIP
+auth:
+  serviceAccountName: "{{ .Config.ServiceAccountName }}"

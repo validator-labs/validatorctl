@@ -11,34 +11,53 @@ import (
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 )
 
+// Binary represents a binary executable.
+type Binary struct {
+	name string
+	path *string
+}
+
 var (
-	// Execute enables monkey-patching cmd execution for integration tests
+	// Execute enables monkey-patching cmd execution for integration tests.
 	Execute = execute
 
-	// Docker references to the docker binary
+	// Docker references to the docker binary.
 	Docker string
-	// Helm references to the helm binary
+	// DockerBin is a Binary struct that references the docker binary.
+	DockerBin = Binary{"docker", &Docker}
+
+	// Helm references to the helm binary.
 	Helm string
-	// Kind references to the kind binary
+	// HelmBin is a Binary struct that references the helm binary.
+	HelmBin = Binary{"helm", &Helm}
+
+	// Kind references to the kind binary.
 	Kind string
-	// Kubectl references to the kubectl binary
+	// KindBin is a Binary struct that references the kind binary.
+	KindBin = Binary{"kind", &Kind}
+
+	// Kubectl references to the kubectl binary.
 	Kubectl string
+	// KubectlBin is a Binary struct that references the kubectl binary.
+	KubectlBin = Binary{"kubectl", &Kubectl}
+
+	// Nslookup references to the nslookup binary.
+	Nslookup string
+	// NslookupBin is a Binary struct that references the nslookup binary.
+	NslookupBin = Binary{"nslookup", &Nslookup}
+
+	// Ping references to the ping binary.
+	Ping string
+	// PingBin is a Binary struct that references the ping binary.
+	PingBin = Binary{"ping", &Ping}
+
+	// AllBins is a list of all binaries used by the CLI.
+	AllBins = []Binary{DockerBin, HelmBin, KindBin, KubectlBin}
 )
 
 // CheckBinaries checks if the required binaries are installed and available on the PATH and returns an error if any are missing.
-func CheckBinaries() error {
-	binaries := []struct {
-		name string
-		path *string
-	}{
-		{"docker", &Docker},
-		{"helm", &Helm},
-		{"kind", &Kind},
-		{"kubectl", &Kubectl},
-	}
-
+func CheckBinaries(binaries []Binary) error {
 	hasAllBinaries := true
-
 	for _, binary := range binaries {
 		path, err := exec.LookPath(binary.name)
 		if err != nil {
@@ -50,11 +69,9 @@ func CheckBinaries() error {
 		}
 		*binary.path = path
 	}
-
 	if !hasAllBinaries {
-		return fmt.Errorf("missing required binaries")
+		return fmt.Errorf("failed to verify required binaries; one or more binaries are missing")
 	}
-
 	return nil
 }
 
