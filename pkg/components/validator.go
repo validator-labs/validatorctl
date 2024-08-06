@@ -483,7 +483,7 @@ func (c *OCIPluginConfig) AllPubKeys() [][][]byte {
 	pubKeys := make([][][]byte, len(c.PublicKeySecrets))
 	for i, s := range c.PublicKeySecrets {
 		s := s
-		keys := make([][]byte, 0, len(s.Keys))
+		keys := make([][]byte, len(s.Keys))
 		for i, k := range s.Keys {
 			keys[i] = []byte(k)
 		}
