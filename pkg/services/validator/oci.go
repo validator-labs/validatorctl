@@ -302,6 +302,9 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 		}
 	}
 
+	if c.CaCertPaths == nil {
+		c.CaCertPaths = make(map[int]string, 0)
+	}
 	caCertPath := c.CaCertPaths[idx]
 	caCertPath, _, caCertData, err := prompts.ReadCACert("Registry CA certificate filepath", caCertPath, "")
 	if err != nil {

@@ -64,7 +64,7 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testUndeploy(); result.IsFailed() {
 		return result
 	}
-	if result := t.testUpdatePasswords(); result.IsFailed() {
+	if result := t.testInstallUpdatePasswords(); result.IsFailed() {
 		return result
 	}
 	return test.Success()
@@ -100,6 +100,7 @@ func (t *ValidatorTest) initVsphereDriver(ctx *test.TestContext) {
 }
 
 func (t *ValidatorTest) testInstallInteractive(ctx *test.TestContext) (tr *test.TestResult) {
+	t.log.Printf("Executing testInstallInteractive")
 
 	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "-l", "debug"})
 
@@ -124,6 +125,7 @@ func (t *ValidatorTest) testInstallInteractive(ctx *test.TestContext) (tr *test.
 }
 
 func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *test.TestResult) {
+	t.log.Printf("Executing testInstallInteractiveCheck")
 
 	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "--check", "-l", "debug"})
 
@@ -498,6 +500,8 @@ func interleave(vals []string, sliceVals [][]string, inputVals []any) ([]string,
 }
 
 func (t *ValidatorTest) testInstallSilent() (tr *test.TestResult) {
+	t.log.Printf("Executing testInstallSilent")
+
 	kindClusterName = fmt.Sprintf("%s-%s", cfg.ValidatorKindClusterName, string_utils.RandStr(5))
 	tokens := map[string]string{
 		"<kind_cluster_name>": kindClusterName, // ensure concurrent tests use unique kind cluster names
@@ -512,6 +516,8 @@ func (t *ValidatorTest) testInstallSilent() (tr *test.TestResult) {
 }
 
 func (t *ValidatorTest) testInstallSilentWait() (tr *test.TestResult) {
+	t.log.Printf("Executing testInstallSilentWait")
+
 	tokens := map[string]string{
 		"useKindCluster: true": "useKindCluster: false", // re-use the existing kind cluster
 	}
@@ -526,6 +532,8 @@ func (t *ValidatorTest) testInstallSilentWait() (tr *test.TestResult) {
 }
 
 func (t *ValidatorTest) testDescribe() (tr *test.TestResult) {
+	t.log.Printf("Executing testDescribe")
+
 	silentCmd, buffer := common.InitCmd([]string{
 		"describe", "-f", t.filePath(cfg.ValidatorConfigFile),
 	})
@@ -533,13 +541,17 @@ func (t *ValidatorTest) testDescribe() (tr *test.TestResult) {
 }
 
 func (t *ValidatorTest) testUndeploy() (tr *test.TestResult) {
+	t.log.Printf("Executing testInstallUndeploy")
+
 	silentCmd, buffer := common.InitCmd([]string{
 		"uninstall", "-f", t.filePath(cfg.ValidatorConfigFile),
 	})
 	return common.ExecCLI(silentCmd, buffer, t.log)
 }
 
-func (t *ValidatorTest) testUpdatePasswords() (tr *test.TestResult) {
+func (t *ValidatorTest) testInstallUpdatePasswords() (tr *test.TestResult) {
+	t.log.Printf("Executing testInstallUpdatePasswords")
+
 	cmd, buffer := common.InitCmd([]string{
 		"install", "-f", t.filePath(cfg.ValidatorConfigFile), "-p",
 	})

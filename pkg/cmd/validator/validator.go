@@ -143,9 +143,14 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		if !configProvided {
 			tc.Reconfigure = true
 		}
-
 		return ConfigureValidatorCommand(c, tc)
 	}
+
+	log.InfoCLI(`
+	Configure plugin rules via the following command:
+
+	validator check --config-file %s --reconfigure
+	`, tc.ConfigFile)
 	return nil
 }
 
