@@ -690,30 +690,3 @@ func SaveValidatorConfig(c *ValidatorConfig, tc *cfg.TaskConfig) error {
 	log.InfoCLI("\nvalidator configuration file saved: %s", tc.ConfigFile)
 	return nil
 }
-
-// ConfigureBaseValidator configures the base validator configuration
-func ConfigureBaseValidator(vc *ValidatorConfig, kubeconfig string) {
-	// TODO: properly handle TLS, helm, and air-gap config
-	vc.Release = &validator.HelmRelease{
-		Chart: validator.HelmChart{
-			Name:       cfg.Validator,
-			Repository: cfg.Validator,
-			Version:    cfg.ValidatorChartVersions[cfg.Validator],
-		},
-	}
-	vc.ReleaseSecret = &Secret{
-		Name: fmt.Sprintf("validator-helm-release-%s", cfg.Validator),
-	}
-	vc.KindConfig.UseKindCluster = true
-	vc.Kubeconfig = kubeconfig
-	// TODO: update this to use the correct image registry (custom private registry / hauler / default)
-	vc.ImageRegistry = cfg.ValidatorImagePath()
-	vc.ProxyConfig = &ProxyConfig{
-		Env: &Env{
-			PodCIDR:        &cfg.DefaultPodCIDR,
-			ProxyCACert:    &CACert{},
-			ServiceIPRange: &cfg.DefaultServiceIPRange,
-		},
-	}
-	vc.UseFixedVersions = true
-}
