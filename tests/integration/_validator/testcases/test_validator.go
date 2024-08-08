@@ -130,7 +130,7 @@ func (t *ValidatorTest) testInstallInteractive(ctx *test.TestContext) (tr *test.
 func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *test.TestResult) {
 	t.log.Printf("Executing testInstallInteractiveCheck")
 
-	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "--check", "-l", "debug"})
+	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "--apply", "-l", "debug"})
 
 	// Base values
 	tuiVals := t.validatorValues(ctx)
@@ -528,7 +528,7 @@ func (t *ValidatorTest) testInstallSilentWait() (tr *test.TestResult) {
 	}
 	silentCmd, buffer := common.InitCmd([]string{
 		"install", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile),
-		"--check", "--wait",
+		"--apply", "--wait",
 	})
 	return common.ExecCLI(silentCmd, buffer, t.log)
 }
@@ -546,7 +546,7 @@ func (t *ValidatorTest) testCheckDirect() (tr *test.TestResult) {
 	}
 
 	checkCmd, buffer := common.InitCmd([]string{
-		"check", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile), "--direct",
+		"rules", "check", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile),
 	})
 	return common.ExecCLI(checkCmd, buffer, t.log)
 }

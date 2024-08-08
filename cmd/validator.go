@@ -25,6 +25,21 @@ func NewInstallValidatorCmd() *cobra.Command {
 		Short: "Install validator & validator plugin(s)",
 		Long: `Install validator & validator plugin(s).
 
+The validator CLI will install the validator and any configured plugins
+to a Kubernetes cluster or your choosing.
+
+Optionally provide the --apply and/or --wait flags to configure and apply
+plugin rules and wait for validation, in addition to installation. This
+is equivalent to first running 'validatorctl install', then running 
+'validatorctl rules apply --config-file <config-file> --wait'.
+
+Run 'validatorctl install --reconfigure --config-file <config-file>' to
+reconfigure the validator and plugin(s) prior to installation.
+
+Run 'validatorctl install --update-passwords --config-file <config-file>' to
+update passwords in the validator configuration file. Optionally add
+the --apply flag to update passwords for plugin(s) as well.
+
 For more information about validator, see: https://github.com/validator-labs/validator.
 `,
 		Args:          cobra.NoArgs,
@@ -53,8 +68,8 @@ For more information about validator, see: https://github.com/validator-labs/val
 	flags.BoolVarP(&tc.UpdatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with installation. The --config-file flag must be provided. Default: false.")
 	flags.BoolVarP(&tc.Reconfigure, "reconfigure", "r", false, "Re-configure validator and plugin(s) prior to installation. The --config-file flag must be provided. Default: false.")
 
-	flags.BoolVar(&tc.Check, "check", false, "Configure rules for validator plugin(s). Default: false")
-	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Only applies when --check is set. Default: false")
+	flags.BoolVar(&tc.Apply, "apply", false, "Configure and apply validator plugin rules. Default: false")
+	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Only applies when --apply is set. Default: false")
 
 	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
@@ -63,18 +78,49 @@ For more information about validator, see: https://github.com/validator-labs/val
 	return cmd
 }
 
-// NewConfigureValidatorCmd returns a new cobra command for configuring and applying rules for validator plugins
+// NewValidatorRulesCmd returns a new cobra command which is a container for rule configuration subcommands
 // nolint:dupl
-func NewConfigureValidatorCmd() *cobra.Command {
+func NewValidatorRulesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rules",
+		Short: "Configure & apply, or directly evaluate rules validator plugin rules.",
+		Long: `Configure & apply, or directly evaluate rules validator plugin rules.
+
+To configure and apply validator plugin rules, use 'validatorctl rules apply'.
+Running 'validatorctl rules apply' requires a configuration file, which can be
+generated using 'validatorctl install'.
+
+To directly evaluate validator plugin rules, use 'validatorctl rules check'.
+This does not require a configuration file, but one can be provided if desired.
+
+For more information about validator, see: https://github.com/validator-labs/validator.
+`,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
+	}
+
+	cmd.AddCommand(NewApplyValidatorCmd())
+	cmd.AddCommand(NewCheckValidatorCmd())
+
+	return cmd
+}
+
+// NewApplyValidatorCmd returns a new cobra command for configuring and applying rules for validator plugins
+func NewApplyValidatorCmd() *cobra.Command {
 	c := cfgmanager.Config()
 	var tc = &cfg.TaskConfig{
 		CliVersion: Version,
 	}
 
 	cmd := &cobra.Command{
-		Use:   "check",
-		Short: "Configure & apply rules for validator plugin(s)",
-		Long: `Configure & apply rules for validator plugin(s).
+		Use:   "apply",
+		Short: "Configure & apply validator plugin rules.",
+		Long: `Configure & apply validator plugin rules.
+
+Plugin-specific custom resources containing rule definitions will be
+generated and applied to a Kubernetes cluster or your choosing. Useful
+for continuous validation and alerting.
 
 For more information about validator, see: https://github.com/validator-labs/validator.
 `,
@@ -82,18 +128,8 @@ For more information about validator, see: https://github.com/validator-labs/val
 		SilenceErrors: true,
 		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			if tc.ConfigFile == "" && !tc.Direct {
-				return fmt.Errorf(`required flag "config-file" not set`)
-			}
-			if !tc.Direct {
-				if err := exec.CheckBinaries([]exec.Binary{exec.HelmBin, exec.KubectlBin}); err != nil {
-					return err
-				}
-			} else {
-				// enables 'validatorctl check --direct' without '-r'
-				if tc.ConfigFile == "" {
-					tc.Reconfigure = true
-				}
+			if err := exec.CheckBinaries([]exec.Binary{exec.HelmBin, exec.KubectlBin}); err != nil {
+				return err
 			}
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
@@ -101,8 +137,62 @@ For more information about validator, see: https://github.com/validator-labs/val
 			if err := c.Save(""); err != nil {
 				return err
 			}
-			if err := validator.ConfigureValidatorCommand(c, tc); err != nil {
-				return fmt.Errorf("failed to configure validator: %v", err)
+			if err := validator.ConfigureOrCheckCommand(c, tc); err != nil {
+				return fmt.Errorf("failed to configure and apply validator rules: %v", err)
+			}
+			return nil
+		},
+	}
+
+	flags := cmd.Flags()
+	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file (required).")
+	flags.BoolVarP(&tc.CreateConfigOnly, "config-only", "o", false, "Update configuration file only. Do not proceed with checks. Default: false.")
+	flags.BoolVarP(&tc.UpdatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with checks. Default: false.")
+	flags.BoolVarP(&tc.Reconfigure, "reconfigure", "r", false, "Re-configure plugin rules prior to running checks. Default: false.")
+	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Default: false")
+
+	cmdutils.MarkFlagRequired(cmd, "config-file")
+
+	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
+
+	return cmd
+}
+
+// NewCheckValidatorCmd returns a new cobra command for directly evaluating rules for validator plugins
+func NewCheckValidatorCmd() *cobra.Command {
+	c := cfgmanager.Config()
+	var tc = &cfg.TaskConfig{
+		CliVersion: Version,
+		Direct:     true,
+	}
+
+	cmd := &cobra.Command{
+		Use:   "check",
+		Short: "Directly evaluate rules for validator plugin(s)",
+		Long: `Directly evaluate rules for validator plugin(s).
+
+Plugin rules will be evaluated directly, in-process. Useful for preflight checks or debugging.
+
+For more information about validator, see: https://github.com/validator-labs/validator.
+`,
+		Args:          cobra.NoArgs,
+		SilenceErrors: true,
+		SilenceUsage:  false,
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			// enable 'validatorctl rules check --direct' without '-r'
+			if tc.ConfigFile == "" {
+				tc.Reconfigure = true
+			}
+			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
+		},
+		RunE: func(_ *cobra.Command, _ []string) error {
+			if err := c.Save(""); err != nil {
+				return err
+			}
+			if err := validator.ConfigureOrCheckCommand(c, tc); err != nil {
+				return fmt.Errorf("failed to check validator: %v", err)
 			}
 			return nil
 		},
@@ -111,17 +201,10 @@ For more information about validator, see: https://github.com/validator-labs/val
 	flags := cmd.Flags()
 	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file. Required unless using --direct.")
 	flags.BoolVarP(&tc.CreateConfigOnly, "config-only", "o", false, "Update configuration file only. Do not proceed with checks. Default: false.")
-	flags.BoolVarP(&tc.Direct, "direct", "d", false, "Execute checks directly; no validator installation required. Default: false")
 	flags.BoolVarP(&tc.UpdatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&tc.Reconfigure, "reconfigure", "r", false, "Re-configure plugin rules prior to running checks. Default: false.")
-	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Default: false")
 
-	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
-	cmd.MarkFlagsMutuallyExclusive("direct", "config-only")
-	cmd.MarkFlagsMutuallyExclusive("direct", "update-passwords")
-	cmd.MarkFlagsMutuallyExclusive("direct", "wait")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
-	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
 
 	return cmd
 }

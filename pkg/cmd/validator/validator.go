@@ -83,7 +83,7 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 			if err := validator.UpdateValidatorCredentials(vc); err != nil {
 				return err
 			}
-			if tc.Check {
+			if tc.Apply {
 				if err := validator.UpdateValidatorPluginCredentials(vc, tc); err != nil {
 					return err
 				}
@@ -138,24 +138,24 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	if err := deployValidatorAndPlugins(c, vc); err != nil {
 		return err
 	}
-	if tc.Check {
+	if tc.Apply {
 		if !configProvided {
 			tc.Reconfigure = true
 		}
-		return ConfigureValidatorCommand(c, tc)
+		return ConfigureOrCheckCommand(c, tc)
 	}
 
 	log.InfoCLI(`
-	Configure plugin rules via the following command:
+	Configure plugin rules and apply them to a cluster via the following command:
 
-	validator check --config-file %s --reconfigure
+	validator rules apply --config-file %s --reconfigure
 	`, tc.ConfigFile)
 	return nil
 }
 
-// ConfigureValidatorCommand configures and applies/executes validator plugin rules
+// ConfigureOrCheckCommand configures and applies/executes validator plugin rules
 // nolint:dupl
-func ConfigureValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
+func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var vc *components.ValidatorConfig
 	var err error
 	var saveConfig bool
