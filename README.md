@@ -56,10 +56,11 @@ make build
 
 `validatorctl` provides several commands for managing validator plugins. Below are some common commands:
 
-- Install validator plugins with the `validator install` command.
+- Install validator and plugins in a cluster, and apply validation rules with the `validator install --apply` command.
 - Describe validation results with the `validator describe` command.
 - Re-configure validator plugins after they've been installed with the `validator upgrade` command.
 - Uninstall the validator and all plugins with the `validator uninstall` command.
+- Directly invoke validation rules with the `validator rules check` command.
 
 Refer to the [subcommands](./docs/subcommands.md) page to learn more about each command. You can also issue the `validator help` command to learn more about the available commands.
 
@@ -75,8 +76,10 @@ Usage:
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
   describe    Describe all validation results in a Kubernetes cluster
+  docs        Display information about supported validator plugins
   help        Help about any command
-  install     Install validator & configure validator plugin(s)
+  install     Install validator & validator plugin(s)
+  rules       Configure & apply, or directly evaluate validator plugin rules.
   uninstall   Uninstall validator & all validator plugin(s)
   upgrade     Upgrade validator & re-configure validator plugin(s)
   version     Prints the Validator CLI version
