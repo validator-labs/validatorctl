@@ -385,27 +385,26 @@ func (t *ValidatorTest) ociPluginInstallValues(ctx *test.TestContext, vals []str
 
 func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string) []string {
 	ociVals := []string{
-		"y",                        // add registry credentials
-		"oci-creds",                // secret name
-		"y",                        // configure basic auth
-		"user1",                    // username
-		"pa$$w0rd",                 // password
-		"n",                        // skip adding env vars
-		"n",                        // add another registry credential
-		"y",                        // add signature verification secret
-		"cosign-pubkeys",           // secret name
-		t.filePath("cosign.pub"),   // public key file
-		"n",                        // add another public key to this secret
-		"n",                        // add another signature verification secret
-		"public ecr registry",      // rule name
-		"public.ecr.aws",           // registry host
-		"N/A",                      // registry auth secret name
-		"u5n5j0b4/oci-test-public", // artifact ref
-		"n",                        // enable full layer validation
-		"n",                        // add another artifact
-		"N/A",                      // signature verification secret name
-		"",                         // ca certificate
-		"n",                        // add another registry rule
+		"y",                      // add registry credentials
+		"oci-creds",              // secret name
+		"y",                      // configure basic auth
+		"user1",                  // username
+		"pa$$w0rd",               // password
+		"n",                      // skip adding env vars
+		"n",                      // add another registry credential
+		"y",                      // add signature verification secret
+		"cosign-pubkeys",         // secret name
+		t.filePath("cosign.pub"), // public key file
+		"n",                      // add another public key to this secret
+		"n",                      // add another signature verification secret
+		"public ecr registry",    // rule name
+		"public.ecr.aws",         // registry host
+		"N/A",                    // registry auth secret name
+		"public.ecr.aws/u5n5j0b4/oci-test-public", // artifact references
+		"y",   // disable full layer validation
+		"N/A", // signature verification secret name
+		"",    // ca certificate
+		"n",   // add another registry rule
 	}
 	vals = append(vals, ociVals...)
 	return vals
