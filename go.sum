@@ -758,8 +758,8 @@ github.com/validator-labs/validator-plugin-network v0.0.22 h1:tlyyA8wq2j9/tmNjxP
 github.com/validator-labs/validator-plugin-network v0.0.22/go.mod h1:0zlqCtTNHxPAp7jKN/1abzRBXRXvBNWSQzVEhkQCrXg=
 github.com/validator-labs/validator-plugin-oci v0.0.13 h1:KBiB1vPj+9LI1Kyy+1wW0+dHhp6BHrNCVcKm9/wqKO8=
 github.com/validator-labs/validator-plugin-oci v0.0.13/go.mod h1:ueXJoh4cnEUFz/V0JcBBOKjYSnMQ7gxOUPguznFd8sE=
-github.com/validator-labs/validator-plugin-vsphere v0.0.30-0.20240806164459-9b1f05bd3c24 h1:bRtkl9EP0xkY7uwRGVuSGQuiVtAPYIeLbiffYlwuyBA=
-github.com/validator-labs/validator-plugin-vsphere v0.0.30-0.20240806164459-9b1f05bd3c24/go.mod h1:XzD1rmP91LRocKGsnTdqRjsSdkk7G127HEPnhc4BWkQ=
+github.com/validator-labs/validator-plugin-vsphere v0.0.30-0.20240807224226-d7deabde208d h1:bUi0GbvLi4heRXBl4yBBxdMF3F3wZTafbRJL93X7BH8=
+github.com/validator-labs/validator-plugin-vsphere v0.0.30-0.20240807224226-d7deabde208d/go.mod h1:VIT+ugQg/UOah8X4u8lULIENa53p6VgyVEfCgZFpIko=
 github.com/vbatts/tar-split v0.11.5 h1:3bHCTIheBm1qFTcgh9oPu+nNBtX+XJIupG/vacinCts=
 github.com/vbatts/tar-split v0.11.5/go.mod h1:yZbwRsSeGjusneWgA781EKej9HF8vme8okylkAeNKLk=
 github.com/vmware/govmomi v0.39.0 h1:soLZ08Q2zvjRSinNup8xVlw0KDDCJPPA1rIDmBhi7As=
