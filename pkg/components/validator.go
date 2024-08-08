@@ -465,29 +465,29 @@ type OCIPluginConfig struct {
 }
 
 // BasicAuths returns a slice of basic authentication details for each secret.
-func (c *OCIPluginConfig) BasicAuths() [][]string {
-	auths := make([][]string, len(c.Secrets))
-	for i, s := range c.Secrets {
+func (c *OCIPluginConfig) BasicAuths() map[string][]string {
+	auths := make(map[string][]string, len(c.Secrets))
+	for _, s := range c.Secrets {
 		s := s
 		if s.BasicAuth != nil {
-			auths[i] = []string{s.BasicAuth.Username, s.BasicAuth.Password}
+			auths[s.Name] = []string{s.BasicAuth.Username, s.BasicAuth.Password}
 		} else {
-			auths[i] = []string{"", ""}
+			auths[s.Name] = []string{"", ""}
 		}
 	}
 	return auths
 }
 
 // AllPubKeys returns a slice of public keys for each public key secret.
-func (c *OCIPluginConfig) AllPubKeys() [][][]byte {
-	pubKeys := make([][][]byte, len(c.PublicKeySecrets))
-	for i, s := range c.PublicKeySecrets {
+func (c *OCIPluginConfig) AllPubKeys() map[string][][]byte {
+	pubKeys := make(map[string][][]byte, len(c.PublicKeySecrets))
+	for _, s := range c.PublicKeySecrets {
 		s := s
 		keys := make([][]byte, len(s.Keys))
 		for i, k := range s.Keys {
 			keys[i] = []byte(k)
 		}
-		pubKeys[i] = keys
+		pubKeys[s.Name] = keys
 	}
 	return pubKeys
 }

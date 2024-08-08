@@ -201,7 +201,7 @@ ociPlugin:
     chart:
       name: validator-plugin-oci
       repository: validator-plugin-oci
-      version: v0.0.13
+      version: v0.1.0
     values: ""
   secrets:
   - name: oci-creds

@@ -20,7 +20,7 @@ require (
 	github.com/validator-labs/validator-plugin-aws v0.1.3
 	github.com/validator-labs/validator-plugin-azure v0.0.16-0.20240808034217-862db625b587
 	github.com/validator-labs/validator-plugin-network v0.0.22
-	github.com/validator-labs/validator-plugin-oci v0.0.13
+	github.com/validator-labs/validator-plugin-oci v0.1.0
 	github.com/validator-labs/validator-plugin-vsphere v0.0.30-0.20240807224226-d7deabde208d
 	github.com/vmware/govmomi v0.39.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.15 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.173.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.31.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.26.3 // indirect
@@ -93,7 +93,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.3 // indirect
 	github.com/aws/smithy-go v1.20.3 // indirect
-	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240730143543-a8d7d3c42ca1 // indirect
+	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240807144652-27a1eeba0782 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
@@ -110,9 +110,8 @@ require (
 	github.com/digitorus/pkcs7 v0.0.0-20230818184609-3a137a874352 // indirect
 	github.com/digitorus/timestamp v0.0.0-20231217203849-220c5c2851b7 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
-	github.com/docker/cli v24.0.7+incompatible // indirect
+	github.com/docker/cli v27.1.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v24.0.9+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/dougm/pretty v0.0.0-20171025230240-2ee9d7453c02 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -144,7 +143,7 @@ require (
 	github.com/google/certificate-transparency-go v1.2.1 // indirect
 	github.com/google/gnostic-models v0.6.9-0.20230804172637-c7be7c783f49 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/go-containerregistry v0.20.1 // indirect
+	github.com/google/go-containerregistry v0.20.2 // indirect
 	github.com/google/go-github/v55 v55.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -201,9 +200,10 @@ require (
 	github.com/secure-systems-lab/go-securesystemslib v0.8.0 // indirect
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/sigstore/cosign/v2 v2.3.0 // indirect
+	github.com/sigstore/cosign/v2 v2.4.0 // indirect
+	github.com/sigstore/protobuf-specs v0.3.2 // indirect
 	github.com/sigstore/rekor v1.3.6 // indirect
-	github.com/sigstore/sigstore v1.8.7 // indirect
+	github.com/sigstore/sigstore v1.8.8 // indirect
 	github.com/sigstore/timestamp-authority v1.2.2 // indirect
 	github.com/slack-go/slack v0.13.1 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
@@ -227,15 +227,16 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
-	golang.org/x/mod v0.19.0 // indirect
+	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/oauth2 v0.21.0 // indirect
+	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240725223205-93522f1f2a9f // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
@@ -247,7 +248,7 @@ require (
 	sigs.k8s.io/cluster-api v1.7.4 // indirect
 	sigs.k8s.io/controller-runtime v0.18.4 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
-	sigs.k8s.io/release-utils v0.8.3 // indirect
+	sigs.k8s.io/release-utils v0.8.4 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 

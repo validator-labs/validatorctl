@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strings"
 
 	"k8s.io/client-go/kubernetes"
 
@@ -274,10 +275,12 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 		return err
 	}
 
-	r.Host, err = prompts.ReadText("Registry host", r.Host, false, -1)
+	log.InfoCLI("Example OCI registry hosts: gcr.io, quay.io, oci://myregistry:5000")
+	host, err := prompts.ReadText("Registry host", r.Host, false, -1)
 	if err != nil {
 		return err
 	}
+	r.Host = strings.TrimSuffix(host, "/")
 
 	authSecretName, err := prompts.Select("Registry authentication secret name, select N/A for public registries", authSecretNames)
 	if err != nil {
@@ -287,7 +290,7 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 		r.Auth = plug.Auth{SecretName: authSecretName}
 	}
 
-	if err := configureArtifacts(r); err != nil {
+	if err := readArtifactRefs(r); err != nil {
 		return err
 	}
 
@@ -316,59 +319,38 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	return nil
 }
 
-func configureArtifacts(r *plug.OciRegistryRule) error {
+func readArtifactRefs(r *plug.OciRegistryRule) error {
 	log.InfoCLI("Configure one or more OCI artifact(s) to validate.")
 
-	var err error
-	addArtifacts := true
+	// We've intentionally opted to not support prompting for full layer validation overrides per artifact
 
-	for i, a := range r.Artifacts {
-		a := a
-		if err := readArtifactRef(r, &a, i); err != nil {
-			return err
-		}
+	log.InfoCLI(`
+	Artifact references must include the registry host for the current rule,
+	e.g. 'gcr.io/someimage:latest', not 'someimage:latest'.
+	`)
+	var defaultArtifacts string
+	for _, a := range r.Artifacts {
+		defaultArtifacts += a.Ref + "\n"
 	}
-	if r.Artifacts == nil {
-		r.Artifacts = make([]plug.Artifact, 0)
-	} else {
-		addArtifacts, err = prompts.ReadBool("Add another artifact reference", false)
-		if err != nil {
-			return err
-		}
-	}
-	if !addArtifacts {
-		return nil
-	}
-	for {
-		if err := readArtifactRef(r, &plug.Artifact{}, -1); err != nil {
-			return err
-		}
-		add, err := prompts.ReadBool("Add another artifact reference", false)
-		if err != nil {
-			return err
-		}
-		if !add {
-			break
-		}
-	}
-	return nil
-}
-
-func readArtifactRef(r *plug.OciRegistryRule, a *plug.Artifact, idx int) error {
-	var err error
-	a.Ref, err = prompts.ReadTextRegex("Artifact ref", a.Ref, "Invalid artifact ref", prompts.ArtifactRefRegex)
+	artifacts, err := prompts.ReadTextSlice(
+		"Artifact references", defaultArtifacts, "invalid artifact refs", `^`+r.Host+`/.*$`, false,
+	)
 	if err != nil {
 		return err
 	}
-	a.LayerValidation, err = prompts.ReadBool("Enable full layer validation", false)
+	r.Artifacts = make([]plug.Artifact, len(artifacts))
+	for i, a := range artifacts {
+		r.Artifacts[i] = plug.Artifact{
+			Ref: strings.TrimPrefix(a, fmt.Sprintf("%s/", r.Host)),
+		}
+	}
+
+	log.InfoCLI("Full layer validation is enabled by default for all artifacts.")
+	r.SkipLayerValidation, err = prompts.ReadBool("Disable full layer validation for all artifacts", false)
 	if err != nil {
 		return err
 	}
-	if idx == -1 {
-		r.Artifacts = append(r.Artifacts, *a)
-	} else {
-		r.Artifacts[idx] = *a
-	}
+
 	return nil
 }
 
