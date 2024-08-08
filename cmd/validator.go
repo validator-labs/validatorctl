@@ -83,8 +83,8 @@ For more information about validator, see: https://github.com/validator-labs/val
 func NewValidatorRulesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rules",
-		Short: "Configure & apply, or directly evaluate rules validator plugin rules.",
-		Long: `Configure & apply, or directly evaluate rules validator plugin rules.
+		Short: "Configure & apply, or directly evaluate validator plugin rules.",
+		Long: `Configure & apply, or directly evaluate validator plugin rules.
 
 To configure and apply validator plugin rules, use 'validatorctl rules apply'.
 Running 'validatorctl rules apply' requires a configuration file, which can be
@@ -199,7 +199,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file. Required unless using --direct.")
+	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file.")
 	flags.BoolVarP(&tc.CreateConfigOnly, "config-only", "o", false, "Update configuration file only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&tc.UpdatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&tc.Reconfigure, "reconfigure", "r", false, "Re-configure plugin rules prior to running checks. Default: false.")

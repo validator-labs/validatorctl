@@ -4,7 +4,9 @@ The `validator` command exposes the following subcommands.
 
 - [`describe`](#describe) - Describe Validator results in a Kubernetes cluster.
 
-- [`install`](#install) - Install Validator and configure Validator plugins.
+- [`install`](#install) - Install Validator and Validator plugins.
+
+- [`rules`](#rules) - Configure and apply, or directly evaluate validator plugin rules.
 
 - [`uninstall`](#uninstall) - Uninstall Validator and remove all Validator plugins.
 
@@ -32,11 +34,13 @@ The `install` subcommand accepts the following flags.
 
 | **Short Flag** | **Long Flag**        | **Description**                                                                                                                                            | **Type** |
 | -------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+|                | `--apply`            | Configure and apply validator plugin rules. Default: false                                                                                                 | -        |
 | `-f`           | `--config-file`      | Install Validator using a configuration file (optional). Provide the file path to the configuration file.                                                  | string   |
 | `-o`           | `--config-only`      | Generate a configuration file without proceeding with an actual install. Default: false                                                                    | boolean  |
 | `-h`           | `--help`             | Help with any command.                                                                                                                                     | -        |
 | `-r`           | `--reconfigure`      | Reconfigure Validator and plugins prior to installation. The `--config-file` flag must be included. Default: false.                                        | boolean  |
 | `-p`           | `--update-passwords` | Update credentials provided in the configuration file. This does not proceed with installation. The `--config-file` flag must be included. Default: false. | boolean  |
+|                | `--wait`             | Wait for validation to succeed and describe results. Only applies when --apply is set. Default: false                                                       | -        |
 
 ### Examples
 
@@ -290,6 +294,76 @@ Use the `kubectl describe` command to view the validation results.
 kubectl describe validationresults --namespace validator
 ```
 
+## Rules
+
+Use the `rules` subcommand to configure and apply validator plugin rules, or directly invoke validation rules.
+
+The `rules` subcommand accepts the following flags.
+
+| **Short Flag** | **Long Flag**      | **Description**           | **Type** |
+| -------------- | ------------------ | ------------------------- | -------- |
+| `-h`           | `--help`           | Help with any command.    | -        |
+
+The rules subcommand exposes the following subcommands.
+
+- [`apply`](#apply) - Configure and apply validator plugin rules in a Kubernetes cluster.
+
+- [`check`](#check) - Directly evaluate rules for validator plugins.
+
+### Apply
+
+Use the `apply` subcommand to configure and apply validator plugin rules.
+
+The `apply` subcommand accepts the following flags.
+
+| **Short Flag** | **Long Flag**        | **Description**                                                                                                                                            | **Type** |
+| -------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `-f`           | `--config-file`      | Validator configuration file (required).                                                                                                                   | string   |
+| `-o`           | `--config-only`      | Update the configuration file only. Do not proceed with checks. Default: false                                                                             | boolean  |
+| `-h`           | `--help`             | Help with any command.                                                                                                                                     | -        |
+| `-r`           | `--reconfigure`      | Reconfigure plugins rules prior to running checks. The `--config-file` flag must be included. Default: false.                                              | boolean  |
+| `-p`           | `--update-passwords` | Update credentials provided in the configuration file. This does not proceed with installation. The `--config-file` flag must be included. Default: false. | boolean  |
+|                | `--wait`             | Wait for validation to succeed and describe results. Default: false                                                                                        | -        |
+
+#### Examples
+
+Apply Validator plugin rules in a cluster and wait for results.
+
+```shell
+validator rules apply  \
+--config-file /Users/demo/.validator/validator-20231109135306/validator.yaml \
+--wait
+```
+
+### Check
+
+Use the `check` subcommand to directly evaluate rules for validator plugins.
+
+The `check` subcommand accepts the following flags.
+
+| **Short Flag** | **Long Flag**        | **Description**                                                                                                                                            | **Type** |
+| -------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `-f`           | `--config-file`      | Validator configuration file.                                                                                                                              | string   |
+| `-o`           | `--config-only`      | Update the configuration file only. Do not proceed with checks. Default: false                                                                             | boolean  |
+| `-h`           | `--help`             | Help with any command.                                                                                                                                     | -        |
+| `-r`           | `--reconfigure`      | Reconfigure plugins rules prior to running checks. The `--config-file` flag must be included. Default: false.                                              | boolean  |
+| `-p`           | `--update-passwords` | Update credentials provided in the configuration file. This does not proceed with installation. The `--config-file` flag must be included. Default: false. | boolean  |
+
+#### Examples
+
+Directly evaluate Validator plugin rules.
+
+```shell
+validator rules check
+```
+
+Directly evaluate preconfigured Validator plugin rules.
+
+```shell
+validator rules check  \
+--config-file /Users/demo/.validator/validator-20231109135306/validator.yaml
+```
+
 ## Uninstall
 
 Use the `uninstall` subcommand to uninstall the Validator framework and remove all Validator plugins. To remove
@@ -454,5 +528,5 @@ validator version
 ```
 
 ```shell
-Validator CLI version: 0.0.6
+Validator CLI version: 0.1.0
 ```
