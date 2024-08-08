@@ -30,7 +30,7 @@ type Config struct {
 type TaskConfig struct {
 	CliVersion       string
 	ConfigFile       string
-	Check            bool
+	Apply            bool
 	CreateConfigOnly bool
 	DeleteCluster    bool
 	Direct           bool
