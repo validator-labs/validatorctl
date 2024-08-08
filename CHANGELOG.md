@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.1.1](https://github.com/validator-labs/validatorctl/compare/v0.1.0...v0.1.1) (2024-08-08)
+
+
+### Other
+
+* clean up helpers for setting up oci network and vsphere validation rules ([#137](https://github.com/validator-labs/validatorctl/issues/137)) ([dbdee2f](https://github.com/validator-labs/validatorctl/commit/dbdee2f8fd22fc443ff67c96b36c301a39fe85e1))
+
+
+### Docs
+
+* update docs to reflect recent api changes ([#146](https://github.com/validator-labs/validatorctl/issues/146)) ([f2b3217](https://github.com/validator-labs/validatorctl/commit/f2b3217b086aa6d8d52ef71ea9dafd102c558fcb))
+
+
+### Dependency Updates
+
+* **deps:** update github.com/validator-labs/validator-plugin-azure digest to 862db62 ([#142](https://github.com/validator-labs/validatorctl/issues/142)) ([039e6f0](https://github.com/validator-labs/validatorctl/commit/039e6f0fc7143dd5ab58b69e4d27c2a25be08c88))
+* **deps:** update github.com/validator-labs/validator-plugin-vsphere digest to d7deabd ([#143](https://github.com/validator-labs/validatorctl/issues/143)) ([72267ad](https://github.com/validator-labs/validatorctl/commit/72267adf955539b18878ab1edbc95d6121884561))
+* **deps:** update module github.com/validator-labs/validator-plugin-oci to v0.1.0 ([#132](https://github.com/validator-labs/validatorctl/issues/132)) ([8862bb5](https://github.com/validator-labs/validatorctl/commit/8862bb50646701a095b1d6577f2cbdcdd44bf13a))
+
+
+### Refactoring
+
+* add rules subcommand & split out apply/check ([#144](https://github.com/validator-labs/validatorctl/issues/144)) ([e88bd71](https://github.com/validator-labs/validatorctl/commit/e88bd7130546eff1e75881984d2e05073ee78340))
+
 ## [0.1.0](https://github.com/validator-labs/validatorctl/compare/v0.0.6...v0.1.0) (2024-08-06)
 
 
