@@ -79,7 +79,7 @@ Available Commands:
   docs        Display information about supported validator plugins
   help        Help about any command
   install     Install validator & validator plugin(s)
-  rules       Configure & apply, or directly evaluate rules validator plugin rules.
+  rules       Configure & apply, or directly evaluate validator plugin rules.
   uninstall   Uninstall validator & all validator plugin(s)
   upgrade     Upgrade validator & re-configure validator plugin(s)
   version     Prints the Validator CLI version
