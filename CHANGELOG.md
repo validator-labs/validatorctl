@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.2](https://github.com/validator-labs/validatorctl/compare/v0.1.1...v0.1.2) (2024-08-09)
+
+
+### Features
+
+* set exit code 2 on validation failure; restore debug log file ([#150](https://github.com/validator-labs/validatorctl/issues/150)) ([2a3fe4d](https://github.com/validator-labs/validatorctl/commit/2a3fe4d4195a051f3779151ff58112bf2b26b109))
+
+
+### Dependency Updates
+
+* **deps:** update github.com/validator-labs/validator-plugin-azure digest to b4687e5 ([#149](https://github.com/validator-labs/validatorctl/issues/149)) ([e7ab9a6](https://github.com/validator-labs/validatorctl/commit/e7ab9a637676d1640b2e60e5772f50f436a094e7))
+* **deps:** update github.com/validator-labs/validator-plugin-vsphere digest to a93cb70 ([#147](https://github.com/validator-labs/validatorctl/issues/147)) ([79304b9](https://github.com/validator-labs/validatorctl/commit/79304b9087afd98348bb56ebb7716999d9d2e357))
+
 ## [0.1.1](https://github.com/validator-labs/validatorctl/compare/v0.1.0...v0.1.1) (2024-08-08)
 
 
