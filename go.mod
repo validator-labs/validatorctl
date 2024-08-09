@@ -16,14 +16,14 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.1.1
+	github.com/validator-labs/validator v0.1.2
 	github.com/validator-labs/validator-plugin-aws v0.1.3
 	github.com/validator-labs/validator-plugin-azure v0.0.16-0.20240808034217-862db625b587
 	github.com/validator-labs/validator-plugin-network v0.0.22
 	github.com/validator-labs/validator-plugin-oci v0.1.0
-	github.com/validator-labs/validator-plugin-vsphere v0.0.30-0.20240807224226-d7deabde208d
+	github.com/validator-labs/validator-plugin-vsphere v0.0.30-0.20240808221109-a93cb7014075
 	github.com/vmware/govmomi v0.39.0
-	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
+	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.30.3
 	k8s.io/apimachinery v0.30.3
