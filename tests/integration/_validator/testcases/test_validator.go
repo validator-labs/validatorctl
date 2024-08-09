@@ -124,7 +124,7 @@ func (t *ValidatorTest) testInstallInteractive(ctx *test.TestContext) (tr *test.
 		Values: tuiVals,
 	}
 
-	return common.ExecCLI(interactiveCmd, buffer, t.log)
+	return common.ExecCLI(interactiveCmd, buffer, t.log, false)
 }
 
 func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *test.TestResult) {
@@ -157,7 +157,7 @@ func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *
 		SliceValues: tuiSliceVals,
 	}
 
-	return common.ExecCLI(interactiveCmd, buffer, t.log)
+	return common.ExecCLI(interactiveCmd, buffer, t.log, false)
 }
 
 func (t *ValidatorTest) validatorValues(ctx *test.TestContext) []string {
@@ -514,7 +514,7 @@ func (t *ValidatorTest) testInstallSilent() (tr *test.TestResult) {
 	silentCmd, buffer := common.InitCmd([]string{
 		"install", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile),
 	})
-	return common.ExecCLI(silentCmd, buffer, t.log)
+	return common.ExecCLI(silentCmd, buffer, t.log, false)
 }
 
 func (t *ValidatorTest) testInstallSilentWait() (tr *test.TestResult) {
@@ -530,7 +530,7 @@ func (t *ValidatorTest) testInstallSilentWait() (tr *test.TestResult) {
 		"install", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile),
 		"--apply", "--wait",
 	})
-	return common.ExecCLI(silentCmd, buffer, t.log)
+	return common.ExecCLI(silentCmd, buffer, t.log, false)
 }
 
 func (t *ValidatorTest) testCheckDirect() (tr *test.TestResult) {
@@ -548,7 +548,7 @@ func (t *ValidatorTest) testCheckDirect() (tr *test.TestResult) {
 	checkCmd, buffer := common.InitCmd([]string{
 		"rules", "check", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile),
 	})
-	return common.ExecCLI(checkCmd, buffer, t.log)
+	return common.ExecCLI(checkCmd, buffer, t.log, true)
 }
 
 func (t *ValidatorTest) testDescribe() (tr *test.TestResult) {
@@ -557,7 +557,7 @@ func (t *ValidatorTest) testDescribe() (tr *test.TestResult) {
 	silentCmd, buffer := common.InitCmd([]string{
 		"describe", "-f", t.filePath(cfg.ValidatorConfigFile),
 	})
-	return common.ExecCLI(silentCmd, buffer, t.log)
+	return common.ExecCLI(silentCmd, buffer, t.log, false)
 }
 
 func (t *ValidatorTest) testUndeploy() (tr *test.TestResult) {
@@ -566,7 +566,7 @@ func (t *ValidatorTest) testUndeploy() (tr *test.TestResult) {
 	silentCmd, buffer := common.InitCmd([]string{
 		"uninstall", "-f", t.filePath(cfg.ValidatorConfigFile),
 	})
-	return common.ExecCLI(silentCmd, buffer, t.log)
+	return common.ExecCLI(silentCmd, buffer, t.log, false)
 }
 
 func (t *ValidatorTest) testInstallUpdatePasswords() (tr *test.TestResult) {
@@ -623,7 +623,7 @@ func (t *ValidatorTest) testInstallUpdatePasswords() (tr *test.TestResult) {
 		},
 	}
 
-	return common.ExecCLI(cmd, buffer, t.log)
+	return common.ExecCLI(cmd, buffer, t.log, false)
 }
 
 func (t *ValidatorTest) PreRequisite(ctx *test.TestContext) (tr *test.TestResult) {
