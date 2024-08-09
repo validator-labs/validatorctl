@@ -15,6 +15,7 @@ import (
 
 	awsconsts "github.com/validator-labs/validator-plugin-aws/pkg/constants"
 	azureconsts "github.com/validator-labs/validator-plugin-azure/pkg/constants"
+	maasconsts "github.com/validator-labs/validator-plugin-maas/pkg/constants"
 	netconsts "github.com/validator-labs/validator-plugin-network/pkg/constants"
 	ociconsts "github.com/validator-labs/validator-plugin-oci/pkg/constants"
 	vsphereconsts "github.com/validator-labs/validator-plugin-vsphere/pkg/constants"
@@ -35,6 +36,7 @@ var (
 	pluginInstallFuncs = pluginFuncMap{
 		awsconsts.PluginCode:     readAwsPlugin,
 		azureconsts.PluginCode:   readAzurePlugin,
+		maasconsts.PluginCode:    readMaasPlugin,
 		netconsts.PluginCode:     readNetworkPlugin,
 		ociconsts.PluginCode:     readOciPlugin,
 		vsphereconsts.PluginCode: readVspherePlugin,
@@ -42,6 +44,7 @@ var (
 	pluginRuleFuncs = pluginFuncMap{
 		awsconsts.PluginCode:     readAwsPluginRules,
 		azureconsts.PluginCode:   readAzurePluginRules,
+		maasconsts.PluginCode:    readMaasPluginRules,
 		netconsts.PluginCode:     readNetworkPluginRules,
 		ociconsts.PluginCode:     readOciPluginRules,
 		vsphereconsts.PluginCode: readVspherePluginRules,
@@ -238,6 +241,33 @@ func handlePlugins(vc *components.ValidatorConfig, tc *cfg.TaskConfig, kClient k
 			}
 		}
 		if err := funcMap[azureconsts.PluginCode](vc, tc, kClient); err != nil {
+			return err
+		}
+	}
+
+	if enablePlugins {
+		log.Header("MAAS Plugin")
+		log.InfoCLI(`
+	The MAAS validator plugin reconciles MaasValidator custom resources to perform
+	the following validation against your network:
+
+	- Upstream DNS
+	- Internal DNS
+	- Resources
+	- OS Images
+		`) // TODO - elaborate
+		vc.MaasPlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s MAAS plugin", verb), true)
+		if err != nil {
+			return err
+		}
+	}
+	if vc.MaasPlugin.Enabled {
+		if tc.Direct {
+			if err = readMaasPlugin(vc, tc, kClient); err != nil {
+				return err
+			}
+		}
+		if err := funcMap[maasconsts.PluginCode](vc, tc, kClient); err != nil {
 			return err
 		}
 	}
@@ -451,6 +481,11 @@ func UpdateValidatorPluginCredentials(c *components.ValidatorConfig, tc *cfg.Tas
 	if c.AzurePlugin != nil && c.AzurePlugin.Enabled {
 		if err := readAzureCredentials(c.AzurePlugin, tc, k8sClient); err != nil {
 			return fmt.Errorf("failed to update Azure credentials: %w", err)
+		}
+	}
+	if c.MaasPlugin != nil && c.MaasPlugin.Enabled {
+		if err := readMaasCredentials(c.MaasPlugin, tc, k8sClient); err != nil {
+			return fmt.Errorf("failed to update MAAS credentials: %w", err)
 		}
 	}
 	if c.OCIPlugin != nil && c.OCIPlugin.Enabled {

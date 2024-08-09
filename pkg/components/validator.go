@@ -10,6 +10,7 @@ import (
 
 	aws "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
 	azure "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
+	maas "github.com/validator-labs/validator-plugin-maas/api/v1alpha1"
 	network "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	oci "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
 	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
@@ -39,6 +40,7 @@ type ValidatorConfig struct {
 	NetworkPlugin *NetworkPluginConfig `yaml:"networkPlugin,omitempty"`
 	OCIPlugin     *OCIPluginConfig     `yaml:"ociPlugin,omitempty"`
 	VspherePlugin *VspherePluginConfig `yaml:"vspherePlugin,omitempty"`
+	MaasPlugin    *MaasPluginConfig    `yaml:"maasPlugin,omitempty"`
 }
 
 // NewValidatorConfig creates a new ValidatorConfig object.
@@ -79,6 +81,10 @@ func NewValidatorConfig() *ValidatorConfig {
 			StaticDeploymentTypes:  make(map[int]string),
 			StaticDeploymentValues: make(map[int]*AzureStaticDeploymentValues),
 		},
+		MaasPlugin: &MaasPluginConfig{
+			Release:   &validator.HelmRelease{},
+			Validator: &maas.MaasValidatorSpec{},
+		},
 		NetworkPlugin: &NetworkPluginConfig{
 			Release:       &validator.HelmRelease{},
 			HTTPFileAuths: make([][]string, 0),
@@ -101,7 +107,7 @@ func NewValidatorConfig() *ValidatorConfig {
 
 // AnyPluginEnabled returns true if any plugin is enabled.
 func (c *ValidatorConfig) AnyPluginEnabled() bool {
-	return c.AWSPlugin.Enabled || c.NetworkPlugin.Enabled || c.VspherePlugin.Enabled || c.OCIPlugin.Enabled || c.AzurePlugin.Enabled
+	return c.AWSPlugin.Enabled || c.NetworkPlugin.Enabled || c.VspherePlugin.Enabled || c.OCIPlugin.Enabled || c.AzurePlugin.Enabled || c.MaasPlugin.Enabled
 }
 
 // EnabledPluginsHaveRules returns true if all enabled plugins have at least one rule configured.
@@ -114,6 +120,10 @@ func (c *ValidatorConfig) EnabledPluginsHaveRules() (bool, []string) {
 	if c.AzurePlugin.Enabled && c.AzurePlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, "Azure")
 		// invalidPlugins = append(invalidPlugins, c.AzurePlugin.Validator.PluginCode())
+	}
+	if c.MaasPlugin.Enabled && c.MaasPlugin.Validator.ResultCount() == 0 {
+		// invalidPlugins = append(invalidPlugins, c.MaasPlugin.Validator.PluginCode())
+		invalidPlugins = append(invalidPlugins, "MAAS")
 	}
 	if c.NetworkPlugin.Enabled && c.NetworkPlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, c.NetworkPlugin.Validator.PluginCode())
@@ -151,6 +161,11 @@ func (c *ValidatorConfig) decrypt() error {
 	if c.AzurePlugin != nil {
 		if err := c.AzurePlugin.decrypt(); err != nil {
 			return errors.Wrap(err, "failed to decrypt Azure plugin configuration")
+		}
+	}
+	if c.MaasPlugin != nil {
+		if err := c.MaasPlugin.decrypt(); err != nil {
+			return errors.Wrap(err, "failed to decrypt MAAS plugin configuration")
 		}
 	}
 	if c.NetworkPlugin != nil {
@@ -191,6 +206,11 @@ func (c *ValidatorConfig) encrypt() error {
 	if c.AzurePlugin != nil {
 		if err := c.AzurePlugin.encrypt(); err != nil {
 			return errors.Wrap(err, "failed to encrypt Azure plugin configuration")
+		}
+	}
+	if c.MaasPlugin != nil {
+		if err := c.MaasPlugin.encrypt(); err != nil {
+			return errors.Wrap(err, "failed to encrypt MAAS plugin configuration")
 		}
 	}
 	if c.NetworkPlugin != nil {
@@ -562,6 +582,34 @@ type VsphereRolePrivilegeRule struct {
 // VsphereTagRule represents a vSphere tag rule.
 type VsphereTagRule struct {
 	vsphereapi.TagValidationRule `yaml:",inline"`
+}
+
+// MaasPluginConfig represents the MAAS plugin configuration.
+type MaasPluginConfig struct {
+	Enabled      bool                    `yaml:"enabled"`
+	Release      *validator.HelmRelease  `yaml:"helmRelease"`
+	Validator    *maas.MaasValidatorSpec `yaml:"validator"`
+	MaasAPIToken string                  `yaml:"maasApiToken"`
+}
+
+func (c *MaasPluginConfig) encrypt() error {
+	token, err := crypto.EncryptB64([]byte(c.MaasAPIToken))
+	if err != nil {
+		return errors.Wrap(err, "failed to encrypt token")
+	}
+	c.MaasAPIToken = token
+
+	return nil
+}
+
+func (c *MaasPluginConfig) decrypt() error {
+	bytes, err := crypto.DecryptB64(c.MaasAPIToken)
+	if err != nil {
+		return errors.Wrap(err, "failed to decrypt token")
+	}
+	c.MaasAPIToken = string(*bytes)
+
+	return nil
 }
 
 // PublicKeySecret represents a public key secret.

@@ -28,12 +28,14 @@ const (
 
 	ValidatorPluginAws     = "validator-plugin-aws"
 	ValidatorPluginAzure   = "validator-plugin-azure"
+	ValidatorPluginMaas    = "validator-plugin-maas"
 	ValidatorPluginNetwork = "validator-plugin-network"
 	ValidatorPluginOci     = "validator-plugin-oci"
 	ValidatorPluginVsphere = "validator-plugin-vsphere"
 
 	ValidatorPluginAwsTemplate     = "validator-rules-aws.tmpl"
 	ValidatorPluginAzureTemplate   = "validator-rules-azure.tmpl"
+	ValidatorPluginMaasTemplate    = "validator-rules-maas.tmpl"
 	ValidatorPluginNetworkTemplate = "validator-rules-network.tmpl"
 	ValidatorPluginOciTemplate     = "validator-rules-oci.tmpl"
 	ValidatorPluginVsphereTemplate = "validator-rules-vsphere.tmpl"
