@@ -3,11 +3,13 @@ package validator
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"slices"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"emperror.dev/errors"
 	"github.com/vmware/govmomi/object"
@@ -369,15 +371,10 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 	}
 
 	if reconfigurePrivileges {
-		privileges, err := LoadPrivileges(cfg.ValidatorVspherePrivilegeFile)
+		r.Privileges, err = readPrivileges(r.Privileges)
 		if err != nil {
 			return err
 		}
-		privileges, err = selectPrivileges(privileges)
-		if err != nil {
-			return err
-		}
-		r.Privileges = privileges
 	}
 
 	if idx == -1 {
@@ -391,41 +388,97 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 	return nil
 }
 
-// LoadPrivileges returns a slice of privilege IDs from the provided privilege file
-func LoadPrivileges(privilegeFile string) ([]string, error) {
+// loadPrivileges returns a slice of privilege IDs from the provided privilege file
+func loadPrivileges(privilegeFile string) (string, func(string) error, error) {
 	privilegeBytes, err := embed.EFS.ReadFile(cfg.Validator, privilegeFile)
+	if err != nil {
+		return "", nil, err
+	}
+
+	var privilegeMap map[string][]string
+	if err := yaml.Unmarshal(privilegeBytes, &privilegeMap); err != nil {
+		return "", nil, err
+	}
+	privileges := privilegeMap["privilegeIds"]
+	slices.Sort(privileges)
+
+	validate := func(input string) error {
+		if !slices.Contains(privileges, strings.TrimSpace(input)) {
+			log.ErrorCLI("failed to read vCenter privileges", "invalidPrivilege", input)
+			return prompts.ErrValidationFailed
+		}
+		return nil
+	}
+
+	return strings.Join(privileges, "\n"), validate, nil
+}
+
+func readPrivileges(rulePrivileges []string) ([]string, error) {
+	defaultPrivileges, validate, err := loadPrivileges(cfg.ValidatorVspherePrivilegeFile)
 	if err != nil {
 		return nil, err
 	}
-	var privilegeMap map[string][]string
-	if err := yaml.Unmarshal(privilegeBytes, &privilegeMap); err != nil {
+	if len(rulePrivileges) > 0 {
+		defaultPrivileges = strings.Join(rulePrivileges, "\n")
+	}
+
+	log.InfoCLI(`
+	Configure vCenter privileges. Either provide a local file path to a
+	file containing vCenter privileges or edit the privileges directly.
+
+	If providing a local file path, the file should contain a list of
+	vCenter privileges, newline separated. Lines starting with '#' are
+	considered comments and are ignored.
+
+	If editing the privileges directly, your default editor will be opened
+	with all valid vCenter privileges prepopulated for you to edit.
+	`)
+	inputType, err := prompts.Select("Add privileges via", cfg.FileInputs)
+	if err != nil {
 		return nil, err
 	}
-	privileges := privilegeMap["privilegeIds"]
+	if inputType == cfg.LocalFilepath {
+		return readPrivilegesFromFile(validate)
+	}
+
+	return readPrivilegesFromEditor(defaultPrivileges, validate)
+}
+
+func readPrivilegesFromEditor(defaultPrivileges string, validate func(string) error) ([]string, error) {
+	log.InfoCLI("Configure vCenter privileges")
+	time.Sleep(2 * time.Second)
+	joinedPrivileges, err := prompts.EditFileValidatedByLine(cfg.VcenterPrivilegePrompt, defaultPrivileges, "\n", validate, 1)
+	if err != nil {
+		return nil, err
+	}
+	privileges := strings.Split(joinedPrivileges, "\n")
 	return privileges, nil
 }
 
-func selectPrivileges(allPrivileges []string) ([]string, error) {
-	var selectedPrivileges []string
-	slices.Sort(allPrivileges)
-
-	log.InfoCLI("Select custom privileges:\n")
-	for {
-		privilege, err := prompts.Select("", allPrivileges)
-		if err != nil {
+func readPrivilegesFromFile(validate func(string) error) ([]string, error) {
+	privilegeFile, err := prompts.ReadFilePath("Privilege file path", "", "Invalid file path", false)
+	if err != nil {
+		return nil, err
+	}
+	privilegeBytes, err := os.ReadFile(privilegeFile) //#nosec
+	if err != nil {
+		return nil, fmt.Errorf("failed to read privilege file: %w", err)
+	}
+	privileges := strings.Split(string(privilegeBytes), "\n")
+	for _, p := range privileges {
+		if err := validate(p); err != nil {
+			log.ErrorCLI(err.Error())
+			retry, err := prompts.ReadBool("Reconfigure privileges", true)
+			if err != nil {
+				return nil, err
+			}
+			if retry {
+				return readPrivilegesFromFile(validate)
+			}
 			return nil, err
-		}
-		selectedPrivileges = append(selectedPrivileges, privilege)
-
-		add, err := prompts.ReadBool("Add another privilege", true)
-		if err != nil {
-			return nil, err
-		}
-		if !add {
-			break
 		}
 	}
-	return selectedPrivileges, nil
+	return privileges, nil
 }
 
 func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.Driver, ruleNames *[]string, vSphereCloudDriver vsphere.Driver) error {
@@ -534,11 +587,7 @@ func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig
 		if err != nil {
 			return err
 		}
-		privileges, err := LoadPrivileges(cfg.ValidatorVspherePrivilegeFile)
-		if err != nil {
-			return err
-		}
-		r.Privileges, err = selectPrivileges(privileges)
+		r.Privileges, err = readPrivileges(r.Privileges)
 		if err != nil {
 			return err
 		}
