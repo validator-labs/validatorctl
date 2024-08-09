@@ -1,14 +1,15 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/validator-labs/validatorctl/pkg/cmd/validator"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	cfgmanager "github.com/validator-labs/validatorctl/pkg/config/manager"
-	log "github.com/validator-labs/validatorctl/pkg/logging"
 	cmdutils "github.com/validator-labs/validatorctl/pkg/utils/cmd"
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 	"github.com/validator-labs/validatorctl/pkg/utils/exec"
@@ -56,7 +57,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 				return err
 			}
 			if err := validator.InstallValidatorCommand(c, tc); err != nil {
-				return fmt.Errorf("failed to install validator: %v", err)
+				return fmt.Errorf("failed to install validator: %w", err)
 			}
 			return nil
 		},
@@ -138,7 +139,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 				return err
 			}
 			if err := validator.ConfigureOrCheckCommand(c, tc); err != nil {
-				return fmt.Errorf("failed to configure and apply validator rules: %v", err)
+				return fmt.Errorf("failed to configure and apply validator rules: %w", err)
 			}
 			return nil
 		},
@@ -175,6 +176,11 @@ func NewCheckValidatorCmd() *cobra.Command {
 
 Plugin rules will be evaluated directly, in-process. Useful for preflight checks or debugging.
 
+Exit codes:
+- 0 indicates that all rules passed validation.
+- 1 indicates that an unexpected error occurred.
+- 2 indicates that one or more rules failed validation.
+
 For more information about validator, see: https://github.com/validator-labs/validator.
 `,
 		Args:          cobra.NoArgs,
@@ -187,12 +193,15 @@ For more information about validator, see: https://github.com/validator-labs/val
 			}
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			if err := c.Save(""); err != nil {
 				return err
 			}
 			if err := validator.ConfigureOrCheckCommand(c, tc); err != nil {
-				return fmt.Errorf("failed to check validator: %v", err)
+				if errors.Is(err, validator.ErrValidationFailed{}) {
+					cmd.SilenceUsage = true
+				}
+				return fmt.Errorf("failed to check validator: %w", err)
 			}
 			return nil
 		},
@@ -232,7 +241,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			if err := validator.UpgradeValidatorCommand(c, tc); err != nil {
-				return fmt.Errorf("failed to upgrade validator: %v", err)
+				return fmt.Errorf("failed to upgrade validator: %w", err)
 			}
 			return nil
 		},
@@ -266,7 +275,7 @@ func NewUndeployValidatorCmd() *cobra.Command {
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			if err := validator.UndeployValidatorCommand(tc); err != nil {
-				return fmt.Errorf("failed to uninstall validator: %v", err)
+				return fmt.Errorf("failed to uninstall validator: %w", err)
 			}
 			return nil
 		},
@@ -302,7 +311,7 @@ If the --config-file flag is specified, the KUBECONFIG specified in the validato
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			if err := validator.DescribeValidationResultsCommand(tc); err != nil {
-				return fmt.Errorf("failed to describe validation results: %v", err)
+				return fmt.Errorf("failed to describe validation results: %w", err)
 			}
 			return nil
 		},
@@ -332,7 +341,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 				"ValidatorVersion": cfg.ValidatorChartVersions[cfg.Validator],
 				"Plugins":          cfg.ValidatorChartVersions,
 			}
-			return embed.EFS.PrintTableTemplate(log.Out(), args, cfg.Validator, "docs.tmpl")
+			return embed.EFS.PrintTableTemplate(os.Stdout, args, cfg.Validator, "docs.tmpl")
 		},
 	}
 

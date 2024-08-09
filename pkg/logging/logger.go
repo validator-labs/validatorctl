@@ -1,4 +1,10 @@
-// Package logging provides a structured logging interface for the CLI.
+// Package logging provides a global logger for the CLI.
+//
+// The global logger's standard methods (i.e., log.Infof, log.Debugf, etc.) write
+// log entries to disk under ~/.validator/validator-<timestamp>/logs/validator.log.
+//
+// The ErrorCLI, FatalCLI, and InfoCLI method logs entries to the console.
+// They are used to guide users through an interactive TUI experience.
 package logging
 
 import (
@@ -6,15 +12,13 @@ import (
 	"io"
 	logging "log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 )
-
-// The log.InfoCLI method logs entries to the console. It is used to guide users
-// through an interactive TUI experience.
 
 var (
 	log    *logrus.Logger
@@ -40,6 +44,16 @@ func SetLevel(logLevel string) {
 		logging.Fatalf("error setting log level: %v", err)
 	}
 	log.SetLevel(level)
+}
+
+// SetOutput sets the output location for the logger
+func SetOutput(runLoc string) {
+	logFile := filepath.Join(runLoc, "logs", "validator.log")
+	f, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600) //#nosec
+	if err != nil {
+		logging.Fatalf("error opening file: %v", err)
+	}
+	log.SetOutput(f)
 }
 
 // logContext recovers the original caller context of each log message
@@ -137,7 +151,7 @@ func HeaderCustom(s string, bgColor, textColor pterm.Color) {
 	fmt.Fprintf(os.Stdout, "\n") // nolint:errcheck
 }
 
-// Out returns the io.Writer used to write messages to the console
-func Out() *os.File {
-	return os.Stdout
+// Out returns the global logger's io.Writer
+func Out() io.Writer {
+	return log.Out
 }
