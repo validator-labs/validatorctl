@@ -467,7 +467,6 @@ func readPrivilegesFromFile(validate func(string) error) ([]string, error) {
 	privileges := strings.Split(string(privilegeBytes), "\n")
 	for _, p := range privileges {
 		if err := validate(p); err != nil {
-			log.ErrorCLI(err.Error())
 			retry, err := prompts.ReadBool("Reconfigure privileges", true)
 			if err != nil {
 				return nil, err
