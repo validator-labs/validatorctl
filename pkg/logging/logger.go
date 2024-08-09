@@ -1,7 +1,7 @@
 // Package logging provides a global logger for the CLI.
 //
-// The global logger's standard methods (i.e., log.Infof, log.Debugf, etc.)
-// write log entries to disk under ~/.validator/logs/validator.log.
+// The global logger's standard methods (i.e., log.Infof, log.Debugf, etc.) write
+// log entries to disk under ~/.validator/validator-<timestamp>/logs/validator.log.
 //
 // The ErrorCLI, FatalCLI, and InfoCLI method logs entries to the console.
 // They are used to guide users through an interactive TUI experience.
