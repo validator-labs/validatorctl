@@ -1,0 +1,33 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/validator.go",
+            "args": [
+                "check", "-d", "-f", "/Users/tylergillson/.validator/validator-20240804075702/validator.yaml"
+            ],
+            "env": {
+                "CLI_VERSION": "0.0.4-dev",
+            }
+        },
+        {
+            "name": "Integration Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/tests/integration/suite_test.go",
+            "env": {
+                "DISABLE_KIND_CLUSTER_CHECK": "true",
+                "KUBECONFIG": "/Users/tylergillson/Downloads/vdev.kubeconfig",
+                "CLI_VERSION": "0.0.4-dev",
+            }
+        }
+    ]
+}
