@@ -79,7 +79,7 @@ var (
 	FileInputs              = []string{LocalFilepath, FileEditor}
 
 	// Command dirs
-	ValidatorSubdirs = []string{"manifests"}
+	ValidatorSubdirs = []string{"logs", "manifests"}
 
 	// Validator
 	ValidatorImagePath = func() string {

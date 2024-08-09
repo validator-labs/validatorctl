@@ -22,6 +22,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/cache"
 	toolsWatch "k8s.io/client-go/tools/watch"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	awsapi "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
 	awsval "github.com/validator-labs/validator-plugin-aws/pkg/validate"
@@ -52,11 +53,20 @@ import (
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 )
 
+// ErrValidationFailed is returned when one or more validation checks failed
+type ErrValidationFailed struct{}
+
+// Error returns the error message for ErrValidationFailed
+func (e ErrValidationFailed) Error() string {
+	return "one or more validation checks failed"
+}
+
 // InitWorkspace initializes a workspace directory with subdirectories
 func InitWorkspace(c *cfg.Config, workspaceDir string, subdirs []string, timestamped bool) error {
 	if err := c.CreateWorkspace(workspaceDir, subdirs, timestamped); err != nil {
 		return fmt.Errorf("failed to initialize workspace: %v", err)
 	}
+	log.SetOutput(c.RunLoc)
 	return nil
 }
 
@@ -387,7 +397,6 @@ func printValidationResults(validationResults []unstructured.Unstructured) error
 		}
 		log.InfoCLI(vrStr)
 	}
-
 	return nil
 }
 
@@ -484,10 +493,11 @@ func configurePlugins(c *cfg.Config, vc *components.ValidatorConfig, tc *cfg.Tas
 func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	log.Header("Executing validator plugin(s)")
 
-	// TODO: restore debug log file & write to it here
-	// l := zap.New(zap.WriteTo(log.DebugOut()))
-	l := logr.Logger{}
+	// Initialize a new logr.Logger that writes to the same
+	// debug log file as the global logrus.Logger
+	l := zap.New(zap.WriteTo(log.Out()))
 
+	ok := true
 	results := make([]*vapi.ValidationResult, 0)
 
 	if vc.AWSPlugin.Enabled {
@@ -507,6 +517,9 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		vrr := awsval.Validate(*vc.AWSPlugin.Validator, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
+		}
+		if vrOk := validationResponseOk(vrr, l); !vrOk {
+			ok = false
 		}
 		results = append(results, vr)
 	}
@@ -528,6 +541,9 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		vrr := azureval.Validate(context.Background(), *vc.AzurePlugin.Validator, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
+		}
+		if vrOk := validationResponseOk(vrr, l); !vrOk {
+			ok = false
 		}
 		results = append(results, vr)
 	}
@@ -553,6 +569,9 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
+		if vrOk := validationResponseOk(vrr, l); !vrOk {
+			ok = false
+		}
 		results = append(results, vr)
 	}
 
@@ -577,6 +596,9 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
+		if vrOk := validationResponseOk(vrr, l); !vrOk {
+			ok = false
+		}
 		results = append(results, vr)
 	}
 
@@ -597,6 +619,9 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		vrr := vsphereval.Validate(context.Background(), *vc.VspherePlugin.Validator, vc.VspherePlugin.Account, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
+		}
+		if vrOk := validationResponseOk(vrr, l); !vrOk {
+			ok = false
 		}
 		results = append(results, vr)
 	}
@@ -628,7 +653,29 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		}
 	}
 
-	return printValidationResults(us)
+	if err := printValidationResults(us); err != nil {
+		return err
+	}
+
+	if !ok {
+		return ErrValidationFailed{}
+	}
+
+	return nil
+}
+
+func validationResponseOk(vr types.ValidationResponse, log logr.Logger) bool {
+	for _, vrr := range vr.ValidationRuleResults {
+		if vrr.State != nil && *vrr.State == vapi.ValidationFailed {
+			log.V(0).Info("validation rule failed",
+				"rule", vrr.Condition.ValidationRule,
+				"type", vrr.Condition.ValidationType,
+				"message", vrr.Condition.Message,
+			)
+			return false
+		}
+	}
+	return true
 }
 
 func emitToSink(vc *components.ValidatorConfig, results []*vapi.ValidationResult, log logr.Logger) error {

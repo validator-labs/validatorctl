@@ -2,10 +2,14 @@
 package cmd
 
 import (
+	"errors"
+	"os"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/validator-labs/validatorctl/pkg/cmd/validator"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	cfgmanager "github.com/validator-labs/validatorctl/pkg/config/manager"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
@@ -29,9 +33,14 @@ func init() {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		log.FatalCLI("failed to execute command", "error", err)
+	err := rootCmd.Execute()
+	if err == nil {
+		return
 	}
+	if errors.Is(err, validator.ErrValidationFailed{}) {
+		os.Exit(2)
+	}
+	log.FatalCLI("failed to execute command", "error", err)
 }
 
 // InitRootCmd initializes the root command and adds all enabled subcommands
