@@ -443,19 +443,18 @@ func readIamPolicyRule(c *components.AWSPluginConfig, r *vpawsapi.IamPolicyRule,
 
 func readIamPolicy() (vpawsapi.PolicyDocument, error) {
 	policyDoc := vpawsapi.PolicyDocument{}
-	inputType, err := prompts.Select("Add policy document via", []string{"Local Filepath", "File Editor"})
+	inputType, err := prompts.Select("Add policy document via", cfg.FileInputs)
 	if err != nil {
 		return policyDoc, err
 	}
 
 	for {
 		var policyBytes []byte
-		if inputType == "Local Filepath" {
+		if inputType == cfg.LocalFilepath {
 			policyFile, err := prompts.ReadFilePath("Policy Document Filepath", "", "Invalid policy document path", false)
 			if err != nil {
 				return policyDoc, err
 			}
-
 			policyBytes, err = os.ReadFile(policyFile) //#nosec
 			if err != nil {
 				return policyDoc, err
@@ -463,7 +462,7 @@ func readIamPolicy() (vpawsapi.PolicyDocument, error) {
 		} else {
 			log.InfoCLI("Configure Policy Document")
 			time.Sleep(2 * time.Second)
-			policyFile, err := prompts.EditFileValidatedByFullContent(cfg.AWSPolicyDocumentPrompt, "", prompts.ValidateJson, 1)
+			policyFile, err := prompts.EditFileValidatedByFullContent(cfg.AWSPolicyDocumentPrompt, "", prompts.ValidateJSON, 1)
 			if err != nil {
 				return policyDoc, err
 			}
@@ -478,7 +477,6 @@ func readIamPolicy() (vpawsapi.PolicyDocument, error) {
 			if err != nil {
 				return policyDoc, err
 			}
-
 			if retry {
 				continue
 			}

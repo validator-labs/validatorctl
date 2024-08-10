@@ -232,57 +232,57 @@ func (t *ValidatorTest) awsPluginInstallValues(ctx *test.TestContext, vals []str
 
 func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
 	awsVals := []any{
-		"us-west-2",               // default region
-		"y",                       // enable IAM role validation
-		"SpectroCloudRole",        // IAM role name
-		"Local Filepath",          // Policy Document Source
-		t.filePath("policy.json"), // Policy Document File
-		"n",                       // add another policy document
-		"n",                       // add another IAM role rule
-		"y",                       // enable IAM user validation
-		"SpectroCloudUser",        // IAM user name
-		"Local Filepath",          // Policy Document Source
-		t.filePath("policy.json"), // Policy Document File
-		"n",                       // add another policy document
-		"n",                       // add another IAM user rule
-		"y",                       // enable IAM group validation
-		"SpectroCloudGroup",       // IAM group name
-		"Local Filepath",          // Policy Document Source
-		t.filePath("policy.json"), // Policy Document File
-		"n",                       // add another policy document
-		"n",                       // add another IAM group rule
-		"y",                       // enable IAM policy validation
+		"us-west-2",                     // default region
+		"y",                             // enable IAM role validation
+		"SpectroCloudRole",              // IAM role name
+		"Local Filepath",                // Policy Document Source
+		t.filePath("awsIAMPolicy.json"), // Policy Document File
+		"n",                             // add another policy document
+		"n",                             // add another IAM role rule
+		"y",                             // enable IAM user validation
+		"SpectroCloudUser",              // IAM user name
+		"Local Filepath",                // Policy Document Source
+		t.filePath("awsIAMPolicy.json"), // Policy Document File
+		"n",                             // add another policy document
+		"n",                             // add another IAM user rule
+		"y",                             // enable IAM group validation
+		"SpectroCloudGroup",             // IAM group name
+		"Local Filepath",                // Policy Document Source
+		t.filePath("awsIAMPolicy.json"), // Policy Document File
+		"n",                             // add another policy document
+		"n",                             // add another IAM group rule
+		"y",                             // enable IAM policy validation
 		"arn:aws:iam::account-num:policy/some-policy", // IAM policy ARN
-		"Local Filepath",           // Policy Document Source
-		t.filePath("policy.json"),  // Policy Document File
-		"n",                        // add another policy document
-		"n",                        // add another IAM policy rule
-		"y",                        // enable service quota validation
-		"EC2",                      // rule name
-		"EC2-VPC Elastic IPs",      // service quota type
-		"us-west-2",                // service quota region #1
-		"5",                        // service quota buffer #1
-		"n",                        // add another service quota rule
-		"y",                        // enable subnet tag validation
-		"subnet",                   // tag resource type
-		"elb tag rule",             // rule name
-		"us-west-2",                // subnet tag region #1
-		"foo",                      // subnet tag key #1
-		"bar",                      // subnet tag value #1
-		[]string{"arn-1"},          // subnet arns
-		"n",                        // add another subnet tag rule
-		"n",                        // add another tag rule
-		"y",                        // enable AMI validation
-		"ami rule",                 // rule name
-		"us-west-2",                // ami region
-		[]string{"ami-1", "ami-2"}, // AMI ids
-		"y",                        // add an AMI filter
-		"foo",                      // filter tag
-		[]string{"bar", "baz"},     // filter values
-		"n",                        // is this a tag filter
-		"n",                        // add another filter
-		[]string{""},               // owners
-		"n",                        // add another AMI rule
+		"Local Filepath",                // Policy Document Source
+		t.filePath("awsIAMPolicy.json"), // Policy Document File
+		"n",                             // add another policy document
+		"n",                             // add another IAM policy rule
+		"y",                             // enable service quota validation
+		"EC2",                           // rule name
+		"EC2-VPC Elastic IPs",           // service quota type
+		"us-west-2",                     // service quota region #1
+		"5",                             // service quota buffer #1
+		"n",                             // add another service quota rule
+		"y",                             // enable subnet tag validation
+		"subnet",                        // tag resource type
+		"elb tag rule",                  // rule name
+		"us-west-2",                     // subnet tag region #1
+		"foo",                           // subnet tag key #1
+		"bar",                           // subnet tag value #1
+		[]string{"arn-1"},               // subnet arns
+		"n",                             // add another subnet tag rule
+		"n",                             // add another tag rule
+		"y",                             // enable AMI validation
+		"ami rule",                      // rule name
+		"us-west-2",                     // ami region
+		[]string{"ami-1", "ami-2"},      // AMI ids
+		"y",                             // add an AMI filter
+		"foo",                           // filter tag
+		[]string{"bar", "baz"},          // filter values
+		"n",                             // is this a tag filter
+		"n",                             // add another filter
+		[]string{""},                    // owners
+		"n",                             // add another AMI rule
 	}
 	return interleave(vals, sliceVals, awsVals)
 }
@@ -433,60 +433,58 @@ func (t *ValidatorTest) vspherePluginInstallValues(ctx *test.TestContext, vals [
 
 func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string) []string {
 	vsphereVals := []string{
-		"DC0",                         // datacenter
-		"y",                           // Enable NTP check
-		"ntpd",                        // NTP rule name
-		"y",                           // are hosts cluster scoped
-		"C0",                          // cluster name
-		"DC0_C0_H0",                   // host1
-		"y",                           // add more hosts
-		"DC0_C0_H1",                   // host2
-		"n",                           // add more hosts
-		"n",                           // add more validation rules
-		"y",                           // Check role privileges
-		"role rule 1",                 // Role privilege rule name
-		"user1@vsphere.local",         // user to check role privileges against
-		"System.Read",                 // role privilege
-		"y",                           // add another role privilege to this rule
-		"Alarm.Acknowledge",           // role privilege
-		"n",                           // add another role privilege to this rule
-		"n",                           // add another role privilege rule
-		"y",                           // check entity privileges
-		"entity rule 1",               // entity privilege rule name
-		"user2@vsphere.local",         // user to check entity privileges against
-		"Folder",                      // entity type
-		"spectro-templates",           // folder name
-		"Folder.Create",               // entity privilege
-		"n",                           // add another entity privilege to this rule
-		"n",                           // add more entity privilege rules
-		"y",                           // check compute resource requirements
-		"resource requirement rule 1", // resource requirement rule name
-		"Cluster",                     // select cluster for resource check
-		"C0",                          // cluster name for resource check
-		"master-pool",                 // node pool name
-		"1",                           // number of nodes
-		"2GHz",                        // per node cpu
-		"4Gi",                         // per node memory
-		"10Gi",                        // per node storage
-		"y",                           // add another node pool
-		"worker-pool",                 // node pool name
-		"3",                           // number of nodes
-		"3GHz",                        // per node cpu
-		"8Gi",                         // per node memory
-		"20Gi",                        // per node storage
-		"n",                           // add more node pools
-		"n",                           // add more resource requirement checks
-		"y",                           // check tags on entities
-		"tag rule 1",                  // tag rule name
-		"Datacenter",                  // entity type
-		"DC0",                         // datacenter name
-		"k8s-region",                  // tag
-		"y",                           // add another tag rule
-		"tag rule 2",                  // tag rule name
-		"Cluster",                     // entity type
-		"C0",                          // cluster name
-		"k8s-zone",                    // tag
-		"n",                           // add another tag rule
+		"DC0",                               // datacenter
+		"y",                                 // Enable NTP check
+		"ntpd",                              // NTP rule name
+		"y",                                 // are hosts cluster scoped
+		"C0",                                // cluster name
+		"DC0_C0_H0",                         // host1
+		"y",                                 // add more hosts
+		"DC0_C0_H1",                         // host2
+		"n",                                 // add more hosts
+		"n",                                 // add more validation rules
+		"y",                                 // Check role privileges
+		"role rule 1",                       // Role privilege rule name
+		"user1@vsphere.local",               // user to check role privileges against
+		"Local Filepath",                    // vCenter privileges Source
+		t.filePath("vCenterPrivileges.txt"), // privileges File
+		"n",                                 // add another role privilege rule
+		"y",                                 // check entity privileges
+		"entity rule 1",                     // entity privilege rule name
+		"user2@vsphere.local",               // user to check entity privileges against
+		"Folder",                            // entity type
+		"spectro-templates",                 // folder name
+		"Local Filepath",                    // vCenter privileges Source
+		t.filePath("vCenterPrivileges.txt"), // privileges File
+		"n",                                 // add more entity privilege rules
+		"y",                                 // check compute resource requirements
+		"resource requirement rule 1",       // resource requirement rule name
+		"Cluster",                           // select cluster for resource check
+		"C0",                                // cluster name for resource check
+		"master-pool",                       // node pool name
+		"1",                                 // number of nodes
+		"2GHz",                              // per node cpu
+		"4Gi",                               // per node memory
+		"10Gi",                              // per node storage
+		"y",                                 // add another node pool
+		"worker-pool",                       // node pool name
+		"3",                                 // number of nodes
+		"3GHz",                              // per node cpu
+		"8Gi",                               // per node memory
+		"20Gi",                              // per node storage
+		"n",                                 // add more node pools
+		"n",                                 // add more resource requirement checks
+		"y",                                 // check tags on entities
+		"tag rule 1",                        // tag rule name
+		"Datacenter",                        // entity type
+		"DC0",                               // datacenter name
+		"k8s-region",                        // tag
+		"y",                                 // add another tag rule
+		"tag rule 2",                        // tag rule name
+		"Cluster",                           // entity type
+		"C0",                                // cluster name
+		"k8s-zone",                          // tag
+		"n",                                 // add another tag rule
 	}
 	vals = append(vals, vsphereVals...)
 	return vals

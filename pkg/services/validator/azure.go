@@ -233,19 +233,18 @@ func configureAzureRBACRulePermissionSets(r *plug.RBACRule) error {
 	log.InfoCLI("Note: You must configure at least one permission set for rule.")
 	log.InfoCLI("If you're updating an existing RBAC rule, its permission sets will be replaced.")
 
-	inputType, err := prompts.Select("Add permission sets via", []string{"Local Filepath", "File Editor"})
+	inputType, err := prompts.Select("Add permission sets via", cfg.FileInputs)
 	if err != nil {
 		return err
 	}
 
 	for {
 		var permissionSetBytes []byte
-		if inputType == "Local Filepath" {
+		if inputType == cfg.LocalFilepath {
 			permissionSetFile, err := prompts.ReadFilePath("Permission sets file path", "", "Invalid file path", false)
 			if err != nil {
 				return err
 			}
-
 			permissionSetBytes, err = os.ReadFile(permissionSetFile) //#nosec
 			if err != nil {
 				return fmt.Errorf("failed to read permission sets file: %w", err)
@@ -253,7 +252,7 @@ func configureAzureRBACRulePermissionSets(r *plug.RBACRule) error {
 		} else {
 			log.InfoCLI("Configure permission sets")
 			time.Sleep(2 * time.Second)
-			permissionSetFile, err := prompts.EditFileValidatedByFullContent(cfg.AzurePermissionSetPrompt, "", prompts.ValidateJson, 1)
+			permissionSetFile, err := prompts.EditFileValidatedByFullContent(cfg.AzurePermissionSetPrompt, "", prompts.ValidateJSON, 1)
 			if err != nil {
 				return fmt.Errorf("failed to configure permission sets: %w", err)
 			}
@@ -266,9 +265,8 @@ func configureAzureRBACRulePermissionSets(r *plug.RBACRule) error {
 			log.ErrorCLI("Failed to unmarshal the provided permission sets", "err", errUnmarshal)
 			retry, err := prompts.ReadBool("Reconfigure permission sets", true)
 			if err != nil {
-				return fmt.Errorf("failed to prompt for reconfiguration of permission sets: %w", err)
+				return err
 			}
-
 			if retry {
 				continue
 			}
