@@ -287,7 +287,7 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 		return err
 	}
 	if authSecretName != notApplicable {
-		r.Auth = plug.Auth{SecretName: authSecretName}
+		r.Auth = plug.Auth{SecretName: &authSecretName}
 	}
 
 	if err := readArtifactRefs(r); err != nil {
