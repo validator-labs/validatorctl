@@ -380,8 +380,8 @@ func getValidationResultsCRDClient(tc *cfg.TaskConfig) (dynamic.NamespaceableRes
 		log.Debug("Using kubeconfig from validator configuration file: %s", vc.Kubeconfig)
 	}
 
-	gv := kube.GetGroupVersion("validation.spectrocloud.labs", "v1alpha1")
-	kClient, err := kube.GetCRDClient(gv, "validationresults")
+	gv := kube.GetGroupVersion(vapi.GroupVersion.Group, vapi.GroupVersion.Version)
+	kClient, err := kube.GetCRDClient(gv, vapi.ValidationResultGroupResource)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get validation result client")
 	}
@@ -509,11 +509,6 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.AWSPlugin.Validator,
 		}
 		vr := vres.Build(v)
-		// TODO: set TypeMeta in vres.Build
-		vr.TypeMeta = metav1.TypeMeta{
-			APIVersion: "validation.spectrocloud.labs/v1alpha1",
-			Kind:       "AwsValidator",
-		}
 		vrr := awsval.Validate(*vc.AWSPlugin.Validator, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
@@ -533,11 +528,6 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.AzurePlugin.Validator,
 		}
 		vr := vres.Build(v)
-		// TODO: set TypeMeta in vres.Build
-		vr.TypeMeta = metav1.TypeMeta{
-			APIVersion: "validation.spectrocloud.labs/v1alpha1",
-			Kind:       "AzureValidator",
-		}
 		vrr := azureval.Validate(context.Background(), *vc.AzurePlugin.Validator, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
@@ -557,11 +547,6 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.NetworkPlugin.Validator,
 		}
 		vr := vres.Build(v)
-		// TODO: set TypeMeta in vres.Build
-		vr.TypeMeta = metav1.TypeMeta{
-			APIVersion: "validation.spectrocloud.labs/v1alpha1",
-			Kind:       "NetworkValidator",
-		}
 		vrr := netval.Validate(*vc.NetworkPlugin.Validator,
 			vc.NetworkPlugin.Validator.CACerts.RawCerts(),
 			vc.NetworkPlugin.HTTPFileAuthBytes(), l,
@@ -584,11 +569,6 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.OCIPlugin.Validator,
 		}
 		vr := vres.Build(v)
-		// TODO: set TypeMeta in vres.Build
-		vr.TypeMeta = metav1.TypeMeta{
-			APIVersion: "validation.spectrocloud.labs/v1alpha1",
-			Kind:       "OciValidator",
-		}
 		vrr := ocival.Validate(*vc.OCIPlugin.Validator,
 			vc.OCIPlugin.BasicAuths(),
 			vc.OCIPlugin.AllPubKeys(), l,
@@ -611,11 +591,6 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.VspherePlugin.Validator,
 		}
 		vr := vres.Build(v)
-		// TODO: set TypeMeta in vres.Build
-		vr.TypeMeta = metav1.TypeMeta{
-			APIVersion: "validation.spectrocloud.labs/v1alpha1",
-			Kind:       "VsphereValidator",
-		}
 		vrr := vsphereval.Validate(context.Background(), *vc.VspherePlugin.Validator, vc.VspherePlugin.Account, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
@@ -943,8 +918,8 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 func watchValidatorConfig(numPlugins int) (bool, error) {
 	log.InfoCLI("\nWatching validator config, waiting for plugins to be installed or failed")
 
-	gv := kube.GetGroupVersion("validation.spectrocloud.labs", "v1alpha1")
-	kClient, err := kube.GetCRDClient(gv, "validatorconfigs")
+	gv := kube.GetGroupVersion(vapi.GroupVersion.Group, vapi.GroupVersion.Version)
+	kClient, err := kube.GetCRDClient(gv, vapi.ValidatorConfigGroupResource)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get validator config client")
 	}

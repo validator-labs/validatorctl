@@ -30,9 +30,6 @@ type KubectlCmd struct {
 	DelayMsg string
 }
 
-// Crd represents a custom resource definition
-type Crd string
-
 // KubectlCommand executes a kubectl command with the given parameters
 func KubectlCommand(params []string, kConfig string) (out, stderr string, err error) {
 	params = append(params, fmt.Sprintf("--kubeconfig=%s", kConfig))
@@ -70,7 +67,7 @@ func GetGroupVersion(group, version string) schema.GroupVersion {
 }
 
 // GetCRDClient returns a dynamic client for the given CRD
-func GetCRDClient(groupVersion schema.GroupVersion, crd Crd) (dynamic.NamespaceableResourceInterface, error) {
+func GetCRDClient(groupVersion schema.GroupVersion, groupResource schema.GroupResource) (dynamic.NamespaceableResourceInterface, error) {
 	dynClient, err := getDynamicClient()
 	if err != nil {
 		return nil, err
@@ -79,7 +76,7 @@ func GetCRDClient(groupVersion schema.GroupVersion, crd Crd) (dynamic.Namespacea
 	version := schema.GroupVersionResource{
 		Group:    groupVersion.Group,
 		Version:  groupVersion.Version,
-		Resource: string(crd),
+		Resource: groupResource.Resource,
 	}
 
 	return dynClient.Resource(version), nil
