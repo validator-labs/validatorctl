@@ -75,7 +75,6 @@ func NewValidatorConfig() *ValidatorConfig {
 			Release:                &validator.HelmRelease{},
 			Validator:              &azure.AzureValidatorSpec{},
 			RuleTypes:              make(map[int]string),
-			PlacementTypes:         make(map[int]string),
 			StaticDeploymentTypes:  make(map[int]string),
 			StaticDeploymentValues: make(map[int]*AzureStaticDeploymentValues),
 		},
@@ -361,7 +360,6 @@ type AzurePluginConfig struct {
 	ClientID               string                               `yaml:"clientId"`
 	ClientSecret           string                               `yaml:"clientSecret"`
 	RuleTypes              map[int]string                       `yaml:"ruleTypes"`
-	PlacementTypes         map[int]string                       `yaml:"placementTypes"`
 	StaticDeploymentTypes  map[int]string                       `yaml:"staticDeploymentTypes"`
 	StaticDeploymentValues map[int]*AzureStaticDeploymentValues `yaml:"staticDeploymentValues"`
 	Validator              *azure.AzureValidatorSpec            `yaml:"validator"`

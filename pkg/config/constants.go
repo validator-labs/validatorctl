@@ -18,6 +18,9 @@ const (
 	KindImageTag          = "v1.30.2"
 	NoProxyPrompt         = "# Default NO_PROXY values are on the lines below.\n# Edit as you see fit (comments are ignored). The file should contain a list of NO_PROXY values, newline separated.\n# Type :wq to save and exit (if using vi).\n\n"
 
+	LocalFilepath = "Local Filepath"
+	FileEditor    = "File Editor"
+
 	// Validator constants
 	ValidatorConfigFile      = "validator.yaml"
 	ValidatorKindClusterName = "validator-kind-cluster"
@@ -48,11 +51,9 @@ const (
 	ValidatorVsphereVersionConstraint    = ">= 6.0, < 9.0"
 	ValidatorVspherePrivilegeFile        = "vsphere-root-level-privileges-all.yaml"
 
-	AWSPolicyDocumentPrompt = "# Provide the AWS policy document for IAM validation rule. The policy document should be in JSON format. Type :wq to save and exit (if using vi).\n"
-
+	AWSPolicyDocumentPrompt  = "# Provide the AWS policy document for IAM validation rule. The policy document should be in JSON format. Type :wq to save and exit (if using vi).\n"
 	AzurePermissionSetPrompt = "# Provide the Azure permission set for IAM validation rule. The permission set should be in JSON format. Type :wq to save and exit (if using vi).\n"
-
-	DefaultStorageClassAnnotation string = "storageclass.kubernetes.io/is-default-class"
+	VcenterPrivilegePrompt   = "# All valid vCenter privileges are on the lines below.\n# Edit as you see fit (comments are ignored). The file should contain a list of privileges, newline separated.\n# Type :wq to save and exit (if using vi).\n\n"
 
 	// Embed dirs
 	Kind      string = "kind"
@@ -75,6 +76,7 @@ var (
 	HTTPSchemes             = []string{"https://", "http://"}
 	RegistryMirrors         = []string{"docker.io", "gcr.io", "ghcr.io", "k8s.gcr.io", "registry.k8s.io", "quay.io", "*"}
 	RegistryMirrorSeparator = "::"
+	FileInputs              = []string{LocalFilepath, FileEditor}
 
 	// Command dirs
 	ValidatorSubdirs = []string{"logs", "manifests"}
@@ -83,11 +85,6 @@ var (
 	ValidatorImagePath = func() string {
 		return ValidatorImageRegistry + "/" + ValidatorImageRepository
 	}
-
-	PlacementTypeStatic  = "Static"
-	PlacementTypeDynamic = "Dynamic"
-	PlacementTypes       = []string{PlacementTypeStatic, PlacementTypeDynamic}
-
 	ValidatorWaitCmd       = []string{"wait", "--for=condition=available", "--timeout=600s", "deployment/validator-controller-manager", "-n", "validator"}
 	ValidatorBasicAuthKeys = []string{"username", "password"}
 	ValidatorSinkKeys      = map[vtypes.SinkType][]string{

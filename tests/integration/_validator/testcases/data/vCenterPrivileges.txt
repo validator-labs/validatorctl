@@ -1,0 +1,7 @@
+# Test vCenter privileges
+Alarm.Acknowledge
+Alarm.Create
+Alarm.Delete
+Alarm.DisableActions
+Alarm.Edit
+Alarm.SetStatus
