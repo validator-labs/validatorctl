@@ -1,431 +1,431 @@
 privilegeIds:
-  - System.Anonymous
-  - System.Read
-  - System.View
-  - Folder.Create
-  - Datastore.UpdateVirtualMachineMetadata
-  - Host.Config.PciPassthru
-  - VcIntegrity.HardwareCompatibility.Read
-  - ExternalStatsProvider.Unregister
-  - VirtualMachine.Config.RawDevice
-  - VirtualMachine.Namespace.ModifyContent
-  - VcIntegrity.ClusterConfiguration.Remediate
-  - ContentLibrary.ManageRegistry
-  - Global.SetCustomField
-  - TenantManager.Query
-  - VirtualMachine.Provisioning.MarkAsVM
-  - InventoryService.Tagging.AttachTag
-  - Extension.Update
-  - InventoryService.Tagging.ModifyUsedByForCategory
-  - Task.Update
-  - OvfManager.OvfConsumerAccess
-  - Cns.Searchable
-  - Host.Config.GuestStore
-  - VApp.ApplicationConfig
-  - VApp.Delete
-  - ContentLibrary.ManageClusterRegistryResource
-  - Infraprofile.Write
-  - DVSwitch.HostOp
-  - VirtualMachine.Config.ResetGuestInfo
-  - Cryptographer.ManageEncryptionPolicy
-  - TrustedAdmin.ReadTrustedHosts
-  - Host.Local.ManageUserGroups
-  - ContentLibrary.EvictLibraryItem
-  - VirtualMachine.Provisioning.Customize
-  - InventoryService.Tagging.DeleteCategory
-  - Nsx.Manage
-  - vStats.QueryAny
-  - Folder.Delete
-  - VirtualMachine.GuestOperations.Execute
-  - VirtualMachine.Interact.SetFloppyMedia
-  - Cryptographer.RegisterVM
-  - TrustedAdmin.ReadKMSTrust
-  - VirtualMachine.Provisioning.DiskRandomAccess
-  - VApp.Create
-  - VcIntegrity.lifecycleSoftwareSpecification.Read
-  - DVPortgroup.Modify
-  - Global.Health
-  - VirtualMachine.Interact.Pause
-  - VcIdentityProviders.Read
-  - TrustedAdmin.ConfigureHostMetadata
-  - ContentLibrary.TypeIntrospection
-  - Cryptographer.Encrypt
-  - Host.Config.DateTime
-  - Datastore.Delete
-  - VirtualMachine.Config.ManagedBy
-  - VcIntegrity.ClusterConfiguration.Modify
-  - Global.ScriptAction
-  - Global.DisableMethods
-  - Alarm.Create
-  - Profile.Edit
-  - VirtualMachine.Interact.EnableSecondary
-  - ContentLibrary.GetConfiguration
-  - Host.Config.AdvancedConfig
-  - vStats.CollectAny
-  - Host.Config.Resources
-  - ScheduledTask.Create
-  - CertificateManagement.Manage
-  - Datastore.AllocateSpace
-  - ContentLibrary.DeleteCertFromTrustStore
-  - Namespaces.Backup
-  - Performance.ModifyIntervals
-  - VApp.PowerOn
-  - Alarm.Edit
-  - EAM.Modify
-  - VirtualMachine.Config.Memory
-  - Namespaces.ManageDisks
-  - Host.Inventory.DeleteCluster
-  - Alarm.Delete
-  - VirtualMachine.Provisioning.PromoteDisks
-  - vStats.Settings
-  - VirtualMachine.Config.QueryUnownedFiles
-  - VirtualMachine.Interact.TerminateFaultTolerantVM
-  - VirtualMachine.Namespace.ReadContent
-  - VApp.Clone
-  - VirtualMachine.Interact.SuspendToMemory
-  - Certificate.Manage
-  - Host.Config.SystemManagement
-  - VirtualMachine.Hbr.ReplicaManagement
-  - VcIntegrity.ClusterConfiguration.Export
-  - InventoryService.Tagging.EditTag
-  - VirtualMachine.Interact.DeviceConnection
-  - VirtualMachine.Config.AddExistingDisk
-  - ContentLibrary.UpdateSession
-  - AutoDeploy.Host.AssociateMachine
-  - Profile.Create
-  - VirtualMachine.Inventory.CreateFromExisting
-  - VcIntegrity.Updates.com.vmware.vcIntegrity.ViewStatus
-  - VApp.Export
-  - Host.Inventory.AddHostToCluster
-  - VirtualMachine.Namespace.Query
-  - ScheduledTask.Delete
-  - Datacenter.Rename
-  - DVSwitch.PortSetting
-  - VirtualMachine.Interact.ConsoleInteract
-  - VirtualMachine.Provisioning.DiskRandomRead
-  - Authorization.ModifyRoles
-  - DVPortgroup.Delete
-  - VirtualMachine.Inventory.Delete
-  - VcIntegrity.lifecycleHealth.Write
-  - ContentLibrary.AddSubscription
-  - ContentLibrary.DeleteSubscription
-  - Resource.QueryVMotion
-  - VirtualMachine.Provisioning.Clone
-  - Host.Hbr.HbrManagement
-  - VirtualMachine.State.CreateSnapshot
-  - VirtualMachine.Config.Annotation
-  - VirtualMachine.Interact.SetCDMedia
-  - ContentLibrary.UpdateLibrary
-  - DVSwitch.Vspan
-  - TransferService.Monitor
-  - InventoryService.Tagging.ModifyUsedByForTag
-  - VirtualMachine.Config.EditDevice
-  - VcIntegrity.General.com.vmware.vcIntegrity.Configure
-  - ScheduledTask.Run
-  - IntercomNamespace.Read
-  - Host.Config.Patch
-  - Cryptographer.ReadKeyServersInfo
-  - Cryptographer.Recrypt
-  - VirtualMachine.Interact.Suspend
-  - ContentLibrary.SyncLibraryItem
-  - Host.Config.Maintenance
-  - VirtualMachine.Interact.Replay
-  - Global.Proxy
-  - VirtualMachine.GuestOperations.ModifyAliases
-  - VApp.Import
-  - AutoDeploy.Rule.Create
-  - Trust.Manage
-  - Global.LogEvent
-  - Extension.Unregister
-  - VirtualMachine.Provisioning.DeployTemplate
-  - Datacenter.IpPoolReleaseIp
-  - Host.Cim.CimInteraction
-  - Host.Config.NetService
-  - VirtualMachine.State.RenameSnapshot
-  - VirtualMachine.Interact.Record
-  - Host.Inventory.CreateCluster
-  - VcIntegrity.HardwareCompatibility.Write
-  - HLM.Manage
-  - VApp.PowerOff
-  - VirtualMachine.Config.DiskLease
-  - VirtualMachine.Config.HostUSBDevice
-  - ContentLibrary.UpdateSubscribedLibrary
-  - VApp.ResourceConfig
-  - Vsan.Cluster.ShallowRekey
-  - EAM.Config
-  - VcIntegrity.ClusterConfiguration.View
-  - VirtualMachine.Provisioning.GetVmFiles
-  - DVSwitch.Delete
-  - VirtualMachine.Interact.SESparseMaintenance
-  - VirtualMachine.Provisioning.PutVmFiles
-  - DVPortgroup.Ipfix
-  - VirtualMachine.Namespace.EventNotify
-  - VirtualMachine.Namespace.Management
-  - Host.Config.Quarantine
-  - Resource.MovePool
-  - VApp.PullFromUrls
-  - AutoDeploy.RuleSet.Activate
-  - VirtualMachine.Interact.PowerOn
-  - Sessions.GlobalMessage
-  - Namespaces.Upgrade
-  - SupervisorServices.Manage
-  - Datastore.Rename
-  - Global.ServiceManagers
-  - VirtualMachine.Interact.PutUsbScanCodes
-  - ContentLibrary.UpdateLibraryItem
-  - Host.Config.Power
-  - Host.Config.Snmp
-  - DVPortgroup.PolicyOp
-  - Namespaces.Manage
-  - ContentLibrary.DeleteLibraryItem
-  - vService.DestroyDependency
-  - ServiceAccount.ManageAccount
-  - VirtualMachine.Interact.PowerOff
-  - Host.Config.AutoStart
-  - VirtualMachine.Interact.MakePrimary
-  - InventoryService.Tagging.CreateTag
-  - Global.EnableMethods
-  - vService.UpdateDependency
-  - Infraprofile.Read
-  - InventoryService.Tagging.DeleteTag
-  - VirtualMachine.Provisioning.ReadCustSpecs
-  - CertificateAuthority.Manage
-  - ContentLibrary.AddCertToTrustStore
-  - ContentLibrary.ManageRegistryProject
-  - VcIntegrity.lifecycleSoftwareRemediation.Write
-  - AutoDeploy.Rule.Edit
-  - ServiceAccount.Administer
-  - Datastore.Move
-  - Cryptographer.Access
-  - Datacenter.Reconfigure
-  - TenantManager.Update
-  - DVPortgroup.ScopeOp
-  - VirtualMachine.Hbr.MonitorReplication
-  - Host.Config.Image
-  - TrustedAdmin.RetrieveTPMHostCertificates
-  - ContentLibrary.SyncLibrary
-  - ContentLibrary.UpdateConfiguration
-  - Host.Config.Network
-  - vSphereDataProtection.Protection
-  - Host.Inventory.RenameCluster
-  - Resource.ApplyRecommendation
-  - Host.Local.DeleteVM
-  - Cryptographer.ManageKeys
-  - VcIntegrity.lifecycleHealth.Read
-  - VApp.Unregister
-  - AutoDeploy.RuleSet.Edit
-  - ContentLibrary.CheckOutTemplate
-  - Global.Diagnostics
-  - VcIntegrity.Updates.com.vmware.vcIntegrity.Stage
-  - GuestDataPublisher.GetData
-  - Datacenter.Move
-  - VApp.Suspend
-  - ContentLibrary.PublishLibraryItem
-  - Sessions.TerminateSession
-  - VirtualMachine.Provisioning.FileRandomAccess
-  - Network.Move
-  - Folder.Move
-  - Host.Config.Nvdimm
-  - Namespaces.SelfServiceManage
-  - Datastore.UpdateVirtualMachineFiles
-  - Global.Licenses
-  - Alarm.Acknowledge
-  - HealthUpdateProvider.Register
-  - VirtualMachine.Config.RemoveDisk
-  - ContentLibrary.UpdateSubscription
-  - Nsx.ModifyAll
-  - Alarm.DisableActions
-  - VirtualMachine.Config.Resource
-  - Host.Config.Connection
-  - VirtualMachine.Config.Rename
-  - VcIntegrity.lifecycleGeneral.Write
-  - VirtualMachine.Config.ReloadFromPath
-  - VApp.Rename
-  - ContentLibrary.DownloadSession
-  - Resource.HotMigrate
-  - VirtualMachine.Interact.Backup
-  - vService.ReconfigureDependency
-  - VApp.AssignVApp
-  - vSphereDataProtection.Recovery
-  - ContentLibrary.CheckInTemplate
-  - Namespaces.Configure
-  - VirtualMachine.GuestOperations.Query
-  - Host.Local.InstallAgent
-  - Profile.Export
-  - Observability.Admin
-  - VcIntegrity.lifecycleSoftwareRemediation.Read
-  - ExternalStatsProvider.Update
-  - TrustedAdmin.ReadAttestingSSO
-  - DVSwitch.ResourceManagement
-  - Datacenter.Delete
-  - VirtualMachine.Interact.ToolsInstall
-  - Authorization.ModifyPermissions
-  - Global.SystemTag
-  - DVSwitch.Move
-  - TrustedAdmin.ConfigureHostCertificates
-  - TrustedAdmin.ConfigureTokenConversionPolicy
-  - Datastore.Config
-  - VirtualMachine.Config.AdvancedConfig
-  - Datastore.DeleteFile
-  - Host.Local.ReconfigVM
-  - VcLifecycle.View
-  - Global.CancelTask
-  - VirtualMachine.Config.DiskExtend
-  - VcIntegrity.lifecycleSoftwareSpecification.Write
-  - ContentLibrary.DeleteLocalLibrary
-  - Cryptographer.RegisterHost
-  - VirtualMachine.Inventory.Unregister
-  - AutoDeploy.Profile.Edit
-  - VirtualMachine.Config.UpgradeVirtualHardware
-  - Trust.Administer
-  - Resource.EditPool
-  - Cryptographer.Clone
-  - DVSwitch.PortConfig
-  - CertificateAuthority.Administer
-  - DVSwitch.Ipfix
-  - HealthUpdateProvider.Update
-  - VcIntegrity.lifecycleSettings.Write
-  - SettingsStore.Manage
-  - InventoryService.Tagging.ObjectAttachable
-  - Host.Inventory.MoveHost
-  - Network.Assign
-  - VirtualMachine.Inventory.Move
-  - Authorization.ModifyPrivileges
-  - VirtualMachine.GuestOperations.Modify
-  - VApp.AssignVM
-  - StorageProfile.Update
-  - DVSwitch.PolicyOp
-  - Network.Config
-  - Cryptographer.ManageKeyServers
-  - VirtualMachine.Config.QueryFTCompatibility
-  - ContentLibrary.EvictSubscribedLibrary
-  - Host.Inventory.AddStandaloneHost
-  - DVPortgroup.Create
-  - Datastore.FileManagement
-  - VcIntegrity.Baseline.com.vmware.vcIntegrity.AssignBaselines
-  - VcIdentityProviders.Create
-  - VirtualMachine.Config.MksControl
-  - Resource.AssignVMToPool
-  - VcIntegrity.Updates.com.vmware.vcIntegrity.Scan
-  - ContentLibrary.DeleteSubscribedLibrary
-  - Host.Inventory.MoveCluster
-  - VirtualMachine.Interact.CreateSecondary
-  - Host.Inventory.EditCluster
-  - StoragePod.Config
-  - StorageProfile.View
-  - VcLifecycle.Upgrade
-  - TrustedAdmin.ManageAttestingSSO
-  - VirtualMachine.Interact.Reset
-  - ComputePolicy.Manage
-  - Nsx.Read
-  - Host.Config.Firmware
-  - Sessions.ValidateSession
-  - Host.Config.HyperThreading
-  - ContentLibrary.ImportStorage
-  - ExternalStatsProvider.Register
-  - VirtualMachine.Config.AddRemoveDevice
-  - Host.Config.Memory
-  - Network.Delete
-  - Plugin.Management
-  - VirtualMachineClasses.Manage
-  - TransferService.Manage
-  - Global.ManageCustomFields
-  - StorageViews.ConfigureService
-  - CertificateManagement.Administer
-  - VirtualMachine.Config.ToggleForkParent
-  - Resource.CreatePool
-  - Cryptographer.EncryptNew
-  - Profile.Delete
-  - TrustedAdmin.ManageKMSTrust
-  - VirtualMachine.Interact.AnswerQuestion
-  - Host.Config.ProductLocker
-  - VirtualMachine.Interact.TurnOffFaultTolerance
-  - VirtualMachine.Hbr.ConfigureReplication
-  - Cryptographer.Migrate
-  - VApp.InstanceConfig
-  - VirtualMachine.Config.CPUCount
-  - VirtualMachine.Config.AddNewDisk
-  - TrustedAdmin.RetrieveHostMetadata
-  - VirtualMachine.State.RevertToSnapshot
-  - Datastore.Browse
-  - VApp.ExtractOvfEnvironment
-  - HLM.Create
-  - ScheduledTask.Edit
-  - VirtualMachine.Config.ChangeTracking
-  - VirtualMachine.Interact.DefragmentAllDisks
-  - Profile.Clear
-  - VirtualMachine.Provisioning.ModifyCustSpecs
-  - VirtualMachine.Provisioning.CreateTemplateFromVM
-  - ContentLibrary.CreateSubscribedLibrary
-  - Namespaces.ListAccess
-  - Global.CapacityPlanning
-  - Alarm.ToggleEnableOnEntity
-  - Host.Local.CreateVM
-  - Authorization.ReassignRolePermissions
-  - EAM.View
-  - Global.VCServer
-  - Task.Create
-  - VirtualMachine.Inventory.Create
-  - AutoDeploy.Rule.Delete
-  - VcIntegrity.lifecycleSettings.Read
-  - VcIntegrity.Baseline.com.vmware.vcIntegrity.ManageBaselines
-  - Sessions.ImpersonateUser
-  - Alarm.SetStatus
-  - VirtualMachine.Interact.DnD
-  - VcIntegrity.lifecycleGeneral.Read
-  - VcIntegrity.Updates.com.vmware.vcIntegrity.Remediate
-  - Namespaces.ManageCapabilities
-  - Global.Settings
-  - vService.CreateDependency
-  - Datacenter.IpPoolConfig
-  - Global.GlobalTag
-  - VcIntegrity.FileUpload.com.vmware.vcIntegrity.ImportFile
-  - DVSwitch.Modify
-  - HealthUpdateProvider.Unregister
-  - VcIdentityProviders.Manage
-  - Resource.ColdMigrate
-  - TrustedAdmin.ManageTrustedHosts
-  - VcIntegrity.lifecycleDepots.Delete
-  - Resource.RenamePool
-  - Host.Inventory.ManageClusterLifecyle
-  - DVSwitch.Create
-  - VirtualMachine.Interact.CreateScreenshot
-  - VirtualMachine.State.RemoveSnapshot
-  - AutoDeploy.Profile.Create
-  - IntercomNamespace.Write
-  - ContentLibrary.UpdateLocalLibrary
-  - InventoryService.Tagging.EditCategory
-  - VirtualMachine.Provisioning.CloneTemplate
-  - VirtualMachine.Inventory.Register
-  - VApp.Move
-  - ServiceAccount.ManagePassword
-  - VirtualMachine.Interact.GuestControl
-  - InventoryService.Tagging.CreateCategory
-  - VApp.ManagedByConfig
-  - VirtualMachine.Provisioning.MarkAsTemplate
-  - Datacenter.IpPoolQueryAllocations
-  - VirtualMachine.Config.SwapPlacement
-  - VirtualMachine.Namespace.Event
-  - Resource.DeletePool
-  - ContentLibrary.PublishLibrary
-  - Datacenter.Create
-  - VApp.AssignResourcePool
-  - vSphereClient.UtilizeVerificationCode
-  - Host.Config.Settings
-  - Folder.Rename
-  - Cryptographer.Decrypt
-  - Extension.Register
-  - Cryptographer.AddDisk
-  - TrustedAdmin.ReadStsInfo
-  - VirtualMachine.Config.Settings
-  - VirtualMachine.Interact.DisableSecondary
-  - ContentLibrary.ProbeSubscription
-  - ContentLibrary.ReadStorage
-  - Host.Config.AuthenticationStore
-  - StorageViews.View
-  - Profile.View
-  - ContentLibrary.AddLibraryItem
-  - ContentLibrary.CreateLocalLibrary
-  - Resource.AssignVAppToPool
-  - VirtualMachine.GuestOperations.QueryAliases
-  - Host.Inventory.RemoveHostFromCluster
+- Alarm.Acknowledge
+- Alarm.Create
+- Alarm.Delete
+- Alarm.DisableActions
+- Alarm.Edit
+- Alarm.SetStatus
+- Alarm.ToggleEnableOnEntity
+- Authorization.ModifyPermissions
+- Authorization.ModifyPrivileges
+- Authorization.ModifyRoles
+- Authorization.ReassignRolePermissions
+- AutoDeploy.Host.AssociateMachine
+- AutoDeploy.Profile.Create
+- AutoDeploy.Profile.Edit
+- AutoDeploy.Rule.Create
+- AutoDeploy.Rule.Delete
+- AutoDeploy.Rule.Edit
+- AutoDeploy.RuleSet.Activate
+- AutoDeploy.RuleSet.Edit
+- Certificate.Manage
+- CertificateAuthority.Administer
+- CertificateAuthority.Manage
+- CertificateManagement.Administer
+- CertificateManagement.Manage
+- Cns.Searchable
+- ComputePolicy.Manage
+- ContentLibrary.AddCertToTrustStore
+- ContentLibrary.AddLibraryItem
+- ContentLibrary.AddSubscription
+- ContentLibrary.CheckInTemplate
+- ContentLibrary.CheckOutTemplate
+- ContentLibrary.CreateLocalLibrary
+- ContentLibrary.CreateSubscribedLibrary
+- ContentLibrary.DeleteCertFromTrustStore
+- ContentLibrary.DeleteLibraryItem
+- ContentLibrary.DeleteLocalLibrary
+- ContentLibrary.DeleteSubscribedLibrary
+- ContentLibrary.DeleteSubscription
+- ContentLibrary.DownloadSession
+- ContentLibrary.EvictLibraryItem
+- ContentLibrary.EvictSubscribedLibrary
+- ContentLibrary.GetConfiguration
+- ContentLibrary.ImportStorage
+- ContentLibrary.ManageClusterRegistryResource
+- ContentLibrary.ManageRegistry
+- ContentLibrary.ManageRegistryProject
+- ContentLibrary.ProbeSubscription
+- ContentLibrary.PublishLibrary
+- ContentLibrary.PublishLibraryItem
+- ContentLibrary.ReadStorage
+- ContentLibrary.SyncLibrary
+- ContentLibrary.SyncLibraryItem
+- ContentLibrary.TypeIntrospection
+- ContentLibrary.UpdateConfiguration
+- ContentLibrary.UpdateLibrary
+- ContentLibrary.UpdateLibraryItem
+- ContentLibrary.UpdateLocalLibrary
+- ContentLibrary.UpdateSession
+- ContentLibrary.UpdateSubscribedLibrary
+- ContentLibrary.UpdateSubscription
+- Cryptographer.Access
+- Cryptographer.AddDisk
+- Cryptographer.Clone
+- Cryptographer.Decrypt
+- Cryptographer.Encrypt
+- Cryptographer.EncryptNew
+- Cryptographer.ManageEncryptionPolicy
+- Cryptographer.ManageKeyServers
+- Cryptographer.ManageKeys
+- Cryptographer.Migrate
+- Cryptographer.ReadKeyServersInfo
+- Cryptographer.Recrypt
+- Cryptographer.RegisterHost
+- Cryptographer.RegisterVM
+- DVPortgroup.Create
+- DVPortgroup.Delete
+- DVPortgroup.Ipfix
+- DVPortgroup.Modify
+- DVPortgroup.PolicyOp
+- DVPortgroup.ScopeOp
+- DVSwitch.Create
+- DVSwitch.Delete
+- DVSwitch.HostOp
+- DVSwitch.Ipfix
+- DVSwitch.Modify
+- DVSwitch.Move
+- DVSwitch.PolicyOp
+- DVSwitch.PortConfig
+- DVSwitch.PortSetting
+- DVSwitch.ResourceManagement
+- DVSwitch.Vspan
+- Datacenter.Create
+- Datacenter.Delete
+- Datacenter.IpPoolConfig
+- Datacenter.IpPoolQueryAllocations
+- Datacenter.IpPoolReleaseIp
+- Datacenter.Move
+- Datacenter.Reconfigure
+- Datacenter.Rename
+- Datastore.AllocateSpace
+- Datastore.Browse
+- Datastore.Config
+- Datastore.Delete
+- Datastore.DeleteFile
+- Datastore.FileManagement
+- Datastore.Move
+- Datastore.Rename
+- Datastore.UpdateVirtualMachineFiles
+- Datastore.UpdateVirtualMachineMetadata
+- EAM.Config
+- EAM.Modify
+- EAM.View
+- Extension.Register
+- Extension.Unregister
+- Extension.Update
+- ExternalStatsProvider.Register
+- ExternalStatsProvider.Unregister
+- ExternalStatsProvider.Update
+- Folder.Create
+- Folder.Delete
+- Folder.Move
+- Folder.Rename
+- Global.CancelTask
+- Global.CapacityPlanning
+- Global.Diagnostics
+- Global.DisableMethods
+- Global.EnableMethods
+- Global.GlobalTag
+- Global.Health
+- Global.Licenses
+- Global.LogEvent
+- Global.ManageCustomFields
+- Global.Proxy
+- Global.ScriptAction
+- Global.ServiceManagers
+- Global.SetCustomField
+- Global.Settings
+- Global.SystemTag
+- Global.VCServer
+- GuestDataPublisher.GetData
+- HLM.Create
+- HLM.Manage
+- HealthUpdateProvider.Register
+- HealthUpdateProvider.Unregister
+- HealthUpdateProvider.Update
+- Host.Cim.CimInteraction
+- Host.Config.AdvancedConfig
+- Host.Config.AuthenticationStore
+- Host.Config.AutoStart
+- Host.Config.Connection
+- Host.Config.DateTime
+- Host.Config.Firmware
+- Host.Config.GuestStore
+- Host.Config.HyperThreading
+- Host.Config.Image
+- Host.Config.Maintenance
+- Host.Config.Memory
+- Host.Config.NetService
+- Host.Config.Network
+- Host.Config.Nvdimm
+- Host.Config.Patch
+- Host.Config.PciPassthru
+- Host.Config.Power
+- Host.Config.ProductLocker
+- Host.Config.Quarantine
+- Host.Config.Resources
+- Host.Config.Settings
+- Host.Config.Snmp
+- Host.Config.SystemManagement
+- Host.Hbr.HbrManagement
+- Host.Inventory.AddHostToCluster
+- Host.Inventory.AddStandaloneHost
+- Host.Inventory.CreateCluster
+- Host.Inventory.DeleteCluster
+- Host.Inventory.EditCluster
+- Host.Inventory.ManageClusterLifecyle
+- Host.Inventory.MoveCluster
+- Host.Inventory.MoveHost
+- Host.Inventory.RemoveHostFromCluster
+- Host.Inventory.RenameCluster
+- Host.Local.CreateVM
+- Host.Local.DeleteVM
+- Host.Local.InstallAgent
+- Host.Local.ManageUserGroups
+- Host.Local.ReconfigVM
+- Infraprofile.Read
+- Infraprofile.Write
+- IntercomNamespace.Read
+- IntercomNamespace.Write
+- InventoryService.Tagging.AttachTag
+- InventoryService.Tagging.CreateCategory
+- InventoryService.Tagging.CreateTag
+- InventoryService.Tagging.DeleteCategory
+- InventoryService.Tagging.DeleteTag
+- InventoryService.Tagging.EditCategory
+- InventoryService.Tagging.EditTag
+- InventoryService.Tagging.ModifyUsedByForCategory
+- InventoryService.Tagging.ModifyUsedByForTag
+- InventoryService.Tagging.ObjectAttachable
+- Namespaces.Backup
+- Namespaces.Configure
+- Namespaces.ListAccess
+- Namespaces.Manage
+- Namespaces.ManageCapabilities
+- Namespaces.ManageDisks
+- Namespaces.SelfServiceManage
+- Namespaces.Upgrade
+- Network.Assign
+- Network.Config
+- Network.Delete
+- Network.Move
+- Nsx.Manage
+- Nsx.ModifyAll
+- Nsx.Read
+- Observability.Admin
+- OvfManager.OvfConsumerAccess
+- Performance.ModifyIntervals
+- Plugin.Management
+- Profile.Clear
+- Profile.Create
+- Profile.Delete
+- Profile.Edit
+- Profile.Export
+- Profile.View
+- Resource.ApplyRecommendation
+- Resource.AssignVAppToPool
+- Resource.AssignVMToPool
+- Resource.ColdMigrate
+- Resource.CreatePool
+- Resource.DeletePool
+- Resource.EditPool
+- Resource.HotMigrate
+- Resource.MovePool
+- Resource.QueryVMotion
+- Resource.RenamePool
+- ScheduledTask.Create
+- ScheduledTask.Delete
+- ScheduledTask.Edit
+- ScheduledTask.Run
+- ServiceAccount.Administer
+- ServiceAccount.ManageAccount
+- ServiceAccount.ManagePassword
+- Sessions.GlobalMessage
+- Sessions.ImpersonateUser
+- Sessions.TerminateSession
+- Sessions.ValidateSession
+- SettingsStore.Manage
+- StoragePod.Config
+- StorageProfile.Update
+- StorageProfile.View
+- StorageViews.ConfigureService
+- StorageViews.View
+- SupervisorServices.Manage
+- System.Anonymous
+- System.Read
+- System.View
+- Task.Create
+- Task.Update
+- TenantManager.Query
+- TenantManager.Update
+- TransferService.Manage
+- TransferService.Monitor
+- Trust.Administer
+- Trust.Manage
+- TrustedAdmin.ConfigureHostCertificates
+- TrustedAdmin.ConfigureHostMetadata
+- TrustedAdmin.ConfigureTokenConversionPolicy
+- TrustedAdmin.ManageAttestingSSO
+- TrustedAdmin.ManageKMSTrust
+- TrustedAdmin.ManageTrustedHosts
+- TrustedAdmin.ReadAttestingSSO
+- TrustedAdmin.ReadKMSTrust
+- TrustedAdmin.ReadStsInfo
+- TrustedAdmin.ReadTrustedHosts
+- TrustedAdmin.RetrieveHostMetadata
+- TrustedAdmin.RetrieveTPMHostCertificates
+- VApp.ApplicationConfig
+- VApp.AssignResourcePool
+- VApp.AssignVApp
+- VApp.AssignVM
+- VApp.Clone
+- VApp.Create
+- VApp.Delete
+- VApp.Export
+- VApp.ExtractOvfEnvironment
+- VApp.Import
+- VApp.InstanceConfig
+- VApp.ManagedByConfig
+- VApp.Move
+- VApp.PowerOff
+- VApp.PowerOn
+- VApp.PullFromUrls
+- VApp.Rename
+- VApp.ResourceConfig
+- VApp.Suspend
+- VApp.Unregister
+- VcIdentityProviders.Create
+- VcIdentityProviders.Manage
+- VcIdentityProviders.Read
+- VcIntegrity.Baseline.com.vmware.vcIntegrity.AssignBaselines
+- VcIntegrity.Baseline.com.vmware.vcIntegrity.ManageBaselines
+- VcIntegrity.ClusterConfiguration.Export
+- VcIntegrity.ClusterConfiguration.Modify
+- VcIntegrity.ClusterConfiguration.Remediate
+- VcIntegrity.ClusterConfiguration.View
+- VcIntegrity.FileUpload.com.vmware.vcIntegrity.ImportFile
+- VcIntegrity.General.com.vmware.vcIntegrity.Configure
+- VcIntegrity.HardwareCompatibility.Read
+- VcIntegrity.HardwareCompatibility.Write
+- VcIntegrity.Updates.com.vmware.vcIntegrity.Remediate
+- VcIntegrity.Updates.com.vmware.vcIntegrity.Scan
+- VcIntegrity.Updates.com.vmware.vcIntegrity.Stage
+- VcIntegrity.Updates.com.vmware.vcIntegrity.ViewStatus
+- VcIntegrity.lifecycleDepots.Delete
+- VcIntegrity.lifecycleGeneral.Read
+- VcIntegrity.lifecycleGeneral.Write
+- VcIntegrity.lifecycleHealth.Read
+- VcIntegrity.lifecycleHealth.Write
+- VcIntegrity.lifecycleSettings.Read
+- VcIntegrity.lifecycleSettings.Write
+- VcIntegrity.lifecycleSoftwareRemediation.Read
+- VcIntegrity.lifecycleSoftwareRemediation.Write
+- VcIntegrity.lifecycleSoftwareSpecification.Read
+- VcIntegrity.lifecycleSoftwareSpecification.Write
+- VcLifecycle.Upgrade
+- VcLifecycle.View
+- VirtualMachine.Config.AddExistingDisk
+- VirtualMachine.Config.AddNewDisk
+- VirtualMachine.Config.AddRemoveDevice
+- VirtualMachine.Config.AdvancedConfig
+- VirtualMachine.Config.Annotation
+- VirtualMachine.Config.CPUCount
+- VirtualMachine.Config.ChangeTracking
+- VirtualMachine.Config.DiskExtend
+- VirtualMachine.Config.DiskLease
+- VirtualMachine.Config.EditDevice
+- VirtualMachine.Config.HostUSBDevice
+- VirtualMachine.Config.ManagedBy
+- VirtualMachine.Config.Memory
+- VirtualMachine.Config.MksControl
+- VirtualMachine.Config.QueryFTCompatibility
+- VirtualMachine.Config.QueryUnownedFiles
+- VirtualMachine.Config.RawDevice
+- VirtualMachine.Config.ReloadFromPath
+- VirtualMachine.Config.RemoveDisk
+- VirtualMachine.Config.Rename
+- VirtualMachine.Config.ResetGuestInfo
+- VirtualMachine.Config.Resource
+- VirtualMachine.Config.Settings
+- VirtualMachine.Config.SwapPlacement
+- VirtualMachine.Config.ToggleForkParent
+- VirtualMachine.Config.UpgradeVirtualHardware
+- VirtualMachine.GuestOperations.Execute
+- VirtualMachine.GuestOperations.Modify
+- VirtualMachine.GuestOperations.ModifyAliases
+- VirtualMachine.GuestOperations.Query
+- VirtualMachine.GuestOperations.QueryAliases
+- VirtualMachine.Hbr.ConfigureReplication
+- VirtualMachine.Hbr.MonitorReplication
+- VirtualMachine.Hbr.ReplicaManagement
+- VirtualMachine.Interact.AnswerQuestion
+- VirtualMachine.Interact.Backup
+- VirtualMachine.Interact.ConsoleInteract
+- VirtualMachine.Interact.CreateScreenshot
+- VirtualMachine.Interact.CreateSecondary
+- VirtualMachine.Interact.DefragmentAllDisks
+- VirtualMachine.Interact.DeviceConnection
+- VirtualMachine.Interact.DisableSecondary
+- VirtualMachine.Interact.DnD
+- VirtualMachine.Interact.EnableSecondary
+- VirtualMachine.Interact.GuestControl
+- VirtualMachine.Interact.MakePrimary
+- VirtualMachine.Interact.Pause
+- VirtualMachine.Interact.PowerOff
+- VirtualMachine.Interact.PowerOn
+- VirtualMachine.Interact.PutUsbScanCodes
+- VirtualMachine.Interact.Record
+- VirtualMachine.Interact.Replay
+- VirtualMachine.Interact.Reset
+- VirtualMachine.Interact.SESparseMaintenance
+- VirtualMachine.Interact.SetCDMedia
+- VirtualMachine.Interact.SetFloppyMedia
+- VirtualMachine.Interact.Suspend
+- VirtualMachine.Interact.SuspendToMemory
+- VirtualMachine.Interact.TerminateFaultTolerantVM
+- VirtualMachine.Interact.ToolsInstall
+- VirtualMachine.Interact.TurnOffFaultTolerance
+- VirtualMachine.Inventory.Create
+- VirtualMachine.Inventory.CreateFromExisting
+- VirtualMachine.Inventory.Delete
+- VirtualMachine.Inventory.Move
+- VirtualMachine.Inventory.Register
+- VirtualMachine.Inventory.Unregister
+- VirtualMachine.Namespace.Event
+- VirtualMachine.Namespace.EventNotify
+- VirtualMachine.Namespace.Management
+- VirtualMachine.Namespace.ModifyContent
+- VirtualMachine.Namespace.Query
+- VirtualMachine.Namespace.ReadContent
+- VirtualMachine.Provisioning.Clone
+- VirtualMachine.Provisioning.CloneTemplate
+- VirtualMachine.Provisioning.CreateTemplateFromVM
+- VirtualMachine.Provisioning.Customize
+- VirtualMachine.Provisioning.DeployTemplate
+- VirtualMachine.Provisioning.DiskRandomAccess
+- VirtualMachine.Provisioning.DiskRandomRead
+- VirtualMachine.Provisioning.FileRandomAccess
+- VirtualMachine.Provisioning.GetVmFiles
+- VirtualMachine.Provisioning.MarkAsTemplate
+- VirtualMachine.Provisioning.MarkAsVM
+- VirtualMachine.Provisioning.ModifyCustSpecs
+- VirtualMachine.Provisioning.PromoteDisks
+- VirtualMachine.Provisioning.PutVmFiles
+- VirtualMachine.Provisioning.ReadCustSpecs
+- VirtualMachine.State.CreateSnapshot
+- VirtualMachine.State.RemoveSnapshot
+- VirtualMachine.State.RenameSnapshot
+- VirtualMachine.State.RevertToSnapshot
+- VirtualMachineClasses.Manage
+- Vsan.Cluster.ShallowRekey
+- vService.CreateDependency
+- vService.DestroyDependency
+- vService.ReconfigureDependency
+- vService.UpdateDependency
+- vSphereClient.UtilizeVerificationCode
+- vSphereDataProtection.Protection
+- vSphereDataProtection.Recovery
+- vStats.CollectAny
+- vStats.QueryAny
+- vStats.Settings
