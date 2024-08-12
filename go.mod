@@ -16,11 +16,11 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.1.3-0.20240809205255-c05a36eebd3c
-	github.com/validator-labs/validator-plugin-aws v0.1.4-0.20240809205833-8085473f77df
+	github.com/validator-labs/validator v0.1.3
+	github.com/validator-labs/validator-plugin-aws v0.1.4-0.20240812193638-c4875b6bcbf6
 	github.com/validator-labs/validator-plugin-azure v0.0.16-0.20240809210033-fab1ab878d10
 	github.com/validator-labs/validator-plugin-network v0.0.23-0.20240809205936-18ffc3b792c4
-	github.com/validator-labs/validator-plugin-oci v0.1.1-0.20240809205756-c1942b7a7104
+	github.com/validator-labs/validator-plugin-oci v0.2.0
 	github.com/validator-labs/validator-plugin-vsphere v0.0.30-0.20240809210242-a318dfc2be38
 	github.com/vmware/govmomi v0.39.0
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
@@ -29,7 +29,7 @@ require (
 	k8s.io/apimachinery v0.30.3
 	k8s.io/client-go v0.30.3
 	k8s.io/helm v2.17.0+incompatible
-	sigs.k8s.io/controller-runtime v0.18.4
+	sigs.k8s.io/controller-runtime v0.18.5
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -243,11 +243,11 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.30.1 // indirect
+	k8s.io/apiextensions-apiserver v0.30.3 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240521193020-835d969ad83a // indirect
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0 // indirect
-	sigs.k8s.io/cluster-api v1.7.4 // indirect
+	sigs.k8s.io/cluster-api v1.8.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/release-utils v0.8.4 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
