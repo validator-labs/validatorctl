@@ -57,7 +57,6 @@ func readMaasPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClien
 	if err := readMaasCredentials(c, tc, k8sClient); err != nil {
 		return fmt.Errorf("failed to read MAAS credentials: %w", err)
 	}
-
 	return nil
 }
 
