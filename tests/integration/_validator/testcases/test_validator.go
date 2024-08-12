@@ -55,21 +55,21 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testInstallSilent(); result.IsFailed() {
 		return result
 	}
-	// if result := t.testInstallSilentWait(); result.IsFailed() {
-	// 	return result
-	// }
-	// if result := t.testCheckDirect(); result.IsFailed() {
-	// 	return result
-	// }
-	// if result := t.testDescribe(); result.IsFailed() {
-	// 	return result
-	// }
-	// if result := t.testUndeploy(); result.IsFailed() {
-	// 	return result
-	// }
-	// if result := t.testInstallUpdatePasswords(); result.IsFailed() {
-	// 	return result
-	// }
+	if result := t.testInstallSilentWait(); result.IsFailed() {
+		return result
+	}
+	if result := t.testCheckDirect(); result.IsFailed() {
+		return result
+	}
+	if result := t.testDescribe(); result.IsFailed() {
+		return result
+	}
+	if result := t.testUndeploy(); result.IsFailed() {
+		return result
+	}
+	if result := t.testInstallUpdatePasswords(); result.IsFailed() {
+		return result
+	}
 	return test.Success()
 }
 
