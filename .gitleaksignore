@@ -5,3 +5,4 @@ e7156f3be822e9da88949cd9405e8eedde836e5f:tests/integration/_validator/testcases/
 481cdf910c0bc555363ae4278b2f57a66a72ed6b:tests/integration/_validator/testcases/data/validator.yaml:generic-api-key:27
 481cdf910c0bc555363ae4278b2f57a66a72ed6b:tests/integration/_validator/testcases/data/validator.yaml:generic-api-key:51
 hack/validator.tmpl:generic-api-key:538
+hack/validator.tmpl:generic-api-key:865
