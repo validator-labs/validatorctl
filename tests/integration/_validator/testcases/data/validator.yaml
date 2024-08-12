@@ -827,6 +827,7 @@ azurePlugin:
       secretName: azure-creds
 maasPlugin:
   enabled: true
+  maasApiToken: "jG81nj7n8feUpHaIU/gFH2tLaqcnSshrpCiziFt+0JZ7OA=="
   helmRelease:
     chart:
       name: validator-plugin-maas

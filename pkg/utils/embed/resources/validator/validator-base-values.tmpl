@@ -195,7 +195,7 @@ pluginSecrets:
   vSphere: {}
   {{- end }}
 
-  {{- if .MAASPlugin.Validator.Auth.SecretName }}
+  {{- if .MAASPlugin.Enabled }}
   maas:
     secretName: {{ .MAASPlugin.Validator.Auth.SecretName }}
     tokenKey: {{ .MAASPlugin.Validator.Auth.TokenKey }}

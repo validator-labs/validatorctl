@@ -560,6 +560,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		}
 		results = append(results, vr)
 	}
+
 	if vc.NetworkPlugin.Enabled {
 		v := &netapi.NetworkValidator{
 			ObjectMeta: metav1.ObjectMeta{
