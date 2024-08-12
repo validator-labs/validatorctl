@@ -282,6 +282,20 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 	r.Host = strings.TrimSuffix(host, "/")
 
+	log.InfoCLI(`
+	The following validation types are available:,
+	- 'none': only the existence of the artifacts in the registry is validated
+    - 'fast': the artifacts are pulled and fast layer, manifest, and config validation is performed
+    - 'full': the artifacts are pulled and full layer, manifest, and config validation is performed
+    More information on fast and full validation can be found at:
+    https://github.com/validator-labs/validator-plugin-oci/blob/9847a0ac4fde8f91dd5ea68f83db79edafbd1a61/api/v1alpha1/ocivalidator_types.go#L51-L63
+	`)
+	vType, err := prompts.Select("Validation type", []string{string(plug.ValidationTypeNone), string(plug.ValidationTypeFast), string(plug.ValidationTypeFull)})
+	if err != nil {
+		return err
+	}
+	r.ValidationType = plug.ValidationType(vType)
+
 	authSecretName, err := prompts.Select("Registry authentication secret name, select N/A for public registries", authSecretNames)
 	if err != nil {
 		return err
@@ -343,12 +357,6 @@ func readArtifactRefs(r *plug.OciRegistryRule) error {
 		r.Artifacts[i] = plug.Artifact{
 			Ref: strings.TrimPrefix(a, fmt.Sprintf("%s/", r.Host)),
 		}
-	}
-
-	log.InfoCLI("Full layer validation is enabled by default for all artifacts.")
-	r.SkipLayerValidation, err = prompts.ReadBool("Disable full layer validation for all artifacts", false)
-	if err != nil {
-		return err
 	}
 
 	return nil
