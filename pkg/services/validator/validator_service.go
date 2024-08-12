@@ -249,13 +249,13 @@ func handlePlugins(vc *components.ValidatorConfig, tc *cfg.TaskConfig, kClient k
 		log.Header("MAAS Plugin")
 		log.InfoCLI(`
 	The MAAS validator plugin reconciles MaasValidator custom resources to perform
-	the following validation against your network:
+	the following validation against your MAAS cluster:
 
-	- Upstream DNS
-	- Internal DNS
-	- Resources
-	- OS Images
-		`) // TODO - elaborate
+	- Check that a certain number of Upstream DNS servers are configured.
+	- Check that the expected Internal DNS settings are present.
+	- Check that the expected number of Machines matching a certain spec are "Ready" for use in each Availability Zone.
+	- Check that all required OS Images are "Synced" to the cluster.
+		`)
 		vc.MaasPlugin.Enabled, err = prompts.ReadBool(fmt.Sprintf("%s MAAS plugin", verb), true)
 		if err != nil {
 			return err
