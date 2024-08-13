@@ -400,8 +400,8 @@ func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string) []
 		"public ecr registry",    // rule name
 		"public.ecr.aws",         // registry host
 		"N/A",                    // registry auth secret name
+		"none",                   // validation type
 		"public.ecr.aws/u5n5j0b4/oci-test-public", // artifact references
-		"y",   // disable full layer validation
 		"N/A", // signature verification secret name
 		"",    // ca certificate
 		"n",   // add another registry rule
