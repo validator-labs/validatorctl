@@ -264,9 +264,6 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
-// replace github.com/spectrocloud-labs/prompts-tui => ../../spectrocloud-labs/prompts-tui
-replace github.com/canonical/gomaasclient v0.6.0 => github.com/arturshadnik/gomaasclient v0.0.0-20240731231205-8239cfb13409
-
 // replace github.com/validator-labs/validator => ../validator
 
 replace github.com/canonical/gomaasclient v0.6.0 => github.com/arturshadnik/gomaasclient v0.0.0-20240731231205-8239cfb13409
