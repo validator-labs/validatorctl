@@ -549,11 +549,6 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.MaasPlugin.Validator,
 		}
 		vr := vres.Build(v)
-		// TODO: set TypeMeta in vres.Build
-		vr.TypeMeta = metav1.TypeMeta{
-			APIVersion: "validation.spectrocloud.labs/v1alpha1",
-			Kind:       "MaasValidator",
-		}
 		vrr := maasval.Validate(*vc.MaasPlugin.Validator, vc.MaasPlugin.Validator.Host, vc.MaasPlugin.MaasAPIToken, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
@@ -1024,10 +1019,19 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		}
 	}
 
-	if vc.VspherePlugin.Enabled {
-		log.InfoCLI("\n==== Applying vSphere plugin validator(s) ====")
+	if vc.AzurePlugin.Enabled {
+		log.InfoCLI("\n==== Applying Azure plugin validator(s) ====")
 		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginVsphere, cfg.ValidatorPluginVsphereTemplate, *vc.VspherePlugin.Validator,
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginAzure, cfg.ValidatorPluginAzureTemplate, *vc.AzurePlugin.Validator,
+		); err != nil {
+			return err
+		}
+	}
+
+	if vc.MaasPlugin.Enabled {
+		log.InfoCLI("\n==== Applying MAAS plugin validator(s) ====")
+		if err := createValidator(
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginMaas, cfg.ValidatorPluginMaasTemplate, *vc.MaasPlugin.Validator,
 		); err != nil {
 			return err
 		}
@@ -1051,19 +1055,10 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		}
 	}
 
-	if vc.AzurePlugin.Enabled {
-		log.InfoCLI("\n==== Applying Azure plugin validator(s) ====")
+	if vc.VspherePlugin.Enabled {
+		log.InfoCLI("\n==== Applying vSphere plugin validator(s) ====")
 		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginAzure, cfg.ValidatorPluginAzureTemplate, *vc.AzurePlugin.Validator,
-		); err != nil {
-			return err
-		}
-	}
-
-	if vc.MaasPlugin.Enabled {
-		log.InfoCLI("\n==== Applying MAAS plugin validator(s) ====")
-		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginMaas, cfg.ValidatorPluginMaasTemplate, *vc.MaasPlugin.Validator,
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginVsphere, cfg.ValidatorPluginVsphereTemplate, *vc.VspherePlugin.Validator,
 		); err != nil {
 			return err
 		}
