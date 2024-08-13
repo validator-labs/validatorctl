@@ -12,6 +12,7 @@ import (
 	tuimocks "github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
 
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
@@ -492,10 +493,11 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 
 func (t *ValidatorTest) maasPluginInstallValues(ctx *test.TestContext, vals []string) []string {
 	maasVals := []string{
-		"y",                  // install MAAS plugin
-		"maas-creds",         // MAAS credentials secret name
-		"MAAS_API_KEY",       // MAAS API token key
-		"fake:maasapi:token", // MAAS API token
+		"y",                   // install MAAS plugin
+		"maas-creds",          // MAAS credentials secret name
+		"MAAS_API_KEY",        // MAAS API token key
+		"fake:maasapi:token",  // MAAS API token
+		"http://maas.io/MAAS", // MAAS Domain
 	}
 
 	if string_utils.IsDevVersion(ctx.Get("version")) {
@@ -511,37 +513,36 @@ func (t *ValidatorTest) maasPluginInstallValues(ctx *test.TestContext, vals []st
 
 func (t *ValidatorTest) maasPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
 	maasVals := []any{
-		"http://maas.io/MAAS", // MAAS Domain
-		"y",                   // Enable Resource Availibility validation
-		"res-rule-1",          // Rule name
-		"az1",                 // Availability Zone
-		"1",                   // Minimum number of machines
-		"4",                   // Minimum CPU cores per machine
-		"16",                  // Minimum RAM in GB
-		"256",                 // Minimum Disk capacity in GB
-		"pool1",               // Machine pool
-		[]string{"tag1"},      // Tags
-		"n",                   // Add another resource
-		"n",                   // Add another resource rule
-		"y",                   // Enable os image validation
-		"os-rule-1",           // Rule name
-		"ubuntu/jammy",        // image name
-		"amd64/ga-22.04",      // image architecture
-		"n",                   // Add another image
-		"n",                   // Add another image rule
-		"y",                   // Enable internal DNS validation
-		"maas.io",             // MAAS Domain
-		"subdomain.maas.io",   // FQDN
-		"10.10.10.10",         // IP
-		"A",                   // Record type
-		"10",                  // ttl
-		"n",                   // add another record
-		"n",                   // add another resource
-		"n",                   // add another internal DNS rule
-		"y",                   // Enable upstream DNS validation
-		"udns-rule-1",         // Rule name
-		"1",                   // Expected number of servers
-		"n",                   // Add another upstream dns rule
+		"y",                 // Enable Resource Availibility validation
+		"res-rule-1",        // Rule name
+		"az1",               // Availability Zone
+		"1",                 // Minimum number of machines
+		"4",                 // Minimum CPU cores per machine
+		"16",                // Minimum RAM in GB
+		"256",               // Minimum Disk capacity in GB
+		"pool1",             // Machine pool
+		[]string{"tag1"},    // Tags
+		"n",                 // Add another resource
+		"n",                 // Add another resource rule
+		"y",                 // Enable os image validation
+		"os-rule-1",         // Rule name
+		"ubuntu/jammy",      // image name
+		"amd64/ga-22.04",    // image architecture
+		"n",                 // Add another image
+		"n",                 // Add another image rule
+		"y",                 // Enable internal DNS validation
+		"maas.io",           // MAAS Domain
+		"subdomain.maas.io", // FQDN
+		"10.10.10.10",       // IP
+		"A",                 // Record type
+		"10",                // ttl
+		"n",                 // add another record
+		"n",                 // add another resource
+		"n",                 // add another internal DNS rule
+		"y",                 // Enable upstream DNS validation
+		"udns-rule-1",       // Rule name
+		"1",                 // Expected number of servers
+		"n",                 // Add another upstream dns rule
 	}
 	return interleave(vals, sliceVals, maasVals)
 }
@@ -695,6 +696,7 @@ func (t *ValidatorTest) PreRequisite(ctx *test.TestContext) (tr *test.TestResult
 	}
 
 	t.initVsphereDriver(ctx)
+	t.overrideMaasClientProps()
 
 	return test.Success()
 }
@@ -729,4 +731,19 @@ func (t *ValidatorTest) updateTestData(tokens map[string]string) error {
 
 func (t *ValidatorTest) filePath(file string) string {
 	return fmt.Sprintf("%s/%s/%s", file_utils.ValidatorTestCasesPath(), "data", file)
+}
+
+func (t *ValidatorTest) overrideMaasClientProps() {
+	clouds.ReadMaasClientProps = func(c *components.MaasPluginConfig) error {
+		var err error
+		c.MaasAPIToken, err = prompts.ReadText("Token", "", false, -1)
+		if err != nil {
+			return err
+		}
+		c.Validator.Host, err = prompts.ReadText("Domain", "", false, -1)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 }

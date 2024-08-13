@@ -79,6 +79,7 @@ var (
 	RegistryMirrors         = []string{"docker.io", "gcr.io", "ghcr.io", "k8s.gcr.io", "registry.k8s.io", "quay.io", "*"}
 	RegistryMirrorSeparator = "::"
 	FileInputs              = []string{LocalFilepath, FileEditor}
+	DNSRecordTypes          = []string{"A", "AAAA", "CNAME", "TXT", "MX", "NS", "SRV", "SSHFP"}
 
 	// Command dirs
 	ValidatorSubdirs = []string{"logs", "manifests"}

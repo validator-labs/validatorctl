@@ -3,7 +3,6 @@ package validator
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 	"time"
 
 	"k8s.io/client-go/kubernetes"
@@ -13,12 +12,12 @@ import (
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
+	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 
 	vpmaasapi "github.com/validator-labs/validator-plugin-maas/api/v1alpha1"
 )
 
 var (
-	host           = "https://maas.io/MAAS"
 	maasSecretName = "maas-creds"
 	maasTokenKey   = "MAAS_API_KEY"
 )
@@ -63,17 +62,7 @@ func readMaasPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClien
 // nolint:dupl
 func readMaasPluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _ kubernetes.Interface) error {
 	log.Header("MAAS Plugin Rule Configuration")
-	var err error
 	c := vc.MaasPlugin
-
-	if c.Validator.Host != "" {
-		host = c.Validator.Host
-	}
-	c.Validator.Host, err = prompts.ReadText("MAAS Domain", host, false, -1)
-	if err != nil {
-		return err
-	}
-
 	ruleNames := make([]string, 0)
 
 	if err := configureMaasResourceRules(c, &ruleNames); err != nil {
@@ -122,7 +111,7 @@ func readMaasCredentials(c *components.MaasPluginConfig, tc *cfg.TaskConfig, k8s
 		}
 
 		if !tc.Direct {
-			c.Validator.Auth.SecretName, err = prompts.ReadText("MAAS credentials secret name", maasSecretName, false, -1)
+			c.Validator.Auth.SecretName, err = prompts.ReadK8sName("MAAS credentials secret name", maasSecretName, false)
 			if err != nil {
 				return fmt.Errorf("failed to prompt for text for MAAS credentials secret name: %w", err)
 			}
@@ -132,9 +121,8 @@ func readMaasCredentials(c *components.MaasPluginConfig, tc *cfg.TaskConfig, k8s
 			}
 		}
 
-		c.MaasAPIToken, err = prompts.ReadPassword("MAAS API token", c.MaasAPIToken, false, -1)
-		if err != nil {
-			return fmt.Errorf("failed to prompt for password for MAAS API token: %w", err)
+		if err := clouds.ReadMaasClientProps(c); err != nil {
+			return err
 		}
 
 	} else {
@@ -157,7 +145,7 @@ func readMaasCredentials(c *components.MaasPluginConfig, tc *cfg.TaskConfig, k8s
 func configureMaasResourceRules(c *components.MaasPluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	Resource Availability validation checks that the required number of machines
-	matching a certain criteria are "Ready" for use in an availability zone. 
+	matching certain criteria are "Ready" for use in an availability zone. 
 	Each availability zone should have no more than 1 rule configured.
 	`)
 
@@ -220,14 +208,6 @@ func readMaasResourceRule(c *components.MaasPluginConfig, r *vpmaasapi.ResourceA
 		return err
 	}
 
-	if r.Name == "" {
-		name, err := prompts.ReadText("Rule Name", "", false, -1)
-		if err != nil {
-			return err
-		}
-		r.Name = name
-	}
-
 	if r.AZ == "" {
 		az, err := prompts.ReadText("Availability Zone", "az1", false, -1)
 		if err != nil {
@@ -239,7 +219,7 @@ func readMaasResourceRule(c *components.MaasPluginConfig, r *vpmaasapi.ResourceA
 	addResources := true
 
 	for addResources {
-		resource, err := readMaasResource()
+		resource, err := readMaasResource(c)
 		if err != nil {
 			return err
 		}
@@ -259,7 +239,7 @@ func readMaasResourceRule(c *components.MaasPluginConfig, r *vpmaasapi.ResourceA
 }
 
 // nolint:dupl
-func readMaasResource() (vpmaasapi.Resource, error) {
+func readMaasResource(c *components.MaasPluginConfig) (vpmaasapi.Resource, error) {
 	res := vpmaasapi.Resource{}
 
 	numMachines, err := prompts.ReadInt("Minimum number of machines", "1", 1, -1)
@@ -286,7 +266,11 @@ func readMaasResource() (vpmaasapi.Resource, error) {
 	}
 	res.Disk = disk
 
-	pool, err := prompts.ReadText("Machine pool", "", true, -1)
+	resourcePools, err := clouds.GetMaasResourcePools(c)
+	if err != nil {
+		return res, err
+	}
+	pool, err := prompts.Select("Machine pool", resourcePools)
 	if err != nil {
 		return res, err
 	}
@@ -368,14 +352,6 @@ func readMaasImageRule(c *components.MaasPluginConfig, r *vpmaasapi.ImageRule, i
 		return err
 	}
 
-	if r.Name == "" {
-		name, err := prompts.ReadText("Rule Name", "", false, -1)
-		if err != nil {
-			return err
-		}
-		r.Name = name
-	}
-
 	addImages := true
 
 	for addImages {
@@ -402,13 +378,13 @@ func readMaasImageRule(c *components.MaasPluginConfig, r *vpmaasapi.ImageRule, i
 func readMaasImage() (vpmaasapi.Image, error) {
 	img := vpmaasapi.Image{}
 
-	name, err := prompts.ReadText("Image name", "ubuntu/jammy", false, -1)
+	name, err := prompts.ReadText("Image name (standard or custom)", "ubuntu/jammy", false, -1)
 	if err != nil {
 		return img, err
 	}
 	img.Name = name
 
-	arch, err := prompts.ReadText("Architecture", "amd64/ga-22.04", false, -1)
+	arch, err := prompts.ReadText("Architecture formatted as <platform>/<release> (e.g amd64/ga-22.04, arm64/hwe-20.04-edge)", "amd64/ga-22.04", false, -1)
 	if err != nil {
 		return img, err
 	}
@@ -548,28 +524,19 @@ func readMaasDNSRecord() (vpmaasapi.DNSRecord, error) {
 	}
 	rec.IP = ip
 
-	recType, err := prompts.ReadText("Record type", "A", false, -1)
+	recType, err := prompts.Select("Record type", cfg.DNSRecordTypes)
 	if err != nil {
 		return rec, err
 	}
 	rec.Type = recType
 
-	ttl, err := prompts.ReadText("TTL", "", true, -1)
+	ttl, err := prompts.ReadInt("TTL in seconds (optional, enter -1 to skip)", "-1", -1, -1)
 	if err != nil {
 		return rec, err
 	}
-	if ttl != "" {
-		ttlInt, err := strconv.Atoi(ttl)
-		if err != nil {
-			return rec, err
-		}
-		if ttlInt >= 0 {
-			rec.TTL = ttlInt
-		}
-	}
+	rec.TTL = ttl
 
 	return rec, nil
-
 }
 
 // nolint:dupl
@@ -633,14 +600,6 @@ func readMaasUpstreamDNSRule(c *components.MaasPluginConfig, r *vpmaasapi.Upstre
 	err := initMaasRule(r, "Upstream DNS", ruleNames)
 	if err != nil {
 		return err
-	}
-
-	if r.Name == "" {
-		name, err := prompts.ReadText("Rule Name", "", false, -1)
-		if err != nil {
-			return err
-		}
-		r.Name = name
 	}
 
 	if r.NumDNSServers <= 0 {
