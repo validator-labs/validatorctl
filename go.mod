@@ -5,6 +5,7 @@ go 1.22.5
 require (
 	emperror.dev/errors v0.8.1
 	github.com/L30Bola/aws-policy v0.0.0-20230126045340-5e6118545ac1
+	github.com/canonical/gomaasclient v0.6.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
@@ -19,6 +20,7 @@ require (
 	github.com/validator-labs/validator v0.1.4
 	github.com/validator-labs/validator-plugin-aws v0.1.4
 	github.com/validator-labs/validator-plugin-azure v0.0.16
+	github.com/validator-labs/validator-plugin-maas v0.0.8-0.20240809210245-5894f5118612
 	github.com/validator-labs/validator-plugin-network v0.0.23
 	github.com/validator-labs/validator-plugin-oci v0.2.0
 	github.com/validator-labs/validator-plugin-vsphere v0.0.30
@@ -108,6 +110,7 @@ require (
 	github.com/cyberphone/json-canonicalization v0.0.0-20231011164504-785e29786b46 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
 	github.com/digitorus/pkcs7 v0.0.0-20230818184609-3a137a874352 // indirect
 	github.com/digitorus/timestamp v0.0.0-20231217203849-220c5c2851b7 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
@@ -163,6 +166,13 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/juju/collections v1.0.4 // indirect
+	github.com/juju/errors v1.0.0 // indirect
+	github.com/juju/gomaasapi/v2 v2.3.0 // indirect
+	github.com/juju/loggo v1.0.0 // indirect
+	github.com/juju/mgo/v2 v2.0.2 // indirect
+	github.com/juju/schema v1.0.1 // indirect
+	github.com/juju/version v0.0.0-20210303051006-2015802527a8 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
@@ -242,6 +252,7 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.30.3 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
@@ -253,6 +264,6 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
-// replace github.com/spectrocloud-labs/prompts-tui => ../../spectrocloud-labs/prompts-tui
-
 // replace github.com/validator-labs/validator => ../validator
+
+replace github.com/canonical/gomaasclient v0.6.0 => github.com/arturshadnik/gomaasclient v0.0.0-20240731231205-8239cfb13409

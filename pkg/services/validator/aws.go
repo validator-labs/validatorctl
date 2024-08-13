@@ -137,6 +137,7 @@ func configureIamRoleRules(c *components.AWSPluginConfig, ruleNames *[]string) e
 	return nil
 }
 
+// nolint:dupl
 func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx int, ruleNames *[]string) error {
 	if r == nil {
 		r = &vpawsapi.IamRoleRule{
@@ -225,6 +226,7 @@ func configureIamUserRules(c *components.AWSPluginConfig, ruleNames *[]string) e
 	return nil
 }
 
+// nolint:dupl
 func readIamUserRule(c *components.AWSPluginConfig, r *vpawsapi.IamUserRule, idx int, ruleNames *[]string) error {
 	if r == nil {
 		r = &vpawsapi.IamUserRule{
@@ -313,6 +315,7 @@ func configureIamGroupRules(c *components.AWSPluginConfig, ruleNames *[]string) 
 	return nil
 }
 
+// nolint:dupl
 func readIamGroupRule(c *components.AWSPluginConfig, r *vpawsapi.IamGroupRule, idx int, ruleNames *[]string) error {
 	if r == nil {
 		r = &vpawsapi.IamGroupRule{

@@ -28,6 +28,8 @@ import (
 	awsval "github.com/validator-labs/validator-plugin-aws/pkg/validate"
 	azureapi "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
 	azureval "github.com/validator-labs/validator-plugin-azure/pkg/validate"
+	maasapi "github.com/validator-labs/validator-plugin-maas/api/v1alpha1"
+	maasval "github.com/validator-labs/validator-plugin-maas/pkg/validate"
 	netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	netval "github.com/validator-labs/validator-plugin-network/pkg/validate"
 	ociapi "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
@@ -538,6 +540,22 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		results = append(results, vr)
 	}
 
+	if vc.MaasPlugin.Enabled {
+		v := &maasapi.MaasValidator{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "maas-validator",
+				Namespace: "N/A",
+			},
+			Spec: *vc.MaasPlugin.Validator,
+		}
+		vr := vres.Build(v)
+		vrr := maasval.Validate(*vc.MaasPlugin.Validator, vc.MaasPlugin.Validator.Host, vc.MaasPlugin.MaasAPIToken, l)
+		if err := vres.Finalize(vr, vrr, l); err != nil {
+			return err
+		}
+		results = append(results, vr)
+	}
+
 	if vc.NetworkPlugin.Enabled {
 		v := &netapi.NetworkValidator{
 			ObjectMeta: metav1.ObjectMeta{
@@ -739,6 +757,22 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		pluginCount++
 	}
 
+	if vc.MaasPlugin.Enabled {
+		args := map[string]interface{}{
+			"Config":        vc.MaasPlugin,
+			"ImageRegistry": vc.ImageRegistry,
+		}
+		values, err := embed.EFS.RenderTemplateBytes(args, cfg.Validator, "validator-plugin-maas-values.tmpl")
+		if err != nil {
+			return errors.Wrap(err, "failed to render validator plugin maas values.yaml")
+		}
+		validatorSpec.Plugins = append(validatorSpec.Plugins, vapi.HelmRelease{
+			Chart:  vc.MaasPlugin.Release.Chart,
+			Values: string(values),
+		})
+		pluginCount++
+	}
+
 	if vc.NetworkPlugin.Enabled {
 		args := map[string]interface{}{
 			"Config":        vc.NetworkPlugin,
@@ -799,6 +833,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 		"SinkConfig":    vc.SinkConfig,
 		"AWSPlugin":     vc.AWSPlugin,
 		"AzurePlugin":   vc.AzurePlugin,
+		"MAASPlugin":    vc.MaasPlugin,
 		"NetworkPlugin": vc.NetworkPlugin,
 		"OCIPlugin":     vc.OCIPlugin,
 		"VspherePlugin": vc.VspherePlugin,
@@ -984,10 +1019,19 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		}
 	}
 
-	if vc.VspherePlugin.Enabled {
-		log.InfoCLI("\n==== Applying vSphere plugin validator(s) ====")
+	if vc.AzurePlugin.Enabled {
+		log.InfoCLI("\n==== Applying Azure plugin validator(s) ====")
 		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginVsphere, cfg.ValidatorPluginVsphereTemplate, *vc.VspherePlugin.Validator,
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginAzure, cfg.ValidatorPluginAzureTemplate, *vc.AzurePlugin.Validator,
+		); err != nil {
+			return err
+		}
+	}
+
+	if vc.MaasPlugin.Enabled {
+		log.InfoCLI("\n==== Applying MAAS plugin validator(s) ====")
+		if err := createValidator(
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginMaas, cfg.ValidatorPluginMaasTemplate, *vc.MaasPlugin.Validator,
 		); err != nil {
 			return err
 		}
@@ -1011,10 +1055,10 @@ func applyPlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		}
 	}
 
-	if vc.AzurePlugin.Enabled {
-		log.InfoCLI("\n==== Applying Azure plugin validator(s) ====")
+	if vc.VspherePlugin.Enabled {
+		log.InfoCLI("\n==== Applying vSphere plugin validator(s) ====")
 		if err := createValidator(
-			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginAzure, cfg.ValidatorPluginAzureTemplate, *vc.AzurePlugin.Validator,
+			vc.Kubeconfig, c.RunLoc, cfg.ValidatorPluginVsphere, cfg.ValidatorPluginVsphereTemplate, *vc.VspherePlugin.Validator,
 		); err != nil {
 			return err
 		}

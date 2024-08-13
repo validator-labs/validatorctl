@@ -11,6 +11,7 @@ import (
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	tuimocks "github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
 
+	maasclient "github.com/canonical/gomaasclient/client"
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
@@ -113,6 +114,7 @@ func (t *ValidatorTest) testInstallInteractive(ctx *test.TestContext) (tr *test.
 	// Install values
 	tuiVals = t.awsPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.azurePluginInstallValues(ctx, tuiVals)
+	tuiVals = t.maasPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.networkPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.ociPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.vspherePluginInstallValues(ctx, tuiVals)
@@ -138,6 +140,7 @@ func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *
 	// Install values
 	tuiVals = t.awsPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.azurePluginInstallValues(ctx, tuiVals)
+	tuiVals = t.maasPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.networkPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.ociPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.vspherePluginInstallValues(ctx, tuiVals)
@@ -147,6 +150,7 @@ func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *
 	tuiSliceVals := make([][]string, 0)
 	tuiVals, tuiSliceVals = t.awsPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals = t.azurePluginValues(ctx, tuiVals)
+	tuiVals, tuiSliceVals = t.maasPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals, tuiSliceVals = t.networkPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals = t.ociPluginValues(ctx, tuiVals)
 	tuiVals = t.vspherePluginValues(ctx, tuiVals)
@@ -487,6 +491,62 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 	return vals
 }
 
+func (t *ValidatorTest) maasPluginInstallValues(ctx *test.TestContext, vals []string) []string {
+	maasVals := []string{
+		"y",                   // install MAAS plugin
+		"maas-creds",          // MAAS credentials secret name
+		"MAAS_API_KEY",        // MAAS API token key
+		"fake:maasapi:token",  // MAAS API token
+		"http://maas.io/MAAS", // MAAS Domain
+	}
+
+	if string_utils.IsDevVersion(ctx.Get("version")) {
+		maasVals = slices.Insert(maasVals, 1,
+			cfg.ValidatorChartVersions[cfg.ValidatorPluginMaas],
+		)
+	}
+
+	vals = append(vals, maasVals...)
+	return vals
+
+}
+
+func (t *ValidatorTest) maasPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+	maasVals := []any{
+		"y",                 // Enable Resource Availibility validation
+		"res-rule-1",        // Rule name
+		"az1",               // Availability Zone
+		"1",                 // Minimum number of machines
+		"4",                 // Minimum CPU cores per machine
+		"16",                // Minimum RAM in GB
+		"256",               // Minimum Disk capacity in GB
+		"pool1",             // Machine pool
+		[]string{"tag1"},    // Tags
+		"n",                 // Add another resource
+		"n",                 // Add another resource rule
+		"y",                 // Enable os image validation
+		"os-rule-1",         // Rule name
+		"ubuntu/jammy",      // image name
+		"amd64/ga-22.04",    // image architecture
+		"n",                 // Add another image
+		"n",                 // Add another image rule
+		"y",                 // Enable internal DNS validation
+		"maas.io",           // MAAS Domain
+		"subdomain.maas.io", // FQDN
+		"10.10.10.10",       // IP
+		"A",                 // Record type
+		"10",                // ttl
+		"n",                 // add another record
+		"n",                 // add another resource
+		"n",                 // add another internal DNS rule
+		"y",                 // Enable upstream DNS validation
+		"udns-rule-1",       // Rule name
+		"1",                 // Expected number of servers
+		"n",                 // Add another upstream dns rule
+	}
+	return interleave(vals, sliceVals, maasVals)
+}
+
 func interleave(vals []string, sliceVals [][]string, inputVals []any) ([]string, [][]string) {
 	for _, val := range inputVals {
 		switch v := val.(type) {
@@ -603,6 +663,11 @@ func (t *ValidatorTest) testInstallUpdatePasswords() (tr *test.TestResult) {
 			"d551b7b1-78ae-43df-9d61-4935c843a454", // Azure Client ID
 			"test_azure_client_secret",             // Azure Client Secret
 
+			// MAAS validator
+			"maas-creds",         // MAAS credentials secret name
+			"MAAS_API_KEY",       // MAAS API token key
+			"fake:maasapi:token", // MAAS API token
+
 			// OCI validator
 			"y",         // Add basic auth credentials
 			"user2",     // Registry username
@@ -631,6 +696,7 @@ func (t *ValidatorTest) PreRequisite(ctx *test.TestContext) (tr *test.TestResult
 	}
 
 	t.initVsphereDriver(ctx)
+	t.overrideMaasClient(ctx)
 
 	return test.Success()
 }
@@ -648,6 +714,10 @@ func (t *ValidatorTest) TearDown(ctx *test.TestContext) {
 	// restore clouds.GetVSphereDriver
 	vsphereDriverFunc := ctx.Get("vsphereDriverFunc")
 	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account *vsphere.CloudAccount) (vsphere.Driver, error))
+
+	// restore clouds.GetMaasClient
+	maasClientFunc := ctx.Get("maasClientFunc")
+	clouds.GetMaasClient = maasClientFunc.(func(maasURL, maasToken string) (*maasclient.Client, error))
 }
 
 // updateTestData updates the hard-coded validator config used for silent installation tests
@@ -665,4 +735,15 @@ func (t *ValidatorTest) updateTestData(tokens map[string]string) error {
 
 func (t *ValidatorTest) filePath(file string) string {
 	return fmt.Sprintf("%s/%s/%s", file_utils.ValidatorTestCasesPath(), "data", file)
+}
+
+func (t *ValidatorTest) overrideMaasClient(ctx *test.TestContext) {
+	maasClientFunc := clouds.GetMaasClient
+	ctx.Put("maasClientFunc", maasClientFunc)
+	clouds.GetMaasClient = func(maasURL, maasToken string) (*maasclient.Client, error) {
+		client := &maasclient.Client{}
+		client.Account = &clouds.MockMaasAccount{}
+
+		return client, nil
+	}
 }
