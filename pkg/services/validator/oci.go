@@ -282,6 +282,14 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 	r.Host = strings.TrimSuffix(host, "/")
 
+	authSecretName, err := prompts.Select("Registry authentication secret name, select N/A for public registries", authSecretNames)
+	if err != nil {
+		return err
+	}
+	if authSecretName != notApplicable {
+		r.Auth = plug.Auth{SecretName: &authSecretName}
+	}
+
 	log.InfoCLI(`
     The following validation types are available:
     - 'none': only the existence of the artifacts in the registry is validated
@@ -293,14 +301,6 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 		return err
 	}
 	r.ValidationType = plug.ValidationType(vType)
-
-	authSecretName, err := prompts.Select("Registry authentication secret name, select N/A for public registries", authSecretNames)
-	if err != nil {
-		return err
-	}
-	if authSecretName != notApplicable {
-		r.Auth = plug.Auth{SecretName: &authSecretName}
-	}
 
 	if err := readArtifactRefs(r); err != nil {
 		return err
