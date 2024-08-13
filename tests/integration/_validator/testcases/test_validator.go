@@ -56,21 +56,21 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testInstallSilent(); result.IsFailed() {
 		return result
 	}
-	// if result := t.testInstallSilentWait(); result.IsFailed() {
-	// 	return result
-	// }
-	// if result := t.testCheckDirect(); result.IsFailed() {
-	// 	return result
-	// }
-	// if result := t.testDescribe(); result.IsFailed() {
-	// 	return result
-	// }
-	// if result := t.testUndeploy(); result.IsFailed() {
-	// 	return result
-	// }
-	// if result := t.testInstallUpdatePasswords(); result.IsFailed() {
-	// 	return result
-	// }
+	if result := t.testInstallSilentWait(); result.IsFailed() {
+		return result
+	}
+	if result := t.testCheckDirect(); result.IsFailed() {
+		return result
+	}
+	if result := t.testDescribe(); result.IsFailed() {
+		return result
+	}
+	if result := t.testUndeploy(); result.IsFailed() {
+		return result
+	}
+	if result := t.testInstallUpdatePasswords(); result.IsFailed() {
+		return result
+	}
 	return test.Success()
 }
 
@@ -696,7 +696,7 @@ func (t *ValidatorTest) PreRequisite(ctx *test.TestContext) (tr *test.TestResult
 	}
 
 	t.initVsphereDriver(ctx)
-	t.overrideMaasClient()
+	t.overrideMaasClient(ctx)
 
 	return test.Success()
 }
@@ -714,6 +714,10 @@ func (t *ValidatorTest) TearDown(ctx *test.TestContext) {
 	// restore clouds.GetVSphereDriver
 	vsphereDriverFunc := ctx.Get("vsphereDriverFunc")
 	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account *vsphere.CloudAccount) (vsphere.Driver, error))
+
+	// restore clouds.GetMaasClient
+	maasClientFunc := ctx.Get("maasClientFunc")
+	clouds.GetMaasClient = maasClientFunc.(func(maasURL, maasToken string) (*maasclient.Client, error))
 }
 
 // updateTestData updates the hard-coded validator config used for silent installation tests
@@ -733,7 +737,9 @@ func (t *ValidatorTest) filePath(file string) string {
 	return fmt.Sprintf("%s/%s/%s", file_utils.ValidatorTestCasesPath(), "data", file)
 }
 
-func (t *ValidatorTest) overrideMaasClient() {
+func (t *ValidatorTest) overrideMaasClient(ctx *test.TestContext) {
+	maasClientFunc := clouds.GetMaasClient
+	ctx.Put("maasClientFunc", maasClientFunc)
 	clouds.GetMaasClient = func(maasURL, maasToken string) (*maasclient.Client, error) {
 		client := &maasclient.Client{}
 		client.Account = &clouds.MockMaasAccount{}

@@ -71,31 +71,40 @@ func handleMaasClientError(err error) (string, error) {
 	return val, nil
 }
 
-// GetMaasResourceProps fetches a list of resource pools and availability zones in the cluster
-func GetMaasResourceProps(c *components.MaasPluginConfig) ([]string, []string, error) {
+// GetMaasResourcePools fetches a list of resource pools in the cluster
+func GetMaasResourcePools(c *components.MaasPluginConfig) ([]string, error) {
 	client, err := GetMaasClient(c.Validator.Host, c.MaasAPIToken)
 	if err != nil {
-		return []string{}, []string{}, err
+		return nil, err
 	}
 
 	poolsObj, err := client.ResourcePools.Get()
 	if err != nil {
-		return []string{}, []string{}, err
+		return nil, err
 	}
 	pools := make([]string, len(poolsObj))
 	for i, p := range poolsObj {
 		pools[i] = p.Name
 	}
 
+	return pools, nil
+}
+
+// GetMaasZones fetches a list of availability zones in the cluster
+func GetMaasZones(c *components.MaasPluginConfig) ([]string, error) {
+	client, err := GetMaasClient(c.Validator.Host, c.MaasAPIToken)
+	if err != nil {
+		return nil, err
+	}
 	zonesObj, err := client.Zones.Get()
 	if err != nil {
-		return []string{}, []string{}, err
+		return nil, err
 	}
 	zones := make([]string, len(zonesObj))
 	for i, z := range zonesObj {
 		zones[i] = z.Name
 	}
-	return pools, zones, nil
+	return zones, nil
 }
 
 func getMaasClient(maasURL, maasToken string) (*maasclient.Client, error) {

@@ -209,11 +209,10 @@ func readMaasResourceRule(c *components.MaasPluginConfig, r *vpmaasapi.ResourceA
 		return err
 	}
 
-	resourcePools, availabilityZones, err := clouds.GetMaasResourceProps(c)
+	availabilityZones, err := clouds.GetMaasZones(c)
 	if err != nil {
 		return err
 	}
-	resourcePools = slices.Insert(resourcePools, 0, "N/A")
 
 	if r.AZ == "" {
 		az, err := prompts.Select("Availability Zone", availabilityZones)
@@ -226,7 +225,7 @@ func readMaasResourceRule(c *components.MaasPluginConfig, r *vpmaasapi.ResourceA
 	addResources := true
 
 	for addResources {
-		resource, err := readMaasResource(&resourcePools)
+		resource, err := readMaasResource(c)
 		if err != nil {
 			return err
 		}
@@ -246,7 +245,7 @@ func readMaasResourceRule(c *components.MaasPluginConfig, r *vpmaasapi.ResourceA
 }
 
 // nolint:dupl
-func readMaasResource(resourcePools *[]string) (vpmaasapi.Resource, error) {
+func readMaasResource(c *components.MaasPluginConfig) (vpmaasapi.Resource, error) {
 	res := vpmaasapi.Resource{}
 
 	numMachines, err := prompts.ReadInt("Minimum number of machines", "1", 1, -1)
@@ -273,7 +272,12 @@ func readMaasResource(resourcePools *[]string) (vpmaasapi.Resource, error) {
 	}
 	res.Disk = disk
 
-	pool, err := prompts.Select("Resource pool (optional)", *resourcePools)
+	resourcePools, err := clouds.GetMaasResourcePools(c)
+	if err != nil {
+		return res, err
+	}
+	resourcePools = slices.Insert(resourcePools, 0, "N/A")
+	pool, err := prompts.Select("Resource pool (optional)", resourcePools)
 	if err != nil {
 		return res, err
 	}
