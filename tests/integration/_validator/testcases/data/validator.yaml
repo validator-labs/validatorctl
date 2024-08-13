@@ -826,3 +826,41 @@ azurePlugin:
     auth:
       implicit: false
       secretName: azure-creds
+maasPlugin:
+  enabled: true
+  helmRelease:
+    chart:
+      name: validator-plugin-maas
+      repository: validator-plugin-maas
+      version: v0.0.7
+    values: ""
+  validator:
+    internalDNSRules:
+      - maasDomain: example.com
+        dnsResources:
+          - fqdn: foo.example.com
+            dnsRecords:
+            - type: A
+              ip: 0.0.0.0
+              ttl: 10
+    upstreamDNSRules:
+      - name: upstream dns
+        numDNSServers: 1
+    imageRules:
+      - name: Image Rule
+        images:
+          - name: example
+            architecture: amd64/ga-20.04
+    resourceAvailabilityRules:
+      - name: AZ1 
+        az: az1
+        resources:
+          - numMachines: 1
+            numCPU: 16
+            ram: 16
+            disk: 100
+    host: "http://example.com/MAAS"
+    auth:
+      secretName: maas-creds
+      tokenKey: MAAS_API_KEY
+  maasApiToken: "jG81nj7n8feUpHaIU/gFH2tLaqcnSshrpCiziFt+0JZ7OA=="

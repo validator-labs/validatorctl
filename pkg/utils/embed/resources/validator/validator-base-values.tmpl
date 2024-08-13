@@ -136,6 +136,15 @@ pluginSecrets:
   {{- end }}
   {{- end }}
 
+  {{- if .MAASPlugin.Enabled }}
+  maas:
+    secretName: {{ .MAASPlugin.Validator.Auth.SecretName }}
+    tokenKey: {{ .MAASPlugin.Validator.Auth.TokenKey }}
+    maasApiToken: {{ .MAASPlugin.MaasAPIToken }}
+  {{- else }}
+  maas: {}
+  {{- end }}
+  
   {{- if .NetworkPlugin.Enabled }}
   network:
     {{- if gt (len .NetworkPlugin.HTTPFileAuths) 0 }}
@@ -194,3 +203,13 @@ pluginSecrets:
   {{- else }}
   vSphere: {}
   {{- end }}
+
+  {{- if .MAASPlugin.Validator.Auth.SecretName }}
+  maas:
+    secretName: {{ .MAASPlugin.Validator.Auth.SecretName }}
+    tokenKey: {{ .MAASPlugin.Validator.Auth.TokenKey }}
+    maasApiToken: {{ .MAASPlugin.MaasAPIToken }}
+  {{- else }}
+  maas: {}
+  {{- end }}
+  
