@@ -41,6 +41,7 @@ type ValidatorConfig struct {
 	NetworkPlugin *NetworkPluginConfig `yaml:"networkPlugin,omitempty"`
 	OCIPlugin     *OCIPluginConfig     `yaml:"ociPlugin,omitempty"`
 	VspherePlugin *VspherePluginConfig `yaml:"vspherePlugin,omitempty"`
+	MaasPlugin    *MaasPluginConfig    `yaml:"maasPlugin,omitempty"`
 }
 
 // NewValidatorConfig creates a new ValidatorConfig object.
@@ -121,6 +122,10 @@ func (c *ValidatorConfig) EnabledPluginsHaveRules() (bool, []string) {
 	}
 	if c.MaasPlugin.Enabled && c.MaasPlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, c.MaasPlugin.Validator.PluginCode())
+	}
+	if c.MaasPlugin.Enabled && c.MaasPlugin.Validator.ResultCount() == 0 {
+		// invalidPlugins = append(invalidPlugins, c.MaasPlugin.Validator.PluginCode())
+		invalidPlugins = append(invalidPlugins, "MAAS")
 	}
 	if c.NetworkPlugin.Enabled && c.NetworkPlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, c.NetworkPlugin.Validator.PluginCode())
@@ -604,6 +609,34 @@ type VsphereRolePrivilegeRule struct {
 // VsphereTagRule represents a vSphere tag rule.
 type VsphereTagRule struct {
 	vsphereapi.TagValidationRule `yaml:",inline"`
+}
+
+// MaasPluginConfig represents the MAAS plugin configuration.
+type MaasPluginConfig struct {
+	Enabled      bool                    `yaml:"enabled"`
+	Release      *validator.HelmRelease  `yaml:"helmRelease"`
+	Validator    *maas.MaasValidatorSpec `yaml:"validator"`
+	MaasAPIToken string                  `yaml:"maasApiToken"`
+}
+
+func (c *MaasPluginConfig) encrypt() error {
+	token, err := crypto.EncryptB64([]byte(c.MaasAPIToken))
+	if err != nil {
+		return errors.Wrap(err, "failed to encrypt token")
+	}
+	c.MaasAPIToken = token
+
+	return nil
+}
+
+func (c *MaasPluginConfig) decrypt() error {
+	bytes, err := crypto.DecryptB64(c.MaasAPIToken)
+	if err != nil {
+		return errors.Wrap(err, "failed to decrypt token")
+	}
+	c.MaasAPIToken = string(*bytes)
+
+	return nil
 }
 
 // PublicKeySecret represents a public key secret.

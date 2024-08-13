@@ -543,7 +543,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	if vc.MaasPlugin.Enabled {
 		v := &maasapi.MaasValidator{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "azure-validator",
+				Name:      "maas-validator",
 				Namespace: "N/A",
 			},
 			Spec: *vc.MaasPlugin.Validator,

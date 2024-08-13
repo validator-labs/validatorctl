@@ -5,17 +5,19 @@ import (
 	"os"
 
 	maasclient "github.com/canonical/gomaasclient/client"
+	"github.com/canonical/gomaasclient/entity"
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	"github.com/validator-labs/validatorctl/pkg/components"
 )
 
 var (
-	// ReadMaasClientProps is defined to enable monkeypatching during testing
-	ReadMaasClientProps = readMaasClientProps
-	host                = "https://maas.io/MAAS"
+	// GetMaasClient is defined to enable monkeypatching during testing
+	GetMaasClient = getMaasClient
+	host          = "https://maas.io/MAAS"
 )
 
-func readMaasClientProps(c *components.MaasPluginConfig) error {
+// ReadMaasClientProps gathers and validates MAAS client credentials
+func ReadMaasClientProps(c *components.MaasPluginConfig) error {
 	var err error
 	c.MaasAPIToken, err = prompts.ReadPassword("MAAS API token", c.MaasAPIToken, false, -1)
 	if err != nil {
@@ -36,7 +38,7 @@ func readMaasClientProps(c *components.MaasPluginConfig) error {
 			return err
 		}
 		if val == "Continue" {
-			return readMaasClientProps(c)
+			return ReadMaasClientProps(c)
 		}
 		os.Exit(0)
 	}
@@ -45,7 +47,7 @@ func readMaasClientProps(c *components.MaasPluginConfig) error {
 }
 
 func validateMaasClient(maasURL, maasToken string) error {
-	client, err := maasclient.GetClient(maasURL, maasToken, "2.0")
+	client, err := GetMaasClient(maasURL, maasToken)
 	if err != nil {
 		return err
 	}
@@ -69,20 +71,47 @@ func handleMaasClientError(err error) (string, error) {
 	return val, nil
 }
 
-// GetMaasResourcePools fetches a list of resource pools in the cluster
-func GetMaasResourcePools(c *components.MaasPluginConfig) ([]string, error) {
-	client, err := maasclient.GetClient(c.Validator.Host, c.MaasAPIToken, "2.0")
+// GetMaasResourceProps fetches a list of resource pools and availability zones in the cluster
+func GetMaasResourceProps(c *components.MaasPluginConfig) ([]string, []string, error) {
+	client, err := GetMaasClient(c.Validator.Host, c.MaasAPIToken)
 	if err != nil {
-		return []string{}, err
-	}
-	poolsObj, err := client.ResourcePools.Get()
-	if err != nil {
-		return []string{}, err
+		return []string{}, []string{}, err
 	}
 
+	poolsObj, err := client.ResourcePools.Get()
+	if err != nil {
+		return []string{}, []string{}, err
+	}
 	pools := make([]string, len(poolsObj))
 	for i, p := range poolsObj {
 		pools[i] = p.Name
 	}
-	return pools, nil
+
+	zonesObj, err := client.Zones.Get()
+	if err != nil {
+		return []string{}, []string{}, err
+	}
+	zones := make([]string, len(zonesObj))
+	for i, z := range zonesObj {
+		zones[i] = z.Name
+	}
+	return pools, zones, nil
+}
+
+func getMaasClient(maasURL, maasToken string) (*maasclient.Client, error) {
+	client, err := maasclient.GetClient(maasURL, maasToken, "2.0")
+	if err != nil {
+		return &maasclient.Client{}, err
+	}
+	return client, nil
+}
+
+// MockMaasAccount replaces the maasclient.Account struct for integration testing
+type MockMaasAccount struct {
+	maasclient.Account
+}
+
+// ListAuthorisationTokens replaces the maasclient.Account.ListAuthorisationTokens method for integration testing
+func (a *MockMaasAccount) ListAuthorisationTokens() ([]entity.AuthorisationTokenListItem, error) {
+	return []entity.AuthorisationTokenListItem{}, nil
 }

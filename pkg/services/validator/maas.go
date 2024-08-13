@@ -3,6 +3,7 @@ package validator
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"time"
 
 	"k8s.io/client-go/kubernetes"
@@ -19,7 +20,7 @@ import (
 
 var (
 	maasSecretName = "maas-creds"
-	maasTokenKey   = "MAAS_API_KEY"
+	maasTokenKey   = "MAAS_API_KEY" //#nosec
 )
 
 type maasRule interface {
@@ -208,8 +209,14 @@ func readMaasResourceRule(c *components.MaasPluginConfig, r *vpmaasapi.ResourceA
 		return err
 	}
 
+	resourcePools, availabilityZones, err := clouds.GetMaasResourceProps(c)
+	if err != nil {
+		return err
+	}
+	resourcePools = slices.Insert(resourcePools, 0, "N/A")
+
 	if r.AZ == "" {
-		az, err := prompts.ReadText("Availability Zone", "az1", false, -1)
+		az, err := prompts.Select("Availability Zone", availabilityZones)
 		if err != nil {
 			return err
 		}
@@ -219,7 +226,7 @@ func readMaasResourceRule(c *components.MaasPluginConfig, r *vpmaasapi.ResourceA
 	addResources := true
 
 	for addResources {
-		resource, err := readMaasResource(c)
+		resource, err := readMaasResource(&resourcePools)
 		if err != nil {
 			return err
 		}
@@ -239,7 +246,7 @@ func readMaasResourceRule(c *components.MaasPluginConfig, r *vpmaasapi.ResourceA
 }
 
 // nolint:dupl
-func readMaasResource(c *components.MaasPluginConfig) (vpmaasapi.Resource, error) {
+func readMaasResource(resourcePools *[]string) (vpmaasapi.Resource, error) {
 	res := vpmaasapi.Resource{}
 
 	numMachines, err := prompts.ReadInt("Minimum number of machines", "1", 1, -1)
@@ -266,15 +273,11 @@ func readMaasResource(c *components.MaasPluginConfig) (vpmaasapi.Resource, error
 	}
 	res.Disk = disk
 
-	resourcePools, err := clouds.GetMaasResourcePools(c)
+	pool, err := prompts.Select("Resource pool (optional)", *resourcePools)
 	if err != nil {
 		return res, err
 	}
-	pool, err := prompts.Select("Machine pool", resourcePools)
-	if err != nil {
-		return res, err
-	}
-	if pool != "" {
+	if pool != "N/A" {
 		res.Pool = pool
 	}
 
