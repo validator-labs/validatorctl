@@ -35,17 +35,17 @@ func readOciPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, _ kuberne
 func readOciPluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, kClient kubernetes.Interface) error {
 	log.Header("OCI Plugin Rule Configuration")
 	c := vc.OCIPlugin
-
+	ruleNames := make([]string, 0)
 	authSecretNames := make([]string, 0)
 	sigSecretNames := make([]string, 0)
-	if err := configureOciRegistryRules(c, &authSecretNames, &sigSecretNames, kClient); err != nil {
+
+	if err := configureOciRegistryRules(c, &ruleNames, &authSecretNames, &sigSecretNames, kClient); err != nil {
 		return err
 	}
 
-	// impossible at present. uncomment if/when additional OCI rule types are added.
-	// if c.Validator.ResultCount() == 0 {
-	// 	return errNoRulesEnabled
-	// }
+	if c.Validator.ResultCount() == 0 {
+		return errNoRulesEnabled
+	}
 	return nil
 }
 
@@ -156,18 +156,20 @@ func readPublicKeySecret(secret *components.PublicKeySecret) error {
 	return nil
 }
 
-func configureOciRegistryRules(c *components.OCIPluginConfig, authSecretNames, sigSecretNames *[]string, kClient kubernetes.Interface) error {
-	log.InfoCLI("OCI registry rule(s) ensure that specific OCI artifacts are present in an OCI registry.")
-
-	var err error
-	addRules := true
+func configureOciRegistryRules(c *components.OCIPluginConfig, ruleNames, authSecretNames, sigSecretNames *[]string, kClient kubernetes.Interface) error {
+	log.InfoCLI(`
+	OCI registry rule(s) ensure that specific OCI artifacts are present in an OCI registry.
+	`)
 
 	for i, r := range c.Validator.OciRegistryRules {
 		r := r
-		if err := readOciRegistryRule(c, &r, i, authSecretNames, sigSecretNames, kClient); err != nil {
+		if err := readOciRegistryRule(c, &r, i, ruleNames, authSecretNames, sigSecretNames, kClient); err != nil {
 			return err
 		}
 	}
+
+	var err error
+	addRules := true
 
 	if c.Validator.OciRegistryRules == nil {
 		c.Validator.OciRegistryRules = make([]plug.OciRegistryRule, 0)
@@ -181,14 +183,10 @@ func configureOciRegistryRules(c *components.OCIPluginConfig, authSecretNames, s
 		return nil
 	}
 
-	ruleIdx := len(c.Validator.OciRegistryRules)
 	for {
-		r := &plug.OciRegistryRule{}
-		if err := readOciRegistryRule(c, r, ruleIdx, authSecretNames, sigSecretNames, kClient); err != nil {
+		if err := readOciRegistryRule(c, &plug.OciRegistryRule{}, -1, ruleNames, authSecretNames, sigSecretNames, kClient); err != nil {
 			return err
 		}
-		c.Validator.OciRegistryRules = append(c.Validator.OciRegistryRules, *r)
-
 		add, err := prompts.ReadBool("Add another OCI registry rule", false)
 		if err != nil {
 			return err
@@ -196,20 +194,28 @@ func configureOciRegistryRules(c *components.OCIPluginConfig, authSecretNames, s
 		if !add {
 			break
 		}
-		ruleIdx++
 	}
 
 	return nil
 }
 
-func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule, idx int, authSecretNames, sigSecretNames *[]string, kClient kubernetes.Interface) error {
-	var err error
-
-	if r.RuleName != "" {
-		log.InfoCLI("Reconfiguring OCI registry rule for name: %s", r.RuleName)
+func initOciRegistryRule(r *plug.OciRegistryRule, ruleType string, ruleNames *[]string) error {
+	name := r.Name()
+	if name != "" {
+		log.InfoCLI("Reconfiguring %s rule: %s", ruleType, name)
+		*ruleNames = append(*ruleNames, name)
+	} else {
+		name, err := getRuleName(ruleNames)
+		if err != nil {
+			return err
+		}
+		r.RuleName = name
 	}
+	return nil
+}
 
-	r.RuleName, err = prompts.ReadText("Rule name", r.RuleName, false, -1)
+func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule, idx int, ruleNames, authSecretNames, sigSecretNames *[]string, kClient kubernetes.Interface) error {
+	err := initOciRegistryRule(r, "OCI", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -221,28 +227,21 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 	r.Host = strings.TrimSuffix(host, "/")
 
-	shouldConfigureAuth, err := prompts.ReadBool("Configure registry authentication", false)
+	shouldConfigureAuth, err := prompts.ReadBool("Configure registry authentication", r.Auth.SecretName != nil)
 	if err != nil {
 		return err
 	}
-
 	if shouldConfigureAuth {
 		err := configureAuthSecrets(c, r, kClient, authSecretNames)
 		if err != nil {
 			return err
 		}
+	} else {
+		r.Auth = plug.Auth{}
 	}
 
-	shouldConfigureSigVerification, err := prompts.ReadBool("Configure signature verification", false)
-	if err != nil {
+	if err := readArtifactRefs(r); err != nil {
 		return err
-	}
-
-	if shouldConfigureSigVerification {
-		err := configureSigVerificationSecrets(c, r, kClient, sigSecretNames)
-		if err != nil {
-			return err
-		}
 	}
 
 	log.InfoCLI(`
@@ -257,8 +256,17 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 	r.ValidationType = plug.ValidationType(vType)
 
-	if err := readArtifactRefs(r); err != nil {
+	shouldConfigureSigVerification, err := prompts.ReadBool("Configure signature verification", r.SignatureVerification.SecretName != "")
+	if err != nil {
 		return err
+	}
+	if shouldConfigureSigVerification {
+		err := configureSigVerificationSecrets(c, r, kClient, sigSecretNames)
+		if err != nil {
+			return err
+		}
+	} else {
+		r.SignatureVerification = plug.SignatureVerification{}
 	}
 
 	if c.CaCertPaths == nil {
@@ -272,6 +280,11 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	r.CaCert = base64.StdEncoding.EncodeToString(caCertData)
 	c.CaCertPaths[idx] = caCertPath
 
+	if idx == -1 {
+		c.Validator.OciRegistryRules = append(c.Validator.OciRegistryRules, *r)
+	} else {
+		c.Validator.OciRegistryRules[idx] = *r
+	}
 	return nil
 }
 
