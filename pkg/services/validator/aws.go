@@ -665,16 +665,19 @@ func configureAmiRules(c *components.AWSPluginConfig, ruleNames *[]string) error
 
 func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	var err error
-	c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit AWS auth", true)
-	if err != nil {
-		return err
-	}
-	if c.Validator.Auth.Implicit && !tc.Direct {
-		c.ServiceAccountName, err = services.ReadServiceAccount(k8sClient, cfg.Validator)
+
+	if !tc.Direct {
+		c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit AWS auth", true)
 		if err != nil {
 			return err
 		}
-		return nil
+		if c.Validator.Auth.Implicit {
+			c.ServiceAccountName, err = services.ReadServiceAccount(k8sClient, cfg.Validator)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
 	}
 
 	// always create AWS credential secret if creating a new kind cluster
@@ -713,6 +716,23 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 		c.SessionToken, err = prompts.ReadPassword("AWS Session Token", c.SessionToken, true, -1)
 		if err != nil {
 			return err
+		}
+
+		if tc.Direct {
+			err = os.Setenv("AWS_ACCESS_KEY_ID", c.AccessKeyID)
+			if err != nil {
+				return fmt.Errorf("failed to set AWS_ACCESS_KEY_ID: %w", err)
+			}
+			err = os.Setenv("AWS_SECRET_ACCESS_KEY", c.SecretAccessKey)
+			if err != nil {
+				return fmt.Errorf("failed to set AWS_SECRET_ACCESS_KEY: %w", err)
+			}
+			if c.SessionToken != "" {
+				err = os.Setenv("AWS_SESSION_TOKEN", c.SessionToken)
+				if err != nil {
+					return fmt.Errorf("failed to set AWS_SESSION_TOKEN: %w", err)
+				}
+			}
 		}
 	} else {
 		secret, err := services.ReadSecret(k8sClient, cfg.Validator, false, cfg.ValidatorPluginAwsKeys)
