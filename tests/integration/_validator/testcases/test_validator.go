@@ -393,7 +393,6 @@ func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string, sl
 		"private quay registry",               // OCI rule name
 		"quay.io",                             // registry host
 		"y",                                   // configure registry authentication
-		cfg.OciCreateNewAuthSecPrompt,         // create a new secret
 		"oci-creds",                           // secret name
 		"y",                                   // configure basic auth
 		"user1",                               // username

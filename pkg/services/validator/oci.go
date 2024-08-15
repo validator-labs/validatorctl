@@ -87,15 +87,17 @@ func configureSigVerificationSecrets(c *components.OCIPluginConfig, r *plug.OciR
 	allSecretNames := []string{cfg.OciCreateNewSigSecPrompt} // provide the option to create a new secret
 	allSecretNames = append(allSecretNames, *sigSecretNames...)
 
-	existingSigSecrets, err := services.GetSecretsWithRegexKeys(kClient, cfg.Validator, cfg.ValidatorPluginOciSigVerificationKeysRegex)
-	if err != nil {
-		return err
+	if kClient != nil {
+		existingSigSecrets, err := services.GetSecretsWithRegexKeys(kClient, cfg.Validator, cfg.ValidatorPluginOciSigVerificationKeysRegex)
+		if err != nil {
+			return err
+		}
+		for _, s := range existingSigSecrets {
+			allSecretNames = append(allSecretNames, s.Name)
+		}
 	}
 
-	for _, s := range existingSigSecrets {
-		allSecretNames = append(allSecretNames, s.Name)
-	}
-
+	var err error
 	useSecretName := cfg.OciCreateNewSigSecPrompt
 	if len(allSecretNames) > 1 {
 		useSecretName, err = prompts.Select("Signature verification secret name", allSecretNames)
