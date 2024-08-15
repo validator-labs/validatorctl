@@ -53,9 +53,11 @@ const (
 	ValidatorVsphereVersionConstraint    = ">= 6.0, < 9.0"
 	ValidatorVspherePrivilegeFile        = "vsphere-root-level-privileges-all.yaml"
 
-	AWSPolicyDocumentPrompt  = "# Provide the AWS policy document for IAM validation rule. The policy document should be in JSON format. Type :wq to save and exit (if using vi).\n"
-	AzurePermissionSetPrompt = "# Provide the Azure permission set for IAM validation rule. The permission set should be in JSON format. Type :wq to save and exit (if using vi).\n"
-	VcenterPrivilegePrompt   = "# All valid vCenter privileges are on the lines below.\n# Edit as you see fit (comments are ignored). The file should contain a list of privileges, newline separated.\n# Type :wq to save and exit (if using vi).\n\n"
+	AWSPolicyDocumentPrompt   = "# Provide the AWS policy document for IAM validation rule. The policy document should be in JSON format. Type :wq to save and exit (if using vi).\n"
+	AzurePermissionSetPrompt  = "# Provide the Azure permission set for IAM validation rule. The permission set should be in JSON format. Type :wq to save and exit (if using vi).\n"
+	VcenterPrivilegePrompt    = "# All valid vCenter privileges are on the lines below.\n# Edit as you see fit (comments are ignored). The file should contain a list of privileges, newline separated.\n# Type :wq to save and exit (if using vi).\n\n"
+	OciCreateNewAuthSecPrompt = "Create a new auth secret"
+	OciCreateNewSigSecPrompt  = "Create a new signature verification secret"
 
 	// Embed dirs
 	Kind      string = "kind"

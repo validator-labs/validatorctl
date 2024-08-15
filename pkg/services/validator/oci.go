@@ -17,9 +17,6 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/services"
 )
 
-const createNewAuthSecPrompt = "Create a new auth secret"
-const createNewSigSecPrompt = "Create a new signature verification secret"
-
 func readOciPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, _ kubernetes.Interface) error {
 	c := vc.OCIPlugin
 
@@ -51,7 +48,7 @@ func readOciPluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, kClie
 
 // configureAuthSecrets prompts the user to configure secrets containing authentication details.
 func configureAuthSecrets(c *components.OCIPluginConfig, r *plug.OciRegistryRule, kClient kubernetes.Interface, authSecretNames *[]string) error {
-	allSecretNames := []string{createNewAuthSecPrompt} // provide the option to create a new secret
+	allSecretNames := []string{cfg.OciCreateNewAuthSecPrompt} // provide the option to create a new secret
 	allSecretNames = append(allSecretNames, *authSecretNames...)
 	existingAuthSecrets, err := services.GetSecretsWithKeys(kClient, cfg.Validator, cfg.ValidatorBasicAuthKeys)
 	if err != nil {
@@ -62,7 +59,7 @@ func configureAuthSecrets(c *components.OCIPluginConfig, r *plug.OciRegistryRule
 		allSecretNames = append(allSecretNames, s.Name)
 	}
 
-	useSecretName := createNewAuthSecPrompt
+	useSecretName := cfg.OciCreateNewAuthSecPrompt
 	if len(allSecretNames) > 1 {
 		useSecretName, err = prompts.Select("Registry authentication secret name", allSecretNames)
 		if err != nil {
@@ -70,7 +67,7 @@ func configureAuthSecrets(c *components.OCIPluginConfig, r *plug.OciRegistryRule
 		}
 	}
 
-	if useSecretName == createNewAuthSecPrompt {
+	if useSecretName == cfg.OciCreateNewAuthSecPrompt {
 		secret := &components.Secret{}
 		if err := readOciSecret(secret); err != nil {
 			return err
@@ -85,7 +82,7 @@ func configureAuthSecrets(c *components.OCIPluginConfig, r *plug.OciRegistryRule
 
 // configureSigVerificationSecrets prompts the user to configure secrets containing public keys for use in signature verification.
 func configureSigVerificationSecrets(c *components.OCIPluginConfig, r *plug.OciRegistryRule, kClient kubernetes.Interface, sigSecretNames *[]string) error {
-	allSecretNames := []string{createNewSigSecPrompt} // provide the option to create a new secret
+	allSecretNames := []string{cfg.OciCreateNewSigSecPrompt} // provide the option to create a new secret
 	allSecretNames = append(allSecretNames, *sigSecretNames...)
 
 	existingSigSecrets, err := services.GetSecretsWithRegexKeys(kClient, cfg.Validator, cfg.ValidatorPluginOciSigVerificationKeysRegex)
@@ -97,7 +94,7 @@ func configureSigVerificationSecrets(c *components.OCIPluginConfig, r *plug.OciR
 		allSecretNames = append(allSecretNames, s.Name)
 	}
 
-	useSecretName := createNewSigSecPrompt
+	useSecretName := cfg.OciCreateNewSigSecPrompt
 	if len(allSecretNames) > 1 {
 		useSecretName, err = prompts.Select("Signature verification secret name", allSecretNames)
 		if err != nil {
@@ -105,7 +102,7 @@ func configureSigVerificationSecrets(c *components.OCIPluginConfig, r *plug.OciR
 		}
 	}
 
-	if useSecretName == createNewSigSecPrompt {
+	if useSecretName == cfg.OciCreateNewSigSecPrompt {
 		secret := &components.PublicKeySecret{}
 		if err := readPublicKeySecret(secret); err != nil {
 			return err
