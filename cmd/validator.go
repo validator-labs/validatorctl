@@ -73,6 +73,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 	flags.BoolVar(&tc.Wait, "wait", false, "Wait for validation to succeed and describe results. Only applies when --apply is set. Default: false")
 
 	cmd.MarkFlagsMutuallyExclusive("config-only", "wait")
+	cmd.MarkFlagsMutuallyExclusive("config-only", "apply")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "wait")
 
