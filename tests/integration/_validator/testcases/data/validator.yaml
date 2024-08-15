@@ -5,7 +5,7 @@ helmRelease:
   chart:
     name: validator
     repository: validator
-    version: v0.1.4
+    version: v0.1.5
   values: ""
 helmReleaseSecret:
   name: validator-helm-release-validator
