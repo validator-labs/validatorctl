@@ -140,8 +140,6 @@ func (t *ValidatorTest) testInstallInteractiveApply(ctx *test.TestContext) (tr *
 	// Install values
 	tuiVals = t.awsPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.azurePluginInstallValues(ctx, tuiVals)
-
-	tuiVals = append(tuiVals, "n")
 	tuiVals = t.maasPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.networkPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.ociPluginInstallValues(ctx, tuiVals)
@@ -197,7 +195,6 @@ func (t *ValidatorTest) validatorValues(ctx *test.TestContext) []string {
 		"foo",                          // Alertmanager username
 		"bar",                          // Alertmanager password
 	}
-
 	if string_utils.IsDevVersion(ctx.Get("version")) {
 		vals = append(vals, cfg.ValidatorChartVersions[cfg.Validator]) // validator helm chart version
 	}
