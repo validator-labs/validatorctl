@@ -50,15 +50,17 @@ func readOciPluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, kClie
 func configureAuthSecrets(c *components.OCIPluginConfig, r *plug.OciRegistryRule, kClient kubernetes.Interface, authSecretNames *[]string) error {
 	allSecretNames := []string{cfg.OciCreateNewAuthSecPrompt} // provide the option to create a new secret
 	allSecretNames = append(allSecretNames, *authSecretNames...)
-	existingAuthSecrets, err := services.GetSecretsWithKeys(kClient, cfg.Validator, cfg.ValidatorBasicAuthKeys)
-	if err != nil {
-		return err
+	if kClient != nil {
+		existingAuthSecrets, err := services.GetSecretsWithKeys(kClient, cfg.Validator, cfg.ValidatorBasicAuthKeys)
+		if err != nil {
+			return err
+		}
+		for _, s := range existingAuthSecrets {
+			allSecretNames = append(allSecretNames, s.Name)
+		}
 	}
 
-	for _, s := range existingAuthSecrets {
-		allSecretNames = append(allSecretNames, s.Name)
-	}
-
+	var err error
 	useSecretName := cfg.OciCreateNewAuthSecPrompt
 	if len(allSecretNames) > 1 {
 		useSecretName, err = prompts.Select("Registry authentication secret name", allSecretNames)
