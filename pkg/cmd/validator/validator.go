@@ -137,7 +137,7 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		log.InfoCLI("validator configuration file: %s", tc.ConfigFile)
 	}
 
-	if tc.Apply {
+	if tc.CreateConfigOnly && tc.Apply {
 		if !configProvided {
 			tc.Reconfigure = true
 		}
@@ -152,6 +152,15 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 
 	if vc.KindConfig.UseKindCluster {
 		if err := createKindCluster(c, vc); err != nil {
+			return err
+		}
+	}
+
+	if tc.Apply {
+		if !configProvided {
+			tc.Reconfigure = true
+		}
+		if err := ConfigureOrCheckCommand(c, tc); err != nil {
 			return err
 		}
 	}
