@@ -2,7 +2,7 @@ package config
 
 // ValidatorChartVersions is a map of validator component names to their respective versions
 var ValidatorChartVersions = map[string]string{
-	Validator:              "v0.1.4",
+	Validator:              "v0.1.5",
 	ValidatorPluginAws:     "v0.1.4",
 	ValidatorPluginAzure:   "v0.0.16",
 	ValidatorPluginMaas:    "v0.0.7",
