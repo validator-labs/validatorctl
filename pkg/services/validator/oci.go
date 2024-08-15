@@ -291,7 +291,7 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 func readArtifactRefs(r *plug.OciRegistryRule) error {
 	log.InfoCLI("Configure one or more OCI artifact(s) to validate.")
 
-	// We've intentionally opted to not support prompting for full layer validation overrides per artifact
+	// We've intentionally opted to not support prompting for validation type overrides per artifact
 
 	log.InfoCLI(`
 	Artifact references must include the registry host for the current rule,
@@ -299,7 +299,7 @@ func readArtifactRefs(r *plug.OciRegistryRule) error {
 	`)
 	var defaultArtifacts string
 	for _, a := range r.Artifacts {
-		defaultArtifacts += a.Ref + "\n"
+		defaultArtifacts += r.Host + "/" + a.Ref + "\n"
 	}
 	artifacts, err := prompts.ReadTextSlice(
 		"Artifact references", defaultArtifacts, "invalid artifact refs", `^`+r.Host+`/.*$`, false,
