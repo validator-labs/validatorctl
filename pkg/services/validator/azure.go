@@ -27,6 +27,10 @@ const (
 	mustBeValidUUID = "must be valid UUID"
 
 	azureNoCredsErr = "DefaultAzureCredential: "
+
+	mockAzureScope = "00000000-0000-0000-0000-000000000000"
+
+	mockAzureRoleAssignment = "00000000-000000-0000000000"
 )
 
 var (
@@ -72,27 +76,20 @@ func readAzureCredentials(c *components.AzurePluginConfig, tc *cfg.TaskConfig, k
 }
 
 func readDirectAzureCredentials(c *components.AzurePluginConfig) error {
+	// check if credentials are already configured
 	api, err := azure.NewAzureAPI()
 	if err != nil {
 		return fmt.Errorf("failed to create Azure API: %w", err)
 	}
-	_, err = api.RoleAssignmentsClient.Get(context.Background(), "00000000-0000-0000-0000-000000000000", "00000000-000000-0000000000", nil)
+	_, err = api.RoleAssignmentsClient.Get(context.Background(), mockAzureScope, mockAzureRoleAssignment, nil)
 	// auth toolchain is configured, skip prompting for credentials
 	if err == nil || !strings.Contains(err.Error(), azureNoCredsErr) {
 		return nil
 	}
 
-	c.TenantID, err = prompts.ReadTextRegex("Azure Tenant ID", c.TenantID, mustBeValidUUID, prompts.UUIDRegex)
+	err = readAzureCredsHelper(c)
 	if err != nil {
-		return fmt.Errorf("failed to prompt for text for Azure Tenant ID: %w", err)
-	}
-	c.ClientID, err = prompts.ReadTextRegex("Azure Client ID", c.ClientID, mustBeValidUUID, prompts.UUIDRegex)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for text for Azure Client ID: %w", err)
-	}
-	c.ClientSecret, err = prompts.ReadPassword("Azure Client Secret", c.ClientSecret, false, -1)
-	if err != nil {
-		return fmt.Errorf("failed to prompt for password for Azure Client Secret: %w", err)
+		return err
 	}
 
 	err = os.Setenv("AZURE_TENANT_ID", c.TenantID)
@@ -149,17 +146,9 @@ func readInstallAzureCredentials(c *components.AzurePluginConfig, k8sClient kube
 			return fmt.Errorf("failed to prompt for text for Azure credentials secret name: %w", err)
 		}
 
-		c.TenantID, err = prompts.ReadTextRegex("Azure Tenant ID", c.TenantID, mustBeValidUUID, prompts.UUIDRegex)
+		err = readAzureCredsHelper(c)
 		if err != nil {
-			return fmt.Errorf("failed to prompt for text for Azure Tenant ID: %w", err)
-		}
-		c.ClientID, err = prompts.ReadTextRegex("Azure Client ID", c.ClientID, mustBeValidUUID, prompts.UUIDRegex)
-		if err != nil {
-			return fmt.Errorf("failed to prompt for text for Azure Client ID: %w", err)
-		}
-		c.ClientSecret, err = prompts.ReadPassword("Azure Client Secret", c.ClientSecret, false, -1)
-		if err != nil {
-			return fmt.Errorf("failed to prompt for password for Azure Client Secret: %w", err)
+			return err
 		}
 
 	} else {
@@ -173,6 +162,23 @@ func readInstallAzureCredentials(c *components.AzurePluginConfig, k8sClient kube
 		c.ClientSecret = string(secret.Data["AZURE_CLIENT_SECRET"])
 	}
 
+	return nil
+}
+
+func readAzureCredsHelper(c *components.AzurePluginConfig) error {
+	var err error
+	c.TenantID, err = prompts.ReadTextRegex("Azure Tenant ID", c.TenantID, mustBeValidUUID, prompts.UUIDRegex)
+	if err != nil {
+		return fmt.Errorf("failed to prompt for text for Azure Tenant ID: %w", err)
+	}
+	c.ClientID, err = prompts.ReadTextRegex("Azure Client ID", c.ClientID, mustBeValidUUID, prompts.UUIDRegex)
+	if err != nil {
+		return fmt.Errorf("failed to prompt for text for Azure Client ID: %w", err)
+	}
+	c.ClientSecret, err = prompts.ReadPassword("Azure Client Secret", c.ClientSecret, false, -1)
+	if err != nil {
+		return fmt.Errorf("failed to prompt for password for Azure Client Secret: %w", err)
+	}
 	return nil
 }
 

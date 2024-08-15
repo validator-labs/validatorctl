@@ -675,7 +675,7 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 			return err
 		}
 	} else {
-		err = readInstallAwsCredentials(c, tc, k8sClient)
+		err = readInstallAwsCredentials(c, k8sClient)
 		if err != nil {
 			return err
 		}
@@ -708,7 +708,7 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 	return nil
 }
 
-func readInstallAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
+func readInstallAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernetes.Interface) error {
 	var err error
 
 	c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit AWS auth", true)
@@ -742,21 +742,11 @@ func readInstallAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig
 		if c.Validator.Auth.SecretName != "" {
 			awsSecretName = c.Validator.Auth.SecretName
 		}
-		if !tc.Direct {
-			c.Validator.Auth.SecretName, err = prompts.ReadText("AWS credentials secret name", awsSecretName, false, -1)
-			if err != nil {
-				return err
-			}
-		}
-		c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
+		c.Validator.Auth.SecretName, err = prompts.ReadText("AWS credentials secret name", awsSecretName, false, -1)
 		if err != nil {
 			return err
 		}
-		c.SecretAccessKey, err = prompts.ReadPassword("AWS Secret Access Key", c.SecretAccessKey, false, -1)
-		if err != nil {
-			return err
-		}
-		c.SessionToken, err = prompts.ReadPassword("AWS Session Token", c.SessionToken, true, -1)
+		err = readAwsCredsHelper(c)
 		if err != nil {
 			return err
 		}
@@ -776,25 +766,18 @@ func readInstallAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig
 }
 
 func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
+	// check if credentials are already configured
 	api, err := aws.NewAPI(c.Validator.Auth, c.Validator.DefaultRegion)
 	if err != nil {
 		return err
 	}
 	_, err = api.IAM.GetUser(context.TODO(), nil)
-	// auth toolchain is configured, skip prompting for credentials
+	// auth keychain is configured, skip prompting for credentials
 	if err == nil || !strings.Contains(err.Error(), awsNoCredsErr) {
 		return nil
 	}
 
-	c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
-	if err != nil {
-		return err
-	}
-	c.SecretAccessKey, err = prompts.ReadPassword("AWS Secret Access Key", c.SecretAccessKey, false, -1)
-	if err != nil {
-		return err
-	}
-	c.SessionToken, err = prompts.ReadPassword("AWS Session Token", c.SessionToken, true, -1)
+	err = readAwsCredsHelper(c)
 	if err != nil {
 		return err
 	}
@@ -812,6 +795,23 @@ func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
 		if err != nil {
 			return fmt.Errorf("failed to set AWS_SESSION_TOKEN: %w", err)
 		}
+	}
+	return nil
+}
+
+func readAwsCredsHelper(c *components.AWSPluginConfig) error {
+	var err error
+	c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
+	if err != nil {
+		return err
+	}
+	c.SecretAccessKey, err = prompts.ReadPassword("AWS Secret Access Key", c.SecretAccessKey, false, -1)
+	if err != nil {
+		return err
+	}
+	c.SessionToken, err = prompts.ReadPassword("AWS Session Token", c.SessionToken, true, -1)
+	if err != nil {
+		return err
 	}
 	return nil
 }
