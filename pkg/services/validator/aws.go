@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -12,12 +13,14 @@ import (
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	vpawsapi "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
-
+	"github.com/validator-labs/validator-plugin-aws/pkg/aws"
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
 )
+
+const awsNoCredsErr = "get identity: get credentials: "
 
 var (
 	region             = "us-east-1"
@@ -666,18 +669,58 @@ func configureAmiRules(c *components.AWSPluginConfig, ruleNames *[]string) error
 func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	var err error
 
-	if !tc.Direct {
-		c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit AWS auth", true)
+	if tc.Direct {
+		err = readDirectAwsCredentials(c)
 		if err != nil {
 			return err
 		}
-		if c.Validator.Auth.Implicit {
-			c.ServiceAccountName, err = services.ReadServiceAccount(k8sClient, cfg.Validator)
-			if err != nil {
-				return err
-			}
-			return nil
+	} else {
+		err = readInstallAwsCredentials(c, tc, k8sClient)
+		if err != nil {
+			return err
 		}
+	}
+
+	useSTS, err := prompts.ReadBool("Configure Credentials for STS", false)
+	if err != nil {
+		return err
+	}
+	if useSTS {
+		c.Validator.Auth.StsAuth = &vpawsapi.AwsSTSAuth{}
+		c.Validator.Auth.StsAuth.RoleArn, err = prompts.ReadText("AWS STS Role ARN", c.Validator.Auth.StsAuth.RoleArn, false, -1)
+		if err != nil {
+			return err
+		}
+		c.Validator.Auth.StsAuth.RoleSessionName, err = prompts.ReadText("AWS STS Session Name", c.Validator.Auth.StsAuth.RoleSessionName, false, -1)
+		if err != nil {
+			return err
+		}
+		duration := stsDurationSeconds
+		if c.Validator.Auth.StsAuth.DurationSeconds != 0 {
+			duration = intToStringDefault(c.Validator.Auth.StsAuth.DurationSeconds)
+		}
+		c.Validator.Auth.StsAuth.DurationSeconds, err = prompts.ReadInt("AWS STS Session Duration", duration, 900, 43200)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func readInstallAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
+	var err error
+
+	c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit AWS auth", true)
+	if err != nil {
+		return err
+	}
+	if c.Validator.Auth.Implicit {
+		c.ServiceAccountName, err = services.ReadServiceAccount(k8sClient, cfg.Validator)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
 	// always create AWS credential secret if creating a new kind cluster
@@ -718,22 +761,6 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 			return err
 		}
 
-		if tc.Direct {
-			err = os.Setenv("AWS_ACCESS_KEY_ID", c.AccessKeyID)
-			if err != nil {
-				return fmt.Errorf("failed to set AWS_ACCESS_KEY_ID: %w", err)
-			}
-			err = os.Setenv("AWS_SECRET_ACCESS_KEY", c.SecretAccessKey)
-			if err != nil {
-				return fmt.Errorf("failed to set AWS_SECRET_ACCESS_KEY: %w", err)
-			}
-			if c.SessionToken != "" {
-				err = os.Setenv("AWS_SESSION_TOKEN", c.SessionToken)
-				if err != nil {
-					return fmt.Errorf("failed to set AWS_SESSION_TOKEN: %w", err)
-				}
-			}
-		}
 	} else {
 		secret, err := services.ReadSecret(k8sClient, cfg.Validator, false, cfg.ValidatorPluginAwsKeys)
 		if err != nil {
@@ -745,30 +772,47 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 		c.SessionToken = string(secret.Data["AWS_SESSION_TOKEN"])
 	}
 
-	useSTS, err := prompts.ReadBool("Configure Credentials for STS", false)
+	return nil
+}
+
+func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
+	api, err := aws.NewAPI(c.Validator.Auth, c.Validator.DefaultRegion)
 	if err != nil {
 		return err
 	}
-	if useSTS {
-		c.Validator.Auth.StsAuth = &vpawsapi.AwsSTSAuth{}
-		c.Validator.Auth.StsAuth.RoleArn, err = prompts.ReadText("AWS STS Role ARN", c.Validator.Auth.StsAuth.RoleArn, false, -1)
-		if err != nil {
-			return err
-		}
-		c.Validator.Auth.StsAuth.RoleSessionName, err = prompts.ReadText("AWS STS Session Name", c.Validator.Auth.StsAuth.RoleSessionName, false, -1)
-		if err != nil {
-			return err
-		}
-		duration := stsDurationSeconds
-		if c.Validator.Auth.StsAuth.DurationSeconds != 0 {
-			duration = intToStringDefault(c.Validator.Auth.StsAuth.DurationSeconds)
-		}
-		c.Validator.Auth.StsAuth.DurationSeconds, err = prompts.ReadInt("AWS STS Session Duration", duration, 900, 43200)
-		if err != nil {
-			return err
-		}
+	_, err = api.IAM.GetUser(context.TODO(), nil)
+	// auth toolchain is configured, skip prompting for credentials
+	if err == nil || !strings.Contains(err.Error(), awsNoCredsErr) {
+		return nil
 	}
 
+	c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
+	if err != nil {
+		return err
+	}
+	c.SecretAccessKey, err = prompts.ReadPassword("AWS Secret Access Key", c.SecretAccessKey, false, -1)
+	if err != nil {
+		return err
+	}
+	c.SessionToken, err = prompts.ReadPassword("AWS Session Token", c.SessionToken, true, -1)
+	if err != nil {
+		return err
+	}
+
+	err = os.Setenv("AWS_ACCESS_KEY_ID", c.AccessKeyID)
+	if err != nil {
+		return fmt.Errorf("failed to set AWS_ACCESS_KEY_ID: %w", err)
+	}
+	err = os.Setenv("AWS_SECRET_ACCESS_KEY", c.SecretAccessKey)
+	if err != nil {
+		return fmt.Errorf("failed to set AWS_SECRET_ACCESS_KEY: %w", err)
+	}
+	if c.SessionToken != "" {
+		err = os.Setenv("AWS_SESSION_TOKEN", c.SessionToken)
+		if err != nil {
+			return fmt.Errorf("failed to set AWS_SESSION_TOKEN: %w", err)
+		}
+	}
 	return nil
 }
 

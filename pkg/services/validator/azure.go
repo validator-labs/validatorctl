@@ -1,14 +1,17 @@
 package validator
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"k8s.io/client-go/kubernetes"
 
 	plug "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
+	"github.com/validator-labs/validator-plugin-azure/pkg/utils/azure"
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
@@ -22,6 +25,8 @@ const (
 	ruleTypeRBAC = "RBAC"
 
 	mustBeValidUUID = "must be valid UUID"
+
+	azureNoCredsErr = "DefaultAzureCredential: "
 )
 
 var (
@@ -60,19 +65,65 @@ func readAzurePluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _ k
 }
 
 func readAzureCredentials(c *components.AzurePluginConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
+	if tc.Direct {
+		return readDirectAzureCredentials(c)
+	}
+	return readInstallAzureCredentials(c, k8sClient)
+}
+
+func readDirectAzureCredentials(c *components.AzurePluginConfig) error {
+	api, err := azure.NewAzureAPI()
+	if err != nil {
+		return fmt.Errorf("failed to create Azure API: %w", err)
+	}
+	_, err = api.RoleAssignmentsClient.Get(context.Background(), "00000000-0000-0000-0000-000000000000", "00000000-000000-0000000000", nil)
+	// auth toolchain is configured, skip prompting for credentials
+	if err == nil || !strings.Contains(err.Error(), azureNoCredsErr) {
+		return nil
+	}
+
+	c.TenantID, err = prompts.ReadTextRegex("Azure Tenant ID", c.TenantID, mustBeValidUUID, prompts.UUIDRegex)
+	if err != nil {
+		return fmt.Errorf("failed to prompt for text for Azure Tenant ID: %w", err)
+	}
+	c.ClientID, err = prompts.ReadTextRegex("Azure Client ID", c.ClientID, mustBeValidUUID, prompts.UUIDRegex)
+	if err != nil {
+		return fmt.Errorf("failed to prompt for text for Azure Client ID: %w", err)
+	}
+	c.ClientSecret, err = prompts.ReadPassword("Azure Client Secret", c.ClientSecret, false, -1)
+	if err != nil {
+		return fmt.Errorf("failed to prompt for password for Azure Client Secret: %w", err)
+	}
+
+	err = os.Setenv("AZURE_TENANT_ID", c.TenantID)
+	if err != nil {
+		return fmt.Errorf("failed to set AZURE_TENANT_ID: %w", err)
+	}
+	err = os.Setenv("AZURE_CLIENT_ID", c.ClientID)
+	if err != nil {
+		return fmt.Errorf("failed to set AZURE_CLIENT_ID: %w", err)
+	}
+	err = os.Setenv("AZURE_CLIENT_SECRET", c.ClientSecret)
+	if err != nil {
+		return fmt.Errorf("failed to set AZURE_CLIENT_SECRET: %w", err)
+	}
+
+	return nil
+}
+
+func readInstallAzureCredentials(c *components.AzurePluginConfig, k8sClient kubernetes.Interface) error {
 	var err error
 
-	if !tc.Direct {
-		c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit Azure auth", true)
+	c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit Azure auth", true)
+	if err != nil {
+		return fmt.Errorf("failed to prompt for bool for use implicit Azure auth: %w", err)
+	}
+	if c.Validator.Auth.Implicit {
+		c.ServiceAccountName, err = services.ReadServiceAccount(k8sClient, cfg.Validator)
 		if err != nil {
-			return fmt.Errorf("failed to prompt for bool for use implicit Azure auth: %w", err)
+			return fmt.Errorf("failed to read k8s ServiceAccount: %w", err)
 		}
-		if c.Validator.Auth.Implicit {
-			c.ServiceAccountName, err = services.ReadServiceAccount(k8sClient, cfg.Validator)
-			if err != nil {
-				return fmt.Errorf("failed to read k8s ServiceAccount: %w", err)
-			}
-		}
+		return nil
 	}
 	// always create Azure credential secret if creating a new kind cluster
 	createSecret := true
@@ -93,12 +144,11 @@ func readAzureCredentials(c *components.AzurePluginConfig, tc *cfg.TaskConfig, k
 		if c.Validator.Auth.SecretName != "" {
 			azureSecretName = c.Validator.Auth.SecretName
 		}
-		if !tc.Direct {
-			c.Validator.Auth.SecretName, err = prompts.ReadText("Azure credentials secret name", azureSecretName, false, -1)
-			if err != nil {
-				return fmt.Errorf("failed to prompt for text for Azure credentials secret name: %w", err)
-			}
+		c.Validator.Auth.SecretName, err = prompts.ReadText("Azure credentials secret name", azureSecretName, false, -1)
+		if err != nil {
+			return fmt.Errorf("failed to prompt for text for Azure credentials secret name: %w", err)
 		}
+
 		c.TenantID, err = prompts.ReadTextRegex("Azure Tenant ID", c.TenantID, mustBeValidUUID, prompts.UUIDRegex)
 		if err != nil {
 			return fmt.Errorf("failed to prompt for text for Azure Tenant ID: %w", err)
@@ -112,20 +162,6 @@ func readAzureCredentials(c *components.AzurePluginConfig, tc *cfg.TaskConfig, k
 			return fmt.Errorf("failed to prompt for password for Azure Client Secret: %w", err)
 		}
 
-		if tc.Direct {
-			err = os.Setenv("AZURE_TENANT_ID", c.TenantID)
-			if err != nil {
-				return fmt.Errorf("failed to set AZURE_TENANT_ID: %w", err)
-			}
-			err = os.Setenv("AZURE_CLIENT_ID", c.ClientID)
-			if err != nil {
-				return fmt.Errorf("failed to set AZURE_CLIENT_ID: %w", err)
-			}
-			err = os.Setenv("AZURE_CLIENT_SECRET", c.ClientSecret)
-			if err != nil {
-				return fmt.Errorf("failed to set AZURE_CLIENT_SECRET: %w", err)
-			}
-		}
 	} else {
 		secret, err := services.ReadSecret(k8sClient, cfg.Validator, false, cfg.ValidatorPluginAzureKeys)
 		if err != nil {
