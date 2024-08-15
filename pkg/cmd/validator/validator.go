@@ -137,6 +137,15 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		log.InfoCLI("validator configuration file: %s", tc.ConfigFile)
 	}
 
+	if tc.Apply {
+		if !configProvided {
+			tc.Reconfigure = true
+		}
+		if err := ConfigureOrCheckCommand(c, tc); err != nil {
+			return err
+		}
+	}
+
 	if tc.CreateConfigOnly || tc.UpdatePasswords {
 		return nil
 	}
@@ -149,12 +158,6 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 
 	if err := deployValidatorAndPlugins(c, vc); err != nil {
 		return err
-	}
-	if tc.Apply {
-		if !configProvided {
-			tc.Reconfigure = true
-		}
-		return ConfigureOrCheckCommand(c, tc)
 	}
 
 	log.InfoCLI(`

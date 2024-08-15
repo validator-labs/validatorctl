@@ -152,7 +152,7 @@ func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *
 	tuiVals = t.azurePluginValues(ctx, tuiVals)
 	tuiVals, tuiSliceVals = t.maasPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals, tuiSliceVals = t.networkPluginValues(ctx, tuiVals, tuiSliceVals)
-	tuiVals = t.ociPluginValues(ctx, tuiVals)
+	tuiVals, tuiSliceVals = t.ociPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals = t.vspherePluginValues(ctx, tuiVals)
 	tuiVals = t.finalizationValues(tuiVals)
 
@@ -360,9 +360,10 @@ func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, vals []string
 		"5",                              // TCP connection timeout
 		"n",                              // add another TCP connection rule
 		"y",                              // enable HTTP file validation
+		"check http file",                // HTTP file rule name
 		[]string{"https://foo.com/file"}, // paths
-		"n",                              // add another path
-		"http-secret",                    // secret name for basic auth
+		"y",                              // configure basic auth for http file rule
+		"y",                              // create http file credential secret
 		"username",                       // username key
 		"password",                       // password key
 		"y",                              // skip TLS verification
@@ -387,8 +388,8 @@ func (t *ValidatorTest) ociPluginInstallValues(ctx *test.TestContext, vals []str
 	return vals
 }
 
-func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string) []string {
-	ociVals := []string{
+func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+	ociVals := []any{
 		"y",                      // add registry credentials
 		"oci-creds",              // secret name
 		"y",                      // configure basic auth
@@ -405,13 +406,12 @@ func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string) []
 		"public.ecr.aws",         // registry host
 		"N/A",                    // registry auth secret name
 		"none",                   // validation type
-		"public.ecr.aws/u5n5j0b4/oci-test-public", // artifact references
+		[]string{"public.ecr.aws/u5n5j0b4/oci-test-public"}, // artifact references
 		"N/A", // signature verification secret name
 		"",    // ca certificate
 		"n",   // add another registry rule
 	}
-	vals = append(vals, ociVals...)
-	return vals
+	return interleave(vals, sliceVals, ociVals)
 }
 
 func (t *ValidatorTest) vspherePluginInstallValues(ctx *test.TestContext, vals []string) []string {
@@ -444,13 +444,13 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"DC0_C0_H1",                         // host2
 		"n",                                 // add more hosts
 		"n",                                 // add more validation rules
-		"y",                                 // Check role privileges
+		"y",                                 // Enable role privileges validation
 		"role rule 1",                       // Role privilege rule name
 		"user1@vsphere.local",               // user to check role privileges against
 		"Local Filepath",                    // vCenter privileges Source
 		t.filePath("vCenterPrivileges.txt"), // privileges File
 		"n",                                 // add another role privilege rule
-		"y",                                 // check entity privileges
+		"y",                                 // Enable entity privilege validation
 		"entity rule 1",                     // entity privilege rule name
 		"user2@vsphere.local",               // user to check entity privileges against
 		"Folder",                            // entity type
@@ -458,7 +458,7 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"Local Filepath",                    // vCenter privileges Source
 		t.filePath("vCenterPrivileges.txt"), // privileges File
 		"n",                                 // add more entity privilege rules
-		"y",                                 // check compute resource requirements
+		"y",                                 // Enable compute resource validation
 		"resource requirement rule 1",       // resource requirement rule name
 		"Cluster",                           // select cluster for resource check
 		"C0",                                // cluster name for resource check
@@ -475,7 +475,7 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"20Gi",                              // per node storage
 		"n",                                 // add more node pools
 		"n",                                 // add more resource requirement checks
-		"y",                                 // check tags on entities
+		"y",                                 // Enable tags validation
 		"tag rule 1",                        // tag rule name
 		"Datacenter",                        // entity type
 		"DC0",                               // datacenter name
@@ -740,10 +740,5 @@ func (t *ValidatorTest) filePath(file string) string {
 func (t *ValidatorTest) overrideMaasClient(ctx *test.TestContext) {
 	maasClientFunc := clouds.GetMaasClient
 	ctx.Put("maasClientFunc", maasClientFunc)
-	clouds.GetMaasClient = func(maasURL, maasToken string) (*maasclient.Client, error) {
-		client := &maasclient.Client{}
-		client.Account = &clouds.MockMaasAccount{}
-
-		return client, nil
-	}
+	clouds.GetMaasClient = clouds.GetMockMaasClient
 }

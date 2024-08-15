@@ -107,12 +107,36 @@ func GetMaasZones(c *components.MaasPluginConfig) ([]string, error) {
 	return zones, nil
 }
 
-func getMaasClient(maasURL, maasToken string) (*maasclient.Client, error) {
-	client, err := maasclient.GetClient(maasURL, maasToken, "2.0")
+func getMaasClient(url, token string) (*maasclient.Client, error) {
+	client, err := maasclient.GetClient(url, token, "2.0")
 	if err != nil {
 		return &maasclient.Client{}, err
 	}
 	return client, nil
+}
+
+// GetMockMaasClient returns a mock MAAS client for testing
+func GetMockMaasClient(_, _ string) (*maasclient.Client, error) {
+	mockClient := &maasclient.Client{
+		Account: &MockMaasAccount{},
+		ResourcePools: &MockMaasResourcePools{
+			resourcePools: []entity.ResourcePool{
+				{
+					Name: "pool1",
+					ID:   1,
+				},
+			},
+		},
+		Zones: &MockMaasZones{
+			zones: []entity.Zone{
+				{
+					Name: "az1",
+					ID:   1,
+				},
+			},
+		},
+	}
+	return mockClient, nil
 }
 
 // MockMaasAccount replaces the maasclient.Account struct for integration testing
@@ -123,4 +147,26 @@ type MockMaasAccount struct {
 // ListAuthorisationTokens replaces the maasclient.Account.ListAuthorisationTokens method for integration testing
 func (a *MockMaasAccount) ListAuthorisationTokens() ([]entity.AuthorisationTokenListItem, error) {
 	return []entity.AuthorisationTokenListItem{}, nil
+}
+
+// MockMaasResourcePools replaces the maasclient.ResourcePools struct for integration testing
+type MockMaasResourcePools struct {
+	maasclient.ResourcePools
+	resourcePools []entity.ResourcePool
+}
+
+// Get replaces the maasclient.ResourcePools.Get method for integration testing
+func (r *MockMaasResourcePools) Get() ([]entity.ResourcePool, error) {
+	return r.resourcePools, nil
+}
+
+// MockMaasZones replaces the maasclient.Zones struct for integration testing
+type MockMaasZones struct {
+	maasclient.Zones
+	zones []entity.Zone
+}
+
+// Get replaces the maasclient.Zones.Get method for integration testing
+func (z *MockMaasZones) Get() ([]entity.Zone, error) {
+	return z.zones, nil
 }

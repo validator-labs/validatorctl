@@ -201,7 +201,7 @@ func configureAzureRBACRules(c *components.AzurePluginConfig) error {
 		c.Validator.RBACRules[i] = r
 	}
 
-	if c.Validator.RBACRules == nil {
+	if len(c.Validator.RBACRules) == 0 {
 		c.Validator.RBACRules = make([]plug.RBACRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another RBAC rule", false)

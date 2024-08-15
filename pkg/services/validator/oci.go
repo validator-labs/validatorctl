@@ -230,7 +230,7 @@ func configureOciRegistryRules(c *components.OCIPluginConfig, authSecretNames, s
 		}
 	}
 
-	if c.Validator.OciRegistryRules == nil {
+	if len(c.Validator.OciRegistryRules) == 0 {
 		c.Validator.OciRegistryRules = make([]plug.OciRegistryRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another OCI registry rule", false)

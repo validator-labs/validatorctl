@@ -114,7 +114,7 @@ func configureIamRoleRules(c *components.AWSPluginConfig, ruleNames *[]string) e
 		}
 	}
 	addRules := true
-	if c.Validator.IamRoleRules == nil {
+	if len(c.Validator.IamRoleRules) == 0 {
 		c.Validator.IamRoleRules = make([]vpawsapi.IamRoleRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another role rule", false)
@@ -203,7 +203,7 @@ func configureIamUserRules(c *components.AWSPluginConfig, ruleNames *[]string) e
 		}
 	}
 	addRules := true
-	if c.Validator.IamUserRules == nil {
+	if len(c.Validator.IamUserRules) == 0 {
 		c.Validator.IamUserRules = make([]vpawsapi.IamUserRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another user rule", false)
@@ -292,7 +292,7 @@ func configureIamGroupRules(c *components.AWSPluginConfig, ruleNames *[]string) 
 		}
 	}
 	addRules := true
-	if c.Validator.IamGroupRules == nil {
+	if len(c.Validator.IamGroupRules) == 0 {
 		c.Validator.IamGroupRules = make([]vpawsapi.IamGroupRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another group rule", false)
@@ -381,7 +381,7 @@ func configureIamPolicyRules(c *components.AWSPluginConfig, ruleNames *[]string)
 		}
 	}
 	addRules := true
-	if c.Validator.IamPolicyRules == nil {
+	if len(c.Validator.IamPolicyRules) == 0 {
 		c.Validator.IamPolicyRules = make([]vpawsapi.IamPolicyRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another policy rule", false)
@@ -534,7 +534,7 @@ func configureServiceQuotaRules(c *components.AWSPluginConfig, ruleNames *[]stri
 		}
 	}
 	addRules := true
-	if c.Validator.ServiceQuotaRules == nil {
+	if len(c.Validator.ServiceQuotaRules) == 0 {
 		c.Validator.ServiceQuotaRules = make([]vpawsapi.ServiceQuotaRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another service quota rule", false)
@@ -583,7 +583,7 @@ func configureAwsTagRules(c *components.AWSPluginConfig, ruleNames *[]string) er
 		}
 	}
 	addRules := true
-	if c.Validator.TagRules == nil {
+	if len(c.Validator.TagRules) == 0 {
 		c.Validator.TagRules = make([]vpawsapi.TagRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another subnet tag rule", false)
@@ -640,7 +640,7 @@ func configureAmiRules(c *components.AWSPluginConfig, ruleNames *[]string) error
 		}
 	}
 	addRules := true
-	if c.Validator.AmiRules == nil {
+	if len(c.Validator.AmiRules) == 0 {
 		c.Validator.AmiRules = make([]vpawsapi.AmiRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another AMI rule", false)
