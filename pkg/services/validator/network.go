@@ -166,7 +166,7 @@ func configureDNSRules(c *components.NetworkPluginConfig, ruleNames *[]string) e
 		}
 	}
 	addRules := true
-	if c.Validator.DNSRules == nil {
+	if len(c.Validator.DNSRules) == 0 {
 		c.Validator.DNSRules = make([]network.DNSRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another DNS rule", false)
@@ -213,7 +213,7 @@ func configureIcmpRules(c *components.NetworkPluginConfig, ruleNames *[]string) 
 		}
 	}
 	addRules := true
-	if c.Validator.ICMPRules == nil {
+	if len(c.Validator.ICMPRules) == 0 {
 		c.Validator.ICMPRules = make([]network.ICMPRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another ICMP rule", false)
@@ -261,7 +261,7 @@ func configureIPRangeRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 		}
 	}
 	addRules := true
-	if c.Validator.IPRangeRules == nil {
+	if len(c.Validator.IPRangeRules) == 0 {
 		c.Validator.IPRangeRules = make([]network.IPRangeRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another IP range rule", false)
@@ -309,7 +309,7 @@ func configureMtuRules(c *components.NetworkPluginConfig, ruleNames *[]string) e
 		}
 	}
 	addRules := true
-	if c.Validator.MTURules == nil {
+	if len(c.Validator.MTURules) == 0 {
 		c.Validator.MTURules = make([]network.MTURule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another MTU rule", false)
@@ -357,7 +357,7 @@ func configureTCPConnRules(c *components.NetworkPluginConfig, ruleNames *[]strin
 		}
 	}
 	addRules := true
-	if c.Validator.TCPConnRules == nil {
+	if len(c.Validator.TCPConnRules) == 0 {
 		c.Validator.TCPConnRules = make([]network.TCPConnRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another TCP connection rule", false)
@@ -405,7 +405,7 @@ func configureHTTPFileRules(c *components.NetworkPluginConfig, tc *cfg.TaskConfi
 		}
 	}
 	addRules := true
-	if c.Validator.HTTPFileRules == nil {
+	if len(c.Validator.HTTPFileRules) == 0 {
 		c.Validator.HTTPFileRules = make([]network.HTTPFileRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another HTTP file rule", false)

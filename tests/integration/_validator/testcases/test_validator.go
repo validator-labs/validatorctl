@@ -367,7 +367,6 @@ func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, vals []string
 		[]string{"https://foo.com/file"}, // paths
 		"y",                              // configure basic auth for http file rule
 		"y",                              // create http file credential secret
-		"http-secret",                    // secret name for basic auth
 		"username",                       // username key
 		"password",                       // password key
 		"y",                              // skip TLS verification
@@ -445,14 +444,13 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"DC0_C0_H1",                         // host2
 		"n",                                 // add more hosts
 		"n",                                 // add more validation rules
-		"y",                                 // Check role privileges
-		"y",                                 // add another role privilege rule // TODO: fix this, shouldn't be asking for another rule yet
+		"y",                                 // Enable role privileges validation
 		"role rule 1",                       // Role privilege rule name
 		"user1@vsphere.local",               // user to check role privileges against
 		"Local Filepath",                    // vCenter privileges Source
 		t.filePath("vCenterPrivileges.txt"), // privileges File
 		"n",                                 // add another role privilege rule
-		"y",                                 // check entity privileges
+		"y",                                 // Enable entity privilege validation
 		"entity rule 1",                     // entity privilege rule name
 		"user2@vsphere.local",               // user to check entity privileges against
 		"Folder",                            // entity type
@@ -460,7 +458,7 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"Local Filepath",                    // vCenter privileges Source
 		t.filePath("vCenterPrivileges.txt"), // privileges File
 		"n",                                 // add more entity privilege rules
-		"y",                                 // check compute resource requirements
+		"y",                                 // Enable compute resource validation
 		"resource requirement rule 1",       // resource requirement rule name
 		"Cluster",                           // select cluster for resource check
 		"C0",                                // cluster name for resource check
@@ -477,8 +475,7 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"20Gi",                              // per node storage
 		"n",                                 // add more node pools
 		"n",                                 // add more resource requirement checks
-		"y",                                 // check tags on entities
-		"y",                                 // add another tag rule // TODO: fix this, shouldnt be asked yet
+		"y",                                 // Enable tags validation
 		"tag rule 1",                        // tag rule name
 		"Datacenter",                        // entity type
 		"DC0",                               // datacenter name
@@ -743,10 +740,5 @@ func (t *ValidatorTest) filePath(file string) string {
 func (t *ValidatorTest) overrideMaasClient(ctx *test.TestContext) {
 	maasClientFunc := clouds.GetMaasClient
 	ctx.Put("maasClientFunc", maasClientFunc)
-	clouds.GetMaasClient = func(maasURL, maasToken string) (*maasclient.Client, error) {
-		client := &maasclient.Client{}
-		client.Account = &clouds.MockMaasAccount{}
-
-		return client, nil
-	}
+	clouds.GetMaasClient = clouds.GetMockMaasClient
 }

@@ -373,7 +373,7 @@ func ReadValidatorPluginConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components
 
 	if tc.Direct {
 		enablePlugins = true
-	} else {
+	} else if !tc.CreateConfigOnly {
 		if vc.Kubeconfig == "" {
 			if vc.KindConfig.UseKindCluster {
 				return errors.New(`config file has kindConfig.useKindCluster set to true, but no kubeconfig path was provided. Have you run "validator install" yet?`)

@@ -205,7 +205,7 @@ func configureNtpRules(ctx context.Context, c *components.VspherePluginConfig, d
 		}
 	}
 	addRules := true
-	if c.Validator.NTPValidationRules == nil {
+	if len(c.Validator.NTPValidationRules) == 0 {
 		c.Validator.NTPValidationRules = make([]v1alpha1.NTPValidationRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another NTP validation rule", false)
@@ -315,7 +315,7 @@ func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[
 		}
 	}
 	addRules := true
-	if c.VsphereRolePrivilegeRules == nil {
+	if len(c.VsphereRolePrivilegeRules) == 0 {
 		c.VsphereRolePrivilegeRules = make([]components.VsphereRolePrivilegeRule, 0)
 		c.Validator.RolePrivilegeValidationRules = make([]v1alpha1.GenericRolePrivilegeValidationRule, 0)
 	} else {
@@ -403,6 +403,9 @@ func loadPrivileges(privilegeFile string) (string, func(string) error, error) {
 	slices.Sort(privileges)
 
 	validate := func(input string) error {
+		if strings.HasPrefix(input, "#") {
+			return nil
+		}
 		if !slices.Contains(privileges, strings.TrimSpace(input)) {
 			log.ErrorCLI("failed to read vCenter privileges", "invalidPrivilege", input)
 			return prompts.ErrValidationFailed
@@ -508,7 +511,7 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 		}
 	}
 	addRules := true
-	if c.Validator.EntityPrivilegeValidationRules == nil {
+	if len(c.Validator.EntityPrivilegeValidationRules) == 0 {
 		c.VsphereEntityPrivilegeRules = make([]components.VsphereEntityPrivilegeRule, 0)
 		c.Validator.EntityPrivilegeValidationRules = make([]v1alpha1.EntityPrivilegeValidationRule, 0)
 	} else {
@@ -617,7 +620,7 @@ func configureResourceRequirementRules(ctx context.Context, c *components.Vspher
 		}
 	}
 	addRules := true
-	if c.Validator.ComputeResourceRules == nil {
+	if len(c.Validator.ComputeResourceRules) == 0 {
 		c.Validator.ComputeResourceRules = make([]v1alpha1.ComputeResourceRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another resource requirement validation rule", false)
@@ -756,7 +759,7 @@ func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginCo
 		}
 	}
 	addRules := true
-	if c.VsphereTagRules == nil {
+	if len(c.VsphereTagRules) == 0 {
 		c.VsphereTagRules = make([]components.VsphereTagRule, 0)
 		c.Validator.TagValidationRules = make([]v1alpha1.TagValidationRule, 0)
 	} else {

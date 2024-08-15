@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -12,12 +13,14 @@ import (
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	vpawsapi "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
-
+	"github.com/validator-labs/validator-plugin-aws/pkg/aws"
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
 )
+
+const awsNoCredsErr = "get identity: get credentials: "
 
 var (
 	region             = "us-east-1"
@@ -111,7 +114,7 @@ func configureIamRoleRules(c *components.AWSPluginConfig, ruleNames *[]string) e
 		}
 	}
 	addRules := true
-	if c.Validator.IamRoleRules == nil {
+	if len(c.Validator.IamRoleRules) == 0 {
 		c.Validator.IamRoleRules = make([]vpawsapi.IamRoleRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another role rule", false)
@@ -200,7 +203,7 @@ func configureIamUserRules(c *components.AWSPluginConfig, ruleNames *[]string) e
 		}
 	}
 	addRules := true
-	if c.Validator.IamUserRules == nil {
+	if len(c.Validator.IamUserRules) == 0 {
 		c.Validator.IamUserRules = make([]vpawsapi.IamUserRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another user rule", false)
@@ -289,7 +292,7 @@ func configureIamGroupRules(c *components.AWSPluginConfig, ruleNames *[]string) 
 		}
 	}
 	addRules := true
-	if c.Validator.IamGroupRules == nil {
+	if len(c.Validator.IamGroupRules) == 0 {
 		c.Validator.IamGroupRules = make([]vpawsapi.IamGroupRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another group rule", false)
@@ -378,7 +381,7 @@ func configureIamPolicyRules(c *components.AWSPluginConfig, ruleNames *[]string)
 		}
 	}
 	addRules := true
-	if c.Validator.IamPolicyRules == nil {
+	if len(c.Validator.IamPolicyRules) == 0 {
 		c.Validator.IamPolicyRules = make([]vpawsapi.IamPolicyRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another policy rule", false)
@@ -531,7 +534,7 @@ func configureServiceQuotaRules(c *components.AWSPluginConfig, ruleNames *[]stri
 		}
 	}
 	addRules := true
-	if c.Validator.ServiceQuotaRules == nil {
+	if len(c.Validator.ServiceQuotaRules) == 0 {
 		c.Validator.ServiceQuotaRules = make([]vpawsapi.ServiceQuotaRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another service quota rule", false)
@@ -580,7 +583,7 @@ func configureAwsTagRules(c *components.AWSPluginConfig, ruleNames *[]string) er
 		}
 	}
 	addRules := true
-	if c.Validator.TagRules == nil {
+	if len(c.Validator.TagRules) == 0 {
 		c.Validator.TagRules = make([]vpawsapi.TagRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another subnet tag rule", false)
@@ -637,7 +640,7 @@ func configureAmiRules(c *components.AWSPluginConfig, ruleNames *[]string) error
 		}
 	}
 	addRules := true
-	if c.Validator.AmiRules == nil {
+	if len(c.Validator.AmiRules) == 0 {
 		c.Validator.AmiRules = make([]vpawsapi.AmiRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another AMI rule", false)
@@ -665,64 +668,17 @@ func configureAmiRules(c *components.AWSPluginConfig, ruleNames *[]string) error
 
 func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	var err error
-	c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit AWS auth", true)
-	if err != nil {
-		return err
-	}
-	if c.Validator.Auth.Implicit && !tc.Direct {
-		c.ServiceAccountName, err = services.ReadServiceAccount(k8sClient, cfg.Validator)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
 
-	// always create AWS credential secret if creating a new kind cluster
-	createSecret := true
-
-	if k8sClient != nil {
-		log.InfoCLI(`
-	Either specify AWS credentials or provide the name of a secret in the target K8s cluster's %s namespace.
-	If using an existing secret, it must contain the following keys: %+v.
-	`, cfg.Validator, cfg.ValidatorPluginAwsKeys,
-		)
-		createSecret, err = prompts.ReadBool("Create AWS credential secret", true)
-		if err != nil {
-			return err
-		}
-	}
-
-	if createSecret {
-		if c.Validator.Auth.SecretName != "" {
-			awsSecretName = c.Validator.Auth.SecretName
-		}
-		if !tc.Direct {
-			c.Validator.Auth.SecretName, err = prompts.ReadText("AWS credentials secret name", awsSecretName, false, -1)
-			if err != nil {
-				return err
-			}
-		}
-		c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
-		if err != nil {
-			return err
-		}
-		c.SecretAccessKey, err = prompts.ReadPassword("AWS Secret Access Key", c.SecretAccessKey, false, -1)
-		if err != nil {
-			return err
-		}
-		c.SessionToken, err = prompts.ReadPassword("AWS Session Token", c.SessionToken, true, -1)
+	if tc.Direct {
+		err = readDirectAwsCredentials(c)
 		if err != nil {
 			return err
 		}
 	} else {
-		secret, err := services.ReadSecret(k8sClient, cfg.Validator, false, cfg.ValidatorPluginAwsKeys)
+		err = readInstallAwsCredentials(c, k8sClient)
 		if err != nil {
 			return err
 		}
-		c.Validator.Auth.SecretName = secret.Name
-		c.AccessKeyID = string(secret.Data["AWS_ACCESS_KEY_ID"])
-		c.SecretAccessKey = string(secret.Data["AWS_SECRET_ACCESS_KEY"])
-		c.SessionToken = string(secret.Data["AWS_SESSION_TOKEN"])
 	}
 
 	useSTS, err := prompts.ReadBool("Configure Credentials for STS", false)
@@ -749,6 +705,114 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 		}
 	}
 
+	return nil
+}
+
+func readInstallAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernetes.Interface) error {
+	var err error
+
+	c.Validator.Auth.Implicit, err = prompts.ReadBool("Use implicit AWS auth", true)
+	if err != nil {
+		return err
+	}
+	if c.Validator.Auth.Implicit {
+		c.ServiceAccountName, err = services.ReadServiceAccount(k8sClient, cfg.Validator)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// always create AWS credential secret if creating a new kind cluster
+	createSecret := true
+
+	if k8sClient != nil {
+		log.InfoCLI(`
+	Either specify AWS credentials or provide the name of a secret in the target K8s cluster's %s namespace.
+	If using an existing secret, it must contain the following keys: %+v.
+	`, cfg.Validator, cfg.ValidatorPluginAwsKeys,
+		)
+		createSecret, err = prompts.ReadBool("Create AWS credential secret", true)
+		if err != nil {
+			return err
+		}
+	}
+
+	if createSecret {
+		if c.Validator.Auth.SecretName != "" {
+			awsSecretName = c.Validator.Auth.SecretName
+		}
+		c.Validator.Auth.SecretName, err = prompts.ReadText("AWS credentials secret name", awsSecretName, false, -1)
+		if err != nil {
+			return err
+		}
+		err = readAwsCredsHelper(c)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		secret, err := services.ReadSecret(k8sClient, cfg.Validator, false, cfg.ValidatorPluginAwsKeys)
+		if err != nil {
+			return err
+		}
+		c.Validator.Auth.SecretName = secret.Name
+		c.AccessKeyID = string(secret.Data["AWS_ACCESS_KEY_ID"])
+		c.SecretAccessKey = string(secret.Data["AWS_SECRET_ACCESS_KEY"])
+		c.SessionToken = string(secret.Data["AWS_SESSION_TOKEN"])
+	}
+
+	return nil
+}
+
+func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
+	// check if credentials are already configured
+	api, err := aws.NewAPI(c.Validator.Auth, c.Validator.DefaultRegion)
+	if err != nil {
+		return err
+	}
+	_, err = api.IAM.GetUser(context.TODO(), nil)
+	// auth keychain is configured, skip prompting for credentials
+	if err == nil || !strings.Contains(err.Error(), awsNoCredsErr) {
+		return nil
+	}
+
+	err = readAwsCredsHelper(c)
+	if err != nil {
+		return err
+	}
+
+	err = os.Setenv("AWS_ACCESS_KEY_ID", c.AccessKeyID)
+	if err != nil {
+		return fmt.Errorf("failed to set AWS_ACCESS_KEY_ID: %w", err)
+	}
+	err = os.Setenv("AWS_SECRET_ACCESS_KEY", c.SecretAccessKey)
+	if err != nil {
+		return fmt.Errorf("failed to set AWS_SECRET_ACCESS_KEY: %w", err)
+	}
+	if c.SessionToken != "" {
+		err = os.Setenv("AWS_SESSION_TOKEN", c.SessionToken)
+		if err != nil {
+			return fmt.Errorf("failed to set AWS_SESSION_TOKEN: %w", err)
+		}
+	}
+	return nil
+}
+
+func readAwsCredsHelper(c *components.AWSPluginConfig) error {
+	var err error
+	c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
+	if err != nil {
+		return err
+	}
+	c.SecretAccessKey, err = prompts.ReadPassword("AWS Secret Access Key", c.SecretAccessKey, false, -1)
+	if err != nil {
+		return err
+	}
+	c.SessionToken, err = prompts.ReadPassword("AWS Session Token", c.SessionToken, true, -1)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
