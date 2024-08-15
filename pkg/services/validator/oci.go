@@ -17,8 +17,6 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/services"
 )
 
-const notApplicable = "N/A"
-
 func readOciPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, _ kubernetes.Interface) error {
 	c := vc.OCIPlugin
 
@@ -34,152 +32,94 @@ func readOciPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, _ kuberne
 func readOciPluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, kClient kubernetes.Interface) error {
 	log.Header("OCI Plugin Rule Configuration")
 	c := vc.OCIPlugin
+	ruleNames := make([]string, 0)
+	authSecretNames := make([]string, 0)
+	sigSecretNames := make([]string, 0)
 
-	authSecretNames, err := configureAuthSecrets(c, kClient)
-	if err != nil {
-		return err
-	}
-	sigVerificationSecretNames, err := configureSigVerificationSecrets(c, kClient)
-	if err != nil {
-		return err
-	}
-	if err := configureOciRegistryRules(c, authSecretNames, sigVerificationSecretNames); err != nil {
+	if err := configureOciRegistryRules(c, &ruleNames, &authSecretNames, &sigSecretNames, kClient); err != nil {
 		return err
 	}
 
-	// impossible at present. uncomment if/when additional OCI rule types are added.
-	// if c.Validator.ResultCount() == 0 {
-	// 	return errNoRulesEnabled
-	// }
+	if c.Validator.ResultCount() == 0 {
+		return errNoRulesEnabled
+	}
 	return nil
 }
 
-// nolint:dupl
-// configureAuthSecrets prompts the user to configure credentials for OCI registries.
-func configureAuthSecrets(c *components.OCIPluginConfig, kClient kubernetes.Interface) ([]string, error) {
-	log.InfoCLI("Optionally configure secret(s) for private OCI registry authentication.")
+// configureAuthSecrets prompts the user to configure secrets containing authentication details.
+func configureAuthSecrets(c *components.OCIPluginConfig, r *plug.OciRegistryRule, kClient kubernetes.Interface, authSecretNames *[]string) error {
+	allSecretNames := []string{cfg.OciCreateNewAuthSecPrompt} // provide the option to create a new secret
+	allSecretNames = append(allSecretNames, *authSecretNames...)
+	if kClient != nil {
+		existingAuthSecrets, err := services.GetSecretsWithKeys(kClient, cfg.Validator, cfg.ValidatorBasicAuthKeys)
+		if err != nil {
+			return err
+		}
+		for _, s := range existingAuthSecrets {
+			allSecretNames = append(allSecretNames, s.Name)
+		}
+	}
 
 	var err error
-	addSecrets := true
-	secretNames := make([]string, 0)
-	secretNames = append(secretNames, notApplicable) // always provide the option to not use any secret
-
-	for i, s := range c.Secrets {
-		s := s
-		if err := readOciSecret(s); err != nil {
-			return nil, err
-		}
-		c.Secrets[i] = s
-		secretNames = append(secretNames, s.Name)
-	}
-
-	if c.Secrets == nil {
-		c.Secrets = make([]*components.Secret, 0)
-	} else {
-		addSecrets, err = prompts.ReadBool("Add another private OCI registry secret", false)
+	useSecretName := cfg.OciCreateNewAuthSecPrompt
+	if len(allSecretNames) > 1 {
+		useSecretName, err = prompts.Select("Registry authentication secret name", allSecretNames)
 		if err != nil {
-			return nil, err
-		}
-	}
-	if !addSecrets {
-		return secretNames, nil
-	}
-
-	adjective := "a"
-	for {
-		add, err := prompts.ReadBool(fmt.Sprintf("Add %s private OCI registry secret", adjective), false)
-		if err != nil {
-			return nil, err
-		}
-		if !add {
-			break
-		}
-		adjective = "another"
-
-		s := &components.Secret{}
-		if err := readOciSecret(s); err != nil {
-			return nil, err
-		}
-		c.Secrets = append(c.Secrets, s)
-		secretNames = append(secretNames, s.Name)
-	}
-
-	if kClient != nil {
-		existingSecrets, err := services.GetSecretsWithKeys(kClient, cfg.Validator, cfg.ValidatorBasicAuthKeys)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, s := range existingSecrets {
-			secretNames = append(secretNames, s.Name)
+			return err
 		}
 	}
 
-	return secretNames, nil
+	if useSecretName == cfg.OciCreateNewAuthSecPrompt {
+		secret := &components.Secret{}
+		if err := readOciSecret(secret); err != nil {
+			return err
+		}
+		c.Secrets = append(c.Secrets, secret)
+		useSecretName = secret.Name
+		*authSecretNames = append(*authSecretNames, useSecretName)
+	}
+	r.Auth.SecretName = &useSecretName
+	return nil
 }
 
-// nolint:dupl
 // configureSigVerificationSecrets prompts the user to configure secrets containing public keys for use in signature verification.
-func configureSigVerificationSecrets(c *components.OCIPluginConfig, kClient kubernetes.Interface) ([]string, error) {
-	log.InfoCLI("Optionally configure secret(s) for OCI artifact signature verification.")
-
-	var err error
-	addSecrets := true
-	secretNames := make([]string, 0)
-	secretNames = append(secretNames, notApplicable) // always provide the option to not use any secret
-
-	for i, s := range c.PublicKeySecrets {
-		s := s
-		if err := readPublicKeySecret(s); err != nil {
-			return nil, err
-		}
-		c.PublicKeySecrets[i] = s
-		secretNames = append(secretNames, s.Name)
-	}
-
-	if c.PublicKeySecrets == nil {
-		c.PublicKeySecrets = make([]*components.PublicKeySecret, 0)
-	} else {
-		addSecrets, err = prompts.ReadBool("Add another signature verification secret", false)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if !addSecrets {
-		return secretNames, nil
-	}
-
-	adjective := "a"
-	for {
-		add, err := prompts.ReadBool(fmt.Sprintf("Add %s signature verification secret", adjective), false)
-		if err != nil {
-			return nil, err
-		}
-		if !add {
-			break
-		}
-		adjective = "another"
-
-		s := &components.PublicKeySecret{}
-		if err := readPublicKeySecret(s); err != nil {
-			return nil, err
-		}
-		c.PublicKeySecrets = append(c.PublicKeySecrets, s)
-		secretNames = append(secretNames, s.Name)
-	}
+func configureSigVerificationSecrets(c *components.OCIPluginConfig, r *plug.OciRegistryRule, kClient kubernetes.Interface, sigSecretNames *[]string) error {
+	allSecretNames := []string{cfg.OciCreateNewSigSecPrompt} // provide the option to create a new secret
+	allSecretNames = append(allSecretNames, *sigSecretNames...)
 
 	if kClient != nil {
-		existingSecrets, err := services.GetSecretsWithRegexKeys(kClient, cfg.Validator, cfg.ValidatorPluginOciSigVerificationKeysRegex)
+		existingSigSecrets, err := services.GetSecretsWithRegexKeys(kClient, cfg.Validator, cfg.ValidatorPluginOciSigVerificationKeysRegex)
 		if err != nil {
-			return nil, err
+			return err
 		}
-
-		for _, s := range existingSecrets {
-			secretNames = append(secretNames, s.Name)
+		for _, s := range existingSigSecrets {
+			allSecretNames = append(allSecretNames, s.Name)
 		}
 	}
 
-	return secretNames, nil
+	var err error
+	useSecretName := cfg.OciCreateNewSigSecPrompt
+	if len(allSecretNames) > 1 {
+		useSecretName, err = prompts.Select("Signature verification secret name", allSecretNames)
+		if err != nil {
+			return err
+		}
+	}
+
+	if useSecretName == cfg.OciCreateNewSigSecPrompt {
+		secret := &components.PublicKeySecret{}
+		if err := readPublicKeySecret(secret); err != nil {
+			return err
+		}
+		c.PublicKeySecrets = append(c.PublicKeySecrets, secret)
+		useSecretName = secret.Name
+		*sigSecretNames = append(*sigSecretNames, useSecretName)
+	}
+	r.SignatureVerification = plug.SignatureVerification{
+		Provider:   "cosign",
+		SecretName: useSecretName,
+	}
+	return nil
 }
 
 func readPublicKeySecret(secret *components.PublicKeySecret) error {
@@ -217,18 +157,20 @@ func readPublicKeySecret(secret *components.PublicKeySecret) error {
 	return nil
 }
 
-func configureOciRegistryRules(c *components.OCIPluginConfig, authSecretNames, sigVerificationSecretNames []string) error {
-	log.InfoCLI("OCI registry rule(s) ensure that specific OCI artifacts are present in an OCI registry.")
-
-	var err error
-	addRules := true
+func configureOciRegistryRules(c *components.OCIPluginConfig, ruleNames, authSecretNames, sigSecretNames *[]string, kClient kubernetes.Interface) error {
+	log.InfoCLI(`
+	OCI registry rule(s) ensure that specific OCI artifacts are present in an OCI registry.
+	`)
 
 	for i, r := range c.Validator.OciRegistryRules {
 		r := r
-		if err := readOciRegistryRule(c, &r, i, authSecretNames, sigVerificationSecretNames); err != nil {
+		if err := readOciRegistryRule(c, &r, i, ruleNames, authSecretNames, sigSecretNames, kClient); err != nil {
 			return err
 		}
 	}
+
+	var err error
+	addRules := true
 
 	if len(c.Validator.OciRegistryRules) == 0 {
 		c.Validator.OciRegistryRules = make([]plug.OciRegistryRule, 0)
@@ -242,14 +184,10 @@ func configureOciRegistryRules(c *components.OCIPluginConfig, authSecretNames, s
 		return nil
 	}
 
-	ruleIdx := len(c.Validator.OciRegistryRules)
 	for {
-		r := &plug.OciRegistryRule{}
-		if err := readOciRegistryRule(c, r, ruleIdx, authSecretNames, sigVerificationSecretNames); err != nil {
+		if err := readOciRegistryRule(c, &plug.OciRegistryRule{}, -1, ruleNames, authSecretNames, sigSecretNames, kClient); err != nil {
 			return err
 		}
-		c.Validator.OciRegistryRules = append(c.Validator.OciRegistryRules, *r)
-
 		add, err := prompts.ReadBool("Add another OCI registry rule", false)
 		if err != nil {
 			return err
@@ -257,20 +195,28 @@ func configureOciRegistryRules(c *components.OCIPluginConfig, authSecretNames, s
 		if !add {
 			break
 		}
-		ruleIdx++
 	}
 
 	return nil
 }
 
-func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule, idx int, authSecretNames, sigVerificationSecretNames []string) error {
-	var err error
-
-	if r.RuleName != "" {
-		log.InfoCLI("Reconfiguring OCI registry rule for name: %s", r.RuleName)
+func initOciRegistryRule(r *plug.OciRegistryRule, ruleType string, ruleNames *[]string) error {
+	name := r.Name()
+	if name != "" {
+		log.InfoCLI("Reconfiguring %s rule: %s", ruleType, name)
+		*ruleNames = append(*ruleNames, name)
+	} else {
+		name, err := getRuleName(ruleNames)
+		if err != nil {
+			return err
+		}
+		r.RuleName = name
 	}
+	return nil
+}
 
-	r.RuleName, err = prompts.ReadText("Rule name", r.RuleName, false, -1)
+func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule, idx int, ruleNames, authSecretNames, sigSecretNames *[]string, kClient kubernetes.Interface) error {
+	err := initOciRegistryRule(r, "OCI", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -282,12 +228,21 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 	r.Host = strings.TrimSuffix(host, "/")
 
-	authSecretName, err := prompts.Select("Registry authentication secret name, select N/A for public registries", authSecretNames)
+	shouldConfigureAuth, err := prompts.ReadBool("Configure registry authentication", r.Auth.SecretName != nil)
 	if err != nil {
 		return err
 	}
-	if authSecretName != notApplicable {
-		r.Auth = plug.Auth{SecretName: &authSecretName}
+	if shouldConfigureAuth {
+		err := configureAuthSecrets(c, r, kClient, authSecretNames)
+		if err != nil {
+			return err
+		}
+	} else {
+		r.Auth = plug.Auth{}
+	}
+
+	if err := readArtifactRefs(r); err != nil {
+		return err
 	}
 
 	log.InfoCLI(`
@@ -302,19 +257,17 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 	r.ValidationType = plug.ValidationType(vType)
 
-	if err := readArtifactRefs(r); err != nil {
-		return err
-	}
-
-	sigVerificationSecretName, err := prompts.Select("Signature verification secret name, select N/A to skip signature verification", sigVerificationSecretNames)
+	shouldConfigureSigVerification, err := prompts.ReadBool("Configure signature verification", r.SignatureVerification.SecretName != "")
 	if err != nil {
 		return err
 	}
-	if sigVerificationSecretName != notApplicable {
-		r.SignatureVerification = plug.SignatureVerification{
-			Provider:   "cosign",
-			SecretName: sigVerificationSecretName,
+	if shouldConfigureSigVerification {
+		err := configureSigVerificationSecrets(c, r, kClient, sigSecretNames)
+		if err != nil {
+			return err
 		}
+	} else {
+		r.SignatureVerification = plug.SignatureVerification{}
 	}
 
 	if c.CaCertPaths == nil {
@@ -328,13 +281,18 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	r.CaCert = base64.StdEncoding.EncodeToString(caCertData)
 	c.CaCertPaths[idx] = caCertPath
 
+	if idx == -1 {
+		c.Validator.OciRegistryRules = append(c.Validator.OciRegistryRules, *r)
+	} else {
+		c.Validator.OciRegistryRules[idx] = *r
+	}
 	return nil
 }
 
 func readArtifactRefs(r *plug.OciRegistryRule) error {
 	log.InfoCLI("Configure one or more OCI artifact(s) to validate.")
 
-	// We've intentionally opted to not support prompting for full layer validation overrides per artifact
+	// We've intentionally opted to not support prompting for validation type overrides per artifact
 
 	log.InfoCLI(`
 	Artifact references must include the registry host for the current rule,
@@ -342,7 +300,7 @@ func readArtifactRefs(r *plug.OciRegistryRule) error {
 	`)
 	var defaultArtifacts string
 	for _, a := range r.Artifacts {
-		defaultArtifacts += a.Ref + "\n"
+		defaultArtifacts += r.Host + "/" + a.Ref + "\n"
 	}
 	artifacts, err := prompts.ReadTextSlice(
 		"Artifact references", defaultArtifacts, "invalid artifact refs", `^`+r.Host+`/.*$`, false,

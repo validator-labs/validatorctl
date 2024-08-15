@@ -50,7 +50,7 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testInstallInteractive(ctx); result.IsFailed() {
 		return result
 	}
-	if result := t.testInstallInteractiveCheck(ctx); result.IsFailed() {
+	if result := t.testInstallInteractiveApply(ctx); result.IsFailed() {
 		return result
 	}
 	if result := t.testInstallSilent(); result.IsFailed() {
@@ -59,7 +59,7 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testInstallSilentWait(); result.IsFailed() {
 		return result
 	}
-	if result := t.testCheckDirect(); result.IsFailed() {
+	if result := t.testRulesCheck(); result.IsFailed() {
 		return result
 	}
 	if result := t.testDescribe(); result.IsFailed() {
@@ -129,8 +129,8 @@ func (t *ValidatorTest) testInstallInteractive(ctx *test.TestContext) (tr *test.
 	return common.ExecCLI(interactiveCmd, buffer, t.log, false)
 }
 
-func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *test.TestResult) {
-	t.log.Printf("Executing testInstallInteractiveCheck")
+func (t *ValidatorTest) testInstallInteractiveApply(ctx *test.TestContext) (tr *test.TestResult) {
+	t.log.Printf("Executing testInstallInteractiveApply")
 
 	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "--apply", "-l", "debug"})
 
@@ -390,26 +390,22 @@ func (t *ValidatorTest) ociPluginInstallValues(ctx *test.TestContext, vals []str
 
 func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
 	ociVals := []any{
-		"y",                      // add registry credentials
-		"oci-creds",              // secret name
-		"y",                      // configure basic auth
-		"user1",                  // username
-		"pa$$w0rd",               // password
-		"n",                      // skip adding env vars
-		"n",                      // add another registry credential
-		"y",                      // add signature verification secret
-		"cosign-pubkeys",         // secret name
-		t.filePath("cosign.pub"), // public key file
-		"n",                      // add another public key to this secret
-		"n",                      // add another signature verification secret
-		"public ecr registry",    // rule name
-		"public.ecr.aws",         // registry host
-		"N/A",                    // registry auth secret name
-		"none",                   // validation type
-		[]string{"public.ecr.aws/u5n5j0b4/oci-test-public"}, // artifact references
-		"N/A", // signature verification secret name
-		"",    // ca certificate
-		"n",   // add another registry rule
+		"private quay registry",               // OCI rule name
+		"quay.io",                             // registry host
+		"y",                                   // configure registry authentication
+		"oci-creds",                           // secret name
+		"y",                                   // configure basic auth
+		"user1",                               // username
+		"pa$$w0rd",                            // password
+		"n",                                   // add env vars
+		[]string{"quay.io/myartifact:latest"}, // artifact references
+		"none",                                // validation type
+		"y",                                   // add signature verification secret
+		"cosign-pubkeys",                      // secret name
+		t.filePath("cosign.pub"),              // public key file
+		"n",                                   // add another public key to this secret
+		"",                                    // ca certificate
+		"n",                                   // add another registry rule
 	}
 	return interleave(vals, sliceVals, ociVals)
 }
@@ -591,8 +587,8 @@ func (t *ValidatorTest) testInstallSilentWait() (tr *test.TestResult) {
 	return common.ExecCLI(silentCmd, buffer, t.log, false)
 }
 
-func (t *ValidatorTest) testCheckDirect() (tr *test.TestResult) {
-	t.log.Printf("Executing testCheckDirect")
+func (t *ValidatorTest) testRulesCheck() (tr *test.TestResult) {
+	t.log.Printf("Executing testRulesCheck")
 
 	tokens := map[string]string{
 		`sinkConfig:
@@ -619,7 +615,7 @@ func (t *ValidatorTest) testDescribe() (tr *test.TestResult) {
 }
 
 func (t *ValidatorTest) testUndeploy() (tr *test.TestResult) {
-	t.log.Printf("Executing testInstallUndeploy")
+	t.log.Printf("Executing testUndeploy")
 
 	silentCmd, buffer := common.InitCmd([]string{
 		"uninstall", "-f", t.filePath(cfg.ValidatorConfigFile),
