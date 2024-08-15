@@ -50,7 +50,7 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testInstallInteractive(ctx); result.IsFailed() {
 		return result
 	}
-	if result := t.testInstallInteractiveCheck(ctx); result.IsFailed() {
+	if result := t.testInstallInteractiveApply(ctx); result.IsFailed() {
 		return result
 	}
 	if result := t.testInstallSilent(); result.IsFailed() {
@@ -59,7 +59,7 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testInstallSilentWait(); result.IsFailed() {
 		return result
 	}
-	if result := t.testCheckDirect(); result.IsFailed() {
+	if result := t.testRulesCheck(); result.IsFailed() {
 		return result
 	}
 	if result := t.testDescribe(); result.IsFailed() {
@@ -129,8 +129,8 @@ func (t *ValidatorTest) testInstallInteractive(ctx *test.TestContext) (tr *test.
 	return common.ExecCLI(interactiveCmd, buffer, t.log, false)
 }
 
-func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *test.TestResult) {
-	t.log.Printf("Executing testInstallInteractiveCheck")
+func (t *ValidatorTest) testInstallInteractiveApply(ctx *test.TestContext) (tr *test.TestResult) {
+	t.log.Printf("Executing testInstallInteractiveApply")
 
 	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "--apply", "-l", "debug"})
 
@@ -140,6 +140,8 @@ func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *
 	// Install values
 	tuiVals = t.awsPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.azurePluginInstallValues(ctx, tuiVals)
+
+	tuiVals = append(tuiVals, "n")
 	tuiVals = t.maasPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.networkPluginInstallValues(ctx, tuiVals)
 	tuiVals = t.ociPluginInstallValues(ctx, tuiVals)
@@ -152,7 +154,7 @@ func (t *ValidatorTest) testInstallInteractiveCheck(ctx *test.TestContext) (tr *
 	tuiVals = t.azurePluginValues(ctx, tuiVals)
 	tuiVals, tuiSliceVals = t.maasPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals, tuiSliceVals = t.networkPluginValues(ctx, tuiVals, tuiSliceVals)
-	tuiVals = t.ociPluginValues(ctx, tuiVals)
+	tuiVals, tuiSliceVals = t.ociPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals = t.vspherePluginValues(ctx, tuiVals)
 	tuiVals = t.finalizationValues(tuiVals)
 
@@ -195,6 +197,7 @@ func (t *ValidatorTest) validatorValues(ctx *test.TestContext) []string {
 		"foo",                          // Alertmanager username
 		"bar",                          // Alertmanager password
 	}
+
 	if string_utils.IsDevVersion(ctx.Get("version")) {
 		vals = append(vals, cfg.ValidatorChartVersions[cfg.Validator]) // validator helm chart version
 	}
@@ -360,8 +363,10 @@ func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, vals []string
 		"5",                              // TCP connection timeout
 		"n",                              // add another TCP connection rule
 		"y",                              // enable HTTP file validation
+		"check http file",                // HTTP file rule name
 		[]string{"https://foo.com/file"}, // paths
-		"n",                              // add another path
+		"y",                              // configure basic auth for http file rule
+		"y",                              // create http file credential secret
 		"http-secret",                    // secret name for basic auth
 		"username",                       // username key
 		"password",                       // password key
@@ -387,27 +392,27 @@ func (t *ValidatorTest) ociPluginInstallValues(ctx *test.TestContext, vals []str
 	return vals
 }
 
-func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string) []string {
-	ociVals := []string{
-		"private quay registry",     // OCI rule name
-		"quay.io",                   // registry host
-		"y",                         // configure registry authentication
-		"oci-creds",                 // secret name
-		"y",                         // configure basic auth
-		"user1",                     // username
-		"pa$$w0rd",                  // password
-		"n",                         // add env vars
-		"quay.io/myartifact:latest", // artifact references
-		"none",                      // validation type
-		"y",                         // add signature verification secret
-		"cosign-pubkeys",            // secret name
-		t.filePath("cosign.pub"),    // public key file
-		"n",                         // add another public key to this secret
-		"",                          // ca certificate
-		"n",                         // add another registry rule
+func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+	ociVals := []any{
+		"private quay registry",               // OCI rule name
+		"quay.io",                             // registry host
+		"y",                                   // configure registry authentication
+		cfg.OciCreateNewAuthSecPrompt,         // create a new secret
+		"oci-creds",                           // secret name
+		"y",                                   // configure basic auth
+		"user1",                               // username
+		"pa$$w0rd",                            // password
+		"n",                                   // add env vars
+		[]string{"quay.io/myartifact:latest"}, // artifact references
+		"none",                                // validation type
+		"y",                                   // add signature verification secret
+		"cosign-pubkeys",                      // secret name
+		t.filePath("cosign.pub"),              // public key file
+		"n",                                   // add another public key to this secret
+		"",                                    // ca certificate
+		"n",                                   // add another registry rule
 	}
-	vals = append(vals, ociVals...)
-	return vals
+	return interleave(vals, sliceVals, ociVals)
 }
 
 func (t *ValidatorTest) vspherePluginInstallValues(ctx *test.TestContext, vals []string) []string {
@@ -441,6 +446,7 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"n",                                 // add more hosts
 		"n",                                 // add more validation rules
 		"y",                                 // Check role privileges
+		"y",                                 // add another role privilege rule // TODO: fix this, shouldn't be asking for another rule yet
 		"role rule 1",                       // Role privilege rule name
 		"user1@vsphere.local",               // user to check role privileges against
 		"Local Filepath",                    // vCenter privileges Source
@@ -472,6 +478,7 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"n",                                 // add more node pools
 		"n",                                 // add more resource requirement checks
 		"y",                                 // check tags on entities
+		"y",                                 // add another tag rule // TODO: fix this, shouldnt be asked yet
 		"tag rule 1",                        // tag rule name
 		"Datacenter",                        // entity type
 		"DC0",                               // datacenter name
@@ -587,8 +594,8 @@ func (t *ValidatorTest) testInstallSilentWait() (tr *test.TestResult) {
 	return common.ExecCLI(silentCmd, buffer, t.log, false)
 }
 
-func (t *ValidatorTest) testCheckDirect() (tr *test.TestResult) {
-	t.log.Printf("Executing testCheckDirect")
+func (t *ValidatorTest) testRulesCheck() (tr *test.TestResult) {
+	t.log.Printf("Executing testRulesCheck")
 
 	tokens := map[string]string{
 		`sinkConfig:
@@ -615,7 +622,7 @@ func (t *ValidatorTest) testDescribe() (tr *test.TestResult) {
 }
 
 func (t *ValidatorTest) testUndeploy() (tr *test.TestResult) {
-	t.log.Printf("Executing testInstallUndeploy")
+	t.log.Printf("Executing testUndeploy")
 
 	silentCmd, buffer := common.InitCmd([]string{
 		"uninstall", "-f", t.filePath(cfg.ValidatorConfigFile),
