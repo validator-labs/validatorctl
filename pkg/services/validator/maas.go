@@ -168,7 +168,7 @@ func configureMaasResourceRules(c *components.MaasPluginConfig, ruleNames *[]str
 	}
 
 	addRules := true
-	if c.Validator.ResourceAvailabilityRules == nil {
+	if len(c.Validator.ResourceAvailabilityRules) == 0 {
 		c.Validator.ResourceAvailabilityRules = make([]vpmaasapi.ResourceAvailabilityRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another Resource Availability rule", false)
@@ -319,7 +319,7 @@ func configureMaasImageRules(c *components.MaasPluginConfig, ruleNames *[]string
 	}
 
 	addRules := true
-	if c.Validator.ImageRules == nil {
+	if len(c.Validator.ImageRules) == 0 {
 		c.Validator.ImageRules = make([]vpmaasapi.ImageRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another OS Image rule", false)
@@ -423,7 +423,7 @@ func configureMaasInternalDNSRules(c *components.MaasPluginConfig, ruleNames *[]
 	}
 
 	addRules := true
-	if c.Validator.InternalDNSRules == nil {
+	if len(c.Validator.InternalDNSRules) == 0 {
 		c.Validator.InternalDNSRules = make([]vpmaasapi.InternalDNSRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another Internal DNS rule", false)
@@ -569,7 +569,7 @@ func configureMaasUpstreamDNSRules(c *components.MaasPluginConfig, ruleNames *[]
 	}
 
 	addRules := true
-	if c.Validator.UpstreamDNSRules == nil {
+	if len(c.Validator.UpstreamDNSRules) == 0 {
 		c.Validator.UpstreamDNSRules = make([]vpmaasapi.UpstreamDNSRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another Upstream DNS rule", false)
