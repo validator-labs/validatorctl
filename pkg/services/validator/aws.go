@@ -683,7 +683,23 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 		return err
 	}
 	if useSTS {
-		c.Validator.Auth.StsAuth = &vpawsapi.AwsSTSAuth{}
+		err = readSTS(c)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func readSTS(c *components.AWSPluginConfig) error {
+	c.Validator.Auth.StsAuth = &vpawsapi.AwsSTSAuth{}
+	err := clouds.ReadAwsSTSProfile(c)
+	if err != nil {
+		return err
+	}
+
+	if c.Validator.Auth.StsAuth.RoleArn == "" {
 		c.Validator.Auth.StsAuth.RoleArn, err = prompts.ReadText("AWS STS Role ARN", c.Validator.Auth.StsAuth.RoleArn, false, -1)
 		if err != nil {
 			return err
@@ -701,7 +717,6 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 			return err
 		}
 	}
-
 	return nil
 }
 

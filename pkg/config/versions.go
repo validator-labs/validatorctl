@@ -7,6 +7,6 @@ var ValidatorChartVersions = map[string]string{
 	ValidatorPluginAzure:   "v0.0.17",
 	ValidatorPluginMaas:    "v0.0.7",
 	ValidatorPluginNetwork: "v0.0.23",
-	ValidatorPluginOci:     "v0.2.0",
+	ValidatorPluginOci:     "v0.2.1",
 	ValidatorPluginVsphere: "v0.0.30",
 }
