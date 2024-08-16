@@ -376,6 +376,7 @@ type AzurePluginConfig struct {
 	Enabled                bool                                 `yaml:"enabled"`
 	Release                *validator.HelmRelease               `yaml:"helmRelease"`
 	ServiceAccountName     string                               `yaml:"serviceAccountName,omitempty"`
+	Cloud                  string                               `yaml:"cloud"`
 	TenantID               string                               `yaml:"tenantId"`
 	ClientID               string                               `yaml:"clientId"`
 	ClientSecret           string                               `yaml:"clientSecret"`
