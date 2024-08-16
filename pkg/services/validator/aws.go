@@ -787,16 +787,9 @@ func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
 
 func readAwsCredsHelper(c *components.AWSPluginConfig) error {
 	var err error
-	profile, validate, err := clouds.ReadAwsProfile()
+	validate, err := clouds.ReadAwsProfile(c)
 	if err != nil {
 		return err
-	}
-
-	if profile.AccessKeyID != "" {
-		c.AccessKeyID = profile.AccessKeyID
-		c.SecretAccessKey = profile.SecretAccessKey
-		c.SessionToken = profile.SessionToken
-		return nil
 	}
 
 	if validate {
@@ -805,6 +798,11 @@ func readAwsCredsHelper(c *components.AWSPluginConfig) error {
 			// auth keychain is configured, skip prompting for credentials
 			return nil
 		}
+	}
+
+	// credentials loaded from profile, skip prompting for credentials
+	if c.AccessKeyID != "" {
+		return nil
 	}
 
 	c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)

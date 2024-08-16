@@ -9,25 +9,18 @@ import (
 	"slices"
 	"strings"
 
+	"golang.org/x/exp/maps"
+	"gopkg.in/ini.v1"
+
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	"github.com/validator-labs/validator-plugin-aws/pkg/aws"
 	"github.com/validator-labs/validatorctl/pkg/components"
-	"golang.org/x/exp/maps"
-	"gopkg.in/ini.v1"
 )
 
 const (
-	awsCredsFilename  = "credentials"
-	awsConfigFilename = "config"
-	awsNoCredsErr     = "get identity: get credentials: "
+	awsCredsFilename = "credentials"
+	awsNoCredsErr    = "get identity: get credentials: "
 )
-
-// AwsCredsProfile represents the AWS credentials profile.
-type AwsCredsProfile struct {
-	AccessKeyID     string
-	SecretAccessKey string
-	SessionToken    string
-}
 
 // ValidateAwsCreds validates the AWS credentials and returns an error if they are not valid.
 func ValidateAwsCreds(c *components.AWSPluginConfig) error {
@@ -43,44 +36,48 @@ func ValidateAwsCreds(c *components.AWSPluginConfig) error {
 }
 
 // ReadAwsProfile reads the AWS credentials profile from the local .aws directory.
-func ReadAwsProfile() (AwsCredsProfile, bool, error) {
+func ReadAwsProfile(c *components.AWSPluginConfig) (bool, error) {
 	profiles, err := loadCredsProfiles()
 	if err != nil || len(profiles) == 0 {
-		return AwsCredsProfile{}, true, nil
+		return true, nil
 	}
 
 	profileNames := maps.Keys(profiles)
 	profileNames = slices.Insert(profileNames, 0, "N/A")
 
-	profile, err := prompts.Select("Use existing profile (N/A to enter manually)", profileNames)
+	profile, err := prompts.Select("AWS Profile (select N/A to enter manually)", profileNames)
 	if err != nil {
-		return AwsCredsProfile{}, false, err
+		return false, err
 	}
 	if profile == "N/A" {
-		return AwsCredsProfile{}, false, nil
+		return false, nil
 	}
 
-	return profiles[profile], false, nil
+	c.AccessKeyID = profiles[profile]["aws_access_key_id"]
+	c.SecretAccessKey = profiles[profile]["aws_secret_access_key"]
+	c.SessionToken = profiles[profile]["aws_session_token"]
+
+	return false, nil
 }
 
-func loadCredsProfiles() (map[string]AwsCredsProfile, error) {
+func loadCredsProfiles() (map[string]map[string]string, error) {
 	credentialsPath := buildAwsFilePath(awsCredsFilename)
 	creds, err := ini.Load(credentialsPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read AWS credentials file: %w", err)
 	}
 
-	awsProfiles := make(map[string]AwsCredsProfile, 0)
+	awsProfiles := make(map[string]map[string]string, 0)
 	for _, section := range creds.Sections() {
-		awsProfiles[section.Name()] = AwsCredsProfile{
-			AccessKeyID:     section.Key("aws_access_key_id").String(),
-			SecretAccessKey: section.Key("aws_secret_access_key").String(),
-			SessionToken:    section.Key("aws_session_token").String(),
+		awsProfiles[section.Name()] = map[string]string{
+			"aws_access_key_id":     section.Key("aws_access_key_id").String(),
+			"aws_secret_access_key": section.Key("aws_secret_access_key").String(),
+			"aws_session_token":     section.Key("aws_session_token").String(),
 		}
 	}
 
 	// dedupe default profile
-	maps.DeleteFunc(awsProfiles, func(k string, _ AwsCredsProfile) bool {
+	maps.DeleteFunc(awsProfiles, func(k string, _ map[string]string) bool {
 		return k == "DEFAULT"
 	})
 	return awsProfiles, nil
