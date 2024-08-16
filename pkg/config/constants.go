@@ -148,6 +148,12 @@ var (
 		},
 	}
 
+	ValidatorAzureClouds = []string{
+		"AzureCloud",
+		"AzureUSGovernment",
+		"AzureChinaCloud",
+	}
+
 	ValidatorPluginVsphereEntities = []string{
 		ValidatorVsphereEntityCluster,
 		ValidatorVsphereEntityDatacenter,

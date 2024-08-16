@@ -52,9 +52,14 @@ func readAzurePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClie
 	return nil
 }
 
+// readAzurePluginRules reads Azure plugin configuration and rules from the user.
 func readAzurePluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _ kubernetes.Interface) error {
-	log.Header("Azure Plugin Rule Configuration")
+	log.Header("Azure Plugin Configuration")
+	if err := configureCloud(vc.AzurePlugin); err != nil {
+		return fmt.Errorf("failed to configure Azure plugin: %w", err)
+	}
 
+	log.Header("Azure Plugin Rule Configuration")
 	// Configure RBAC rules. Unlike how other plugins are styled, no prompt for whether the user
 	// wants to configure this rule type because right now it is the only rule type for the plugin.
 	if err := configureAzureRBACRules(vc.AzurePlugin); err != nil {
@@ -180,6 +185,14 @@ func readAzureCredsHelper(c *components.AzurePluginConfig) error {
 		return fmt.Errorf("failed to prompt for password for Azure Client Secret: %w", err)
 	}
 	return nil
+}
+
+// configureCloud sets up which cloud the plugin will be used with (public vs gov etc).
+func configureCloud(c *components.AzurePluginConfig) error {
+	log.InfoCLI("Select the Azure cloud environment to connect to.")
+	var err error
+	c.Cloud, err = prompts.Select("Azure cloud", cfg.ValidatorAzureClouds)
+	return err
 }
 
 // configureAzureRBACRules sets up zero or more RBAC rules based on pre-existing files or user
