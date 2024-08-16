@@ -17,12 +17,12 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.1.5
+	github.com/validator-labs/validator v0.1.6
 	github.com/validator-labs/validator-plugin-aws v0.1.4
 	github.com/validator-labs/validator-plugin-azure v0.0.17
 	github.com/validator-labs/validator-plugin-maas v0.0.8-0.20240809210245-5894f5118612
 	github.com/validator-labs/validator-plugin-network v0.0.23
-	github.com/validator-labs/validator-plugin-oci v0.2.0
+	github.com/validator-labs/validator-plugin-oci v0.2.1
 	github.com/validator-labs/validator-plugin-vsphere v0.0.30
 	github.com/vmware/govmomi v0.40.0
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
@@ -97,7 +97,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.3 // indirect
 	github.com/aws/smithy-go v1.20.3 // indirect
-	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240809155957-ac94a3401898 // indirect
+	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240814030307-d4ae6cf26e8b // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
@@ -218,7 +218,7 @@ require (
 	github.com/sigstore/rekor v1.3.6 // indirect
 	github.com/sigstore/sigstore v1.8.8 // indirect
 	github.com/sigstore/timestamp-authority v1.2.2 // indirect
-	github.com/slack-go/slack v0.13.1 // indirect
+	github.com/slack-go/slack v0.14.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
