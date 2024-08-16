@@ -533,34 +533,12 @@ func (c *OCIPluginConfig) BasicAuths() (map[string][]string, error) {
 			auths[r.Name()] = []string{r.Auth.Basic.Username, r.Auth.Basic.Password}
 			continue
 		}
-
-		// TODO: This logic should be handled by the plugin for each rule.
-		// As currently configured, users can only validate against 1 private ecr registry at a time.
-		if r.Auth.ECR != nil {
-			if err := os.Setenv(cfg.AwsAccessKey, r.Auth.ECR.AccessKeyID); err != nil {
-				return nil, err
-			}
-			log.InfoCLI("Set environment variable %s", cfg.AwsAccessKey)
-
-			if err := os.Setenv(cfg.AwsSecretAccessKey, r.Auth.ECR.SecretAccessKey); err != nil {
-				return nil, err
-			}
-			log.InfoCLI("Set environment variable %s", cfg.AwsSecretAccessKey)
-
-			if r.Auth.ECR.SessionToken != "" {
-				if err := os.Setenv(cfg.AwsSessionToken, r.Auth.ECR.SessionToken); err != nil {
-					return nil, err
-				}
-				log.InfoCLI("Set environment variable %s", cfg.AwsSessionToken)
-			}
-			continue
-		}
 	}
 
 	return auths, nil
 }
 
-// AllPubKeys returns a slice of public keys for each rule.
+// AllPubKeys returns a slice of public keys for each public key secret.
 func (c *OCIPluginConfig) AllPubKeys() map[string][][]byte {
 	pubKeys := make(map[string][][]byte, len(c.PublicKeySecrets))
 	for _, s := range c.PublicKeySecrets {
