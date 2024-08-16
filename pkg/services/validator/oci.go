@@ -311,17 +311,20 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 	r.ValidationType = plug.ValidationType(vType)
 
-	shouldConfigureSigVerification, err := prompts.ReadBool("Configure signature verification", r.SignatureVerification.SecretName != "")
-	if err != nil {
-		return err
-	}
-	if shouldConfigureSigVerification {
-		err := configureSigVerificationSecrets(c, r, kClient, sigSecretNames)
+	// TODO: Add support for signature verification without a secret for use in direct mode
+	if !direct {
+		shouldConfigureSigVerification, err := prompts.ReadBool("Configure signature verification", r.SignatureVerification.SecretName != "")
 		if err != nil {
 			return err
 		}
-	} else {
-		r.SignatureVerification = plug.SignatureVerification{}
+		if shouldConfigureSigVerification {
+			err := configureSigVerificationSecrets(c, r, kClient, sigSecretNames)
+			if err != nil {
+				return err
+			}
+		} else {
+			r.SignatureVerification = plug.SignatureVerification{}
+		}
 	}
 
 	if c.CaCertPaths == nil {
