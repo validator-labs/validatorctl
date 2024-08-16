@@ -242,12 +242,6 @@ func handlePlugins(vc *components.ValidatorConfig, tc *cfg.TaskConfig, kClient k
 			}
 		}
 
-		log.InfoCLI("Select the Azure cloud environment to connect to.")
-		vc.AzurePlugin.Cloud, err = prompts.Select("Azure cloud", cfg.ValidatorAzureClouds)
-		if err != nil {
-			return err
-		}
-
 		if err := funcMap[azureconsts.PluginCode](vc, tc, kClient); err != nil {
 			return err
 		}

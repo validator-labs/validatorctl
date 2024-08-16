@@ -40,6 +40,13 @@ var (
 func readAzurePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	c := vc.AzurePlugin
 
+	log.InfoCLI("Select the Azure cloud environment to connect to.")
+	var err error
+	vc.AzurePlugin.Cloud, err = prompts.Select("Azure cloud", cfg.ValidatorAzureClouds)
+	if err != nil {
+		return err
+	}
+
 	if !tc.Direct {
 		if err := readHelmRelease(cfg.ValidatorPluginAzure, vc, c.Release); err != nil {
 			return fmt.Errorf("failed to read Helm release: %w", err)
