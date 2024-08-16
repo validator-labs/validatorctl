@@ -97,6 +97,10 @@ func readDirectAzureCredentials(c *components.AzurePluginConfig) error {
 		return err
 	}
 
+	err = os.Setenv("AZURE_ENVIRONMENT", c.Cloud)
+	if err != nil {
+		return fmt.Errorf("failed to set AZURE_ENVIRONMENT: %w", err)
+	}
 	err = os.Setenv("AZURE_TENANT_ID", c.TenantID)
 	if err != nil {
 		return fmt.Errorf("failed to set AZURE_TENANT_ID: %w", err)
