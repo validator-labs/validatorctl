@@ -1,7 +1,6 @@
 package validator
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -13,14 +12,12 @@ import (
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	vpawsapi "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
-	"github.com/validator-labs/validator-plugin-aws/pkg/aws"
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
+	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 )
-
-const awsNoCredsErr = "get identity: get credentials: "
 
 var (
 	region             = "us-east-1"
@@ -766,18 +763,7 @@ func readInstallAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernet
 }
 
 func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
-	// check if credentials are already configured
-	api, err := aws.NewAPI(c.Validator.Auth, c.Validator.DefaultRegion)
-	if err != nil {
-		return err
-	}
-	_, err = api.IAM.GetUser(context.TODO(), nil)
-	// auth keychain is configured, skip prompting for credentials
-	if err == nil || !strings.Contains(err.Error(), awsNoCredsErr) {
-		return nil
-	}
-
-	err = readAwsCredsHelper(c)
+	err := readAwsCredsHelper(c)
 	if err != nil {
 		return err
 	}
@@ -801,6 +787,26 @@ func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
 
 func readAwsCredsHelper(c *components.AWSPluginConfig) error {
 	var err error
+	profile, validate, err := clouds.ReadAwsProfile()
+	if err != nil {
+		return err
+	}
+
+	if profile.AccessKeyID != "" {
+		c.AccessKeyID = profile.AccessKeyID
+		c.SecretAccessKey = profile.SecretAccessKey
+		c.SessionToken = profile.SessionToken
+		return nil
+	}
+
+	if validate {
+		err = clouds.ValidateAwsCreds(c)
+		if err == nil {
+			// auth keychain is configured, skip prompting for credentials
+			return nil
+		}
+	}
+
 	c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
 	if err != nil {
 		return err
