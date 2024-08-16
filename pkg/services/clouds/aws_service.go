@@ -39,7 +39,8 @@ func ValidateAwsCreds(c *components.AWSPluginConfig) error {
 
 // ReadAwsProfile reads the AWS credentials profile from the local .aws directory.
 func ReadAwsProfile(c *components.AWSPluginConfig) (bool, error) {
-	profiles, err := loadAwsCredsProfiles()
+	filepath := buildAwsFilePath(awsCredsFilename)
+	profiles, err := loadAwsCredsProfiles(filepath)
 	if err != nil || len(profiles) == 0 {
 		return true, nil
 	}
@@ -62,9 +63,8 @@ func ReadAwsProfile(c *components.AWSPluginConfig) (bool, error) {
 	return false, nil
 }
 
-func loadAwsCredsProfiles() (map[string]map[string]string, error) {
-	credentialsPath := buildAwsFilePath(awsCredsFilename)
-	creds, err := ini.Load(credentialsPath)
+func loadAwsCredsProfiles(filepath string) (map[string]map[string]string, error) {
+	creds, err := ini.Load(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read AWS credentials file: %w", err)
 	}
@@ -87,7 +87,8 @@ func loadAwsCredsProfiles() (map[string]map[string]string, error) {
 
 // ReadAwsSTSProfile reads the AWS STS config from the local .aws directory.
 func ReadAwsSTSProfile(c *components.AWSPluginConfig) error {
-	profiles, err := loadAwsSTSProfiles()
+	filepath := buildAwsFilePath(awsConfigFilename)
+	profiles, err := loadAwsSTSProfiles(filepath)
 	if err != nil || len(profiles) == 0 {
 		return nil
 	}
@@ -111,9 +112,8 @@ func ReadAwsSTSProfile(c *components.AWSPluginConfig) error {
 	return nil
 }
 
-func loadAwsSTSProfiles() (map[string]vpawsapi.AwsSTSAuth, error) {
-	configPath := buildAwsFilePath(awsConfigFilename)
-	config, err := ini.Load(configPath)
+func loadAwsSTSProfiles(filepath string) (map[string]vpawsapi.AwsSTSAuth, error) {
+	config, err := ini.Load(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read AWS config file: %w", err)
 	}
