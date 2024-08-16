@@ -525,7 +525,7 @@ azurePlugin:
     chart:
       name: validator-plugin-azure
       repository: validator-plugin-azure
-      version: v0.0.16
+      version: v0.0.17
       insecureSkipVerify: true
     values: ""
   tenantId: d551b7b1-78ae-43df-9d61-4935c843a454
