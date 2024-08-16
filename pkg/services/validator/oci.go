@@ -68,6 +68,7 @@ func configureAuth(r *plug.OciRegistryRule) error {
 		if err != nil {
 			return err
 		}
+		return nil
 	}
 
 	if r.Auth.ECR == nil {
