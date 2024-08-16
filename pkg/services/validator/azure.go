@@ -40,6 +40,13 @@ var (
 func readAzurePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	c := vc.AzurePlugin
 
+	log.InfoCLI("Select the Azure cloud environment to connect to.")
+	var err error
+	vc.AzurePlugin.Cloud, err = prompts.Select("Azure cloud", cfg.ValidatorAzureClouds)
+	if err != nil {
+		return err
+	}
+
 	if !tc.Direct {
 		if err := readHelmRelease(cfg.ValidatorPluginAzure, vc, c.Release); err != nil {
 			return fmt.Errorf("failed to read Helm release: %w", err)
@@ -52,9 +59,9 @@ func readAzurePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClie
 	return nil
 }
 
+// readAzurePluginRules reads Azure plugin configuration and rules from the user.
 func readAzurePluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _ kubernetes.Interface) error {
 	log.Header("Azure Plugin Rule Configuration")
-
 	// Configure RBAC rules. Unlike how other plugins are styled, no prompt for whether the user
 	// wants to configure this rule type because right now it is the only rule type for the plugin.
 	if err := configureAzureRBACRules(vc.AzurePlugin); err != nil {
@@ -92,6 +99,10 @@ func readDirectAzureCredentials(c *components.AzurePluginConfig) error {
 		return err
 	}
 
+	err = os.Setenv("AZURE_ENVIRONMENT", c.Cloud)
+	if err != nil {
+		return fmt.Errorf("failed to set AZURE_ENVIRONMENT: %w", err)
+	}
 	err = os.Setenv("AZURE_TENANT_ID", c.TenantID)
 	if err != nil {
 		return fmt.Errorf("failed to set AZURE_TENANT_ID: %w", err)

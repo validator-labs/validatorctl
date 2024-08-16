@@ -291,6 +291,7 @@ func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, vals []string, sl
 func (t *ValidatorTest) azurePluginInstallValues(ctx *test.TestContext, vals []string) []string {
 	azureVals := []string{
 		"y",                                    // enable plugin
+		"AzureCloud",                           // cloud to connect to
 		"n",                                    // implicit plugin auth
 		"azure-creds",                          // k8s secret name
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // tenant id
@@ -298,7 +299,7 @@ func (t *ValidatorTest) azurePluginInstallValues(ctx *test.TestContext, vals []s
 		"test_client_secret",                   // client secret
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
-		azureVals = slices.Insert(azureVals, 1,
+		azureVals = slices.Insert(azureVals, 2,
 			cfg.ValidatorChartVersions[cfg.ValidatorPluginAzure], // validator-plugin-azure helm chart version
 		)
 	}
