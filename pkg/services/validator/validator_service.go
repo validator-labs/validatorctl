@@ -9,9 +9,10 @@ import (
 	"strings"
 
 	"emperror.dev/errors"
-	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	vtypes "github.com/validator-labs/validator/pkg/types"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	awsconsts "github.com/validator-labs/validator-plugin-aws/pkg/constants"
 	azureconsts "github.com/validator-labs/validator-plugin-azure/pkg/constants"
@@ -240,6 +241,13 @@ func handlePlugins(vc *components.ValidatorConfig, tc *cfg.TaskConfig, kClient k
 				return err
 			}
 		}
+
+		log.InfoCLI("Select the Azure cloud environment to connect to.")
+		vc.AzurePlugin.Cloud, err = prompts.Select("Azure cloud", cfg.ValidatorAzureClouds)
+		if err != nil {
+			return err
+		}
+
 		if err := funcMap[azureconsts.PluginCode](vc, tc, kClient); err != nil {
 			return err
 		}
