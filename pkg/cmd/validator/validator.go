@@ -599,8 +599,14 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.OCIPlugin.Validator,
 		}
 		vr := vres.Build(v)
+
+		basicAuths, err := vc.OCIPlugin.BasicAuths()
+		if err != nil {
+			return err
+		}
+
 		vrr := ocival.Validate(*vc.OCIPlugin.Validator,
-			vc.OCIPlugin.BasicAuths(),
+			basicAuths,
 			vc.OCIPlugin.AllPubKeys(), l,
 		)
 		if err := vres.Finalize(vr, vrr, l); err != nil {

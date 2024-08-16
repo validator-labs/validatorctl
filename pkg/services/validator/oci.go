@@ -53,6 +53,8 @@ func readOciPluginRules(vc *components.ValidatorConfig, tc *cfg.TaskConfig, kCli
 
 // configureAuth prompts the user to configure their OCI registry authentication details.
 func configureAuth(r *plug.OciRegistryRule) error {
+	r.Auth.SecretName = nil
+
 	authType, err := prompts.Select("Authentication type", []string{basicAuth, ecrAuth})
 	if err != nil {
 		return err
