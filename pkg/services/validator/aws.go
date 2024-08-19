@@ -1,7 +1,6 @@
 package validator
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -13,14 +12,12 @@ import (
 
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	vpawsapi "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
-	"github.com/validator-labs/validator-plugin-aws/pkg/aws"
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
+	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 )
-
-const awsNoCredsErr = "get identity: get credentials: "
 
 var (
 	region             = "us-east-1"
@@ -686,7 +683,23 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 		return err
 	}
 	if useSTS {
-		c.Validator.Auth.StsAuth = &vpawsapi.AwsSTSAuth{}
+		err = readSTS(c)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func readSTS(c *components.AWSPluginConfig) error {
+	c.Validator.Auth.StsAuth = &vpawsapi.AwsSTSAuth{}
+	err := clouds.ReadAwsSTSProfile(c)
+	if err != nil {
+		return err
+	}
+
+	if c.Validator.Auth.StsAuth.RoleArn == "" {
 		c.Validator.Auth.StsAuth.RoleArn, err = prompts.ReadText("AWS STS Role ARN", c.Validator.Auth.StsAuth.RoleArn, false, -1)
 		if err != nil {
 			return err
@@ -704,7 +717,6 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -766,18 +778,7 @@ func readInstallAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernet
 }
 
 func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
-	// check if credentials are already configured
-	api, err := aws.NewAPI(c.Validator.Auth, c.Validator.DefaultRegion)
-	if err != nil {
-		return err
-	}
-	_, err = api.IAM.GetUser(context.TODO(), nil)
-	// auth keychain is configured, skip prompting for credentials
-	if err == nil || !strings.Contains(err.Error(), awsNoCredsErr) {
-		return nil
-	}
-
-	err = readAwsCredsHelper(c)
+	err := readAwsCredsHelper(c)
 	if err != nil {
 		return err
 	}
@@ -801,6 +802,24 @@ func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
 
 func readAwsCredsHelper(c *components.AWSPluginConfig) error {
 	var err error
+	validate, err := clouds.ReadAwsProfile(c)
+	if err != nil {
+		return err
+	}
+
+	if validate {
+		err = clouds.ValidateAwsCreds(c)
+		if err == nil {
+			// auth keychain is configured, skip prompting for credentials
+			return nil
+		}
+	}
+
+	// credentials loaded from profile, skip prompting for credentials
+	if c.AccessKeyID != "" {
+		return nil
+	}
+
 	c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
 	if err != nil {
 		return err

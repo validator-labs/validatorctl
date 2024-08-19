@@ -1,0 +1,15 @@
+[default]
+region = us-west-2
+
+[profile test]
+role_arn = test_arn
+source_profile = default
+mfa_serial = test_serial
+duration_seconds = 3600
+external_id = test_id
+role_session_name = test_name
+
+[profile foo]
+param1 = foo
+param2 = bar
+duration_seconds = 3600
