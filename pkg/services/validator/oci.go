@@ -61,6 +61,7 @@ func configureAuth(r *plug.OciRegistryRule) error {
 	}
 
 	if authType == basicAuth {
+		r.Auth.ECR = nil
 		if r.Auth.Basic == nil {
 			r.Auth.Basic = &plug.BasicAuth{}
 		}
@@ -73,6 +74,7 @@ func configureAuth(r *plug.OciRegistryRule) error {
 		return nil
 	}
 
+	r.Auth.Basic = nil
 	if r.Auth.ECR == nil {
 		r.Auth.ECR = &plug.ECRAuth{}
 	}
