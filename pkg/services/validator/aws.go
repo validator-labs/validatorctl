@@ -820,15 +820,7 @@ func readAwsCredsHelper(c *components.AWSPluginConfig) error {
 		return nil
 	}
 
-	c.AccessKeyID, err = prompts.ReadPassword("AWS Access Key ID", c.AccessKeyID, false, -1)
-	if err != nil {
-		return err
-	}
-	c.SecretAccessKey, err = prompts.ReadPassword("AWS Secret Access Key", c.SecretAccessKey, false, -1)
-	if err != nil {
-		return err
-	}
-	c.SessionToken, err = prompts.ReadPassword("AWS Session Token", c.SessionToken, true, -1)
+	c.AccessKeyID, c.SecretAccessKey, c.SessionToken, err = readAwsCreds(c.AccessKeyID, c.SecretAccessKey, c.SessionToken)
 	if err != nil {
 		return err
 	}

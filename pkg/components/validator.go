@@ -511,17 +511,30 @@ type OCIPluginConfig struct {
 	Validator        *oci.OciValidatorSpec  `yaml:"validator"`
 }
 
-// BasicAuths returns a slice of basic authentication details for each secret.
+// BasicAuths returns a slice of basic authentication details for each rule.
 func (c *OCIPluginConfig) BasicAuths() map[string][]string {
-	auths := make(map[string][]string, len(c.Secrets))
-	for _, s := range c.Secrets {
-		s := s
-		if s.BasicAuth != nil {
-			auths[s.Name] = []string{s.BasicAuth.Username, s.BasicAuth.Password}
-		} else {
-			auths[s.Name] = []string{"", ""}
+	auths := make(map[string][]string, 0)
+
+	for _, r := range c.Validator.OciRegistryRules {
+		if r.Auth.SecretName != nil {
+			for _, s := range c.Secrets {
+				if s.Name != *r.Auth.SecretName {
+					continue
+				}
+
+				if s.BasicAuth != nil {
+					auths[r.Name()] = []string{s.BasicAuth.Username, s.BasicAuth.Password}
+				}
+			}
+			continue
+		}
+
+		if r.Auth.Basic != nil {
+			auths[r.Name()] = []string{r.Auth.Basic.Username, r.Auth.Basic.Password}
+			continue
 		}
 	}
+
 	return auths
 }
 

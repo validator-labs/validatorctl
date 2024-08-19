@@ -71,6 +71,11 @@ const (
 	MemoryReqRegex       = "(^\\d+\\.?\\d*[M,G,T]i)"
 	DiskReqRegex         = "(^\\d+\\.?\\d*[M,G,T]i)"
 	PolicyArnRegex       = "^arn:aws:iam::.*:policy/.*$"
+
+	// Env vars
+	AwsAccessKey       = "AWS_ACCESS_KEY_ID"     // #nosec
+	AwsSecretAccessKey = "AWS_SECRET_ACCESS_KEY" // #nosec
+	AwsSessionToken    = "AWS_SESSION_TOKEN"     // #nosec
 )
 
 var (
