@@ -77,17 +77,7 @@ func configureAuth(r *plug.OciRegistryRule) error {
 		r.Auth.ECR = &plug.ECRAuth{}
 	}
 
-	r.Auth.ECR.AccessKeyID, err = prompts.ReadText("Access Key ID", r.Auth.ECR.AccessKeyID, false, -1)
-	if err != nil {
-		return err
-	}
-
-	r.Auth.ECR.SecretAccessKey, err = prompts.ReadPassword("Secret Access Key", r.Auth.ECR.SecretAccessKey, false, -1)
-	if err != nil {
-		return err
-	}
-
-	r.Auth.ECR.SessionToken, err = prompts.ReadPassword("Session Token", r.Auth.ECR.SessionToken, true, -1)
+	r.Auth.ECR.AccessKeyID, r.Auth.ECR.SecretAccessKey, r.Auth.ECR.SessionToken, err = readAwsCreds(r.Auth.ECR.AccessKeyID, r.Auth.ECR.SecretAccessKey, r.Auth.ECR.SessionToken)
 	if err != nil {
 		return err
 	}

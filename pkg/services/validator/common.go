@@ -208,6 +208,22 @@ func readBasicAuthSecret(secret *components.Secret) error {
 	return nil
 }
 
+func readAwsCreds(defaultAccessKeyId, defaultSecretAccessKey, defaultSessionToken string) (string, string, string, error) {
+	accessKeyID, err := prompts.ReadPassword("AWS Access Key ID", defaultAccessKeyId, false, -1)
+	if err != nil {
+		return "", "", "", err
+	}
+	secretAccessKey, err := prompts.ReadPassword("AWS Secret Access Key", defaultSecretAccessKey, false, -1)
+	if err != nil {
+		return "", "", "", err
+	}
+	SessionToken, err := prompts.ReadPassword("AWS Session Token", defaultSessionToken, true, -1)
+	if err != nil {
+		return "", "", "", err
+	}
+	return accessKeyID, secretAccessKey, SessionToken, nil
+}
+
 // Gets a unique rule name from the user for a validator. Continues prompting the user until they
 // provide a unique name.
 //   - ruleNames - The rules that exist in the validator so far.
