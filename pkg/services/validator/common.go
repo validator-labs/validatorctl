@@ -208,8 +208,8 @@ func readBasicAuthSecret(secret *components.Secret) error {
 	return nil
 }
 
-func readAwsCreds(defaultAccessKeyId, defaultSecretAccessKey, defaultSessionToken string) (string, string, string, error) {
-	accessKeyID, err := prompts.ReadPassword("AWS Access Key ID", defaultAccessKeyId, false, -1)
+func readAwsCreds(defaultAccessKeyID, defaultSecretAccessKey, defaultSessionToken string) (string, string, string, error) {
+	accessKeyID, err := prompts.ReadPassword("AWS Access Key ID", defaultAccessKeyID, false, -1)
 	if err != nil {
 		return "", "", "", err
 	}
