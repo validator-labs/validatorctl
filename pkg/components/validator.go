@@ -512,7 +512,7 @@ type OCIPluginConfig struct {
 }
 
 // BasicAuths returns a slice of basic authentication details for each rule.
-func (c *OCIPluginConfig) BasicAuths() (map[string][]string, error) {
+func (c *OCIPluginConfig) BasicAuths() map[string][]string {
 	auths := make(map[string][]string, 0)
 
 	for _, r := range c.Validator.OciRegistryRules {
@@ -535,7 +535,7 @@ func (c *OCIPluginConfig) BasicAuths() (map[string][]string, error) {
 		}
 	}
 
-	return auths, nil
+	return auths
 }
 
 // AllPubKeys returns a slice of public keys for each public key secret.
