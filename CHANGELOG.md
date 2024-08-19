@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.1.2](https://github.com/validator-labs/validatorctl/compare/v0.1.1...v0.1.2) (2024-08-19)
+
+
+### Features
+
+* add maas plugin ([#160](https://github.com/validator-labs/validatorctl/issues/160)) ([ab9f21a](https://github.com/validator-labs/validatorctl/commit/ab9f21a93f0d0634da0b984ff0bfc96039a7db98))
+* allow selecting aws creds from filesystem ([#171](https://github.com/validator-labs/validatorctl/issues/171)) ([c3a714c](https://github.com/validator-labs/validatorctl/commit/c3a714c842a88e87712876034db3a276a05c73bd))
+* allow specifying Azure cloud to connect to ([#170](https://github.com/validator-labs/validatorctl/issues/170)) ([6a4a704](https://github.com/validator-labs/validatorctl/commit/6a4a704452649e05253cd9ffdc0ded81e12545b4))
+* read vCenter privileges from local file or editor ([#152](https://github.com/validator-labs/validatorctl/issues/152)) ([94ddd90](https://github.com/validator-labs/validatorctl/commit/94ddd90fb2ade3b3b7cba9551ca7ecb8f34dc7b3))
+* set exit code 2 on validation failure; restore debug log file ([#150](https://github.com/validator-labs/validatorctl/issues/150)) ([2a3fe4d](https://github.com/validator-labs/validatorctl/commit/2a3fe4d4195a051f3779151ff58112bf2b26b109))
+* support configuring oci validationType on a rule ([#161](https://github.com/validator-labs/validatorctl/issues/161)) ([8dfc501](https://github.com/validator-labs/validatorctl/commit/8dfc50176ab7e85740ddbbb2f0b70094391ea930))
+* support direct oci validation of private registries ([#173](https://github.com/validator-labs/validatorctl/issues/173)) ([9cfeab9](https://github.com/validator-labs/validatorctl/commit/9cfeab99aea0301b0f0750d58dc85ae15357d29b))
+
+
+### Bug Fixes
+
+* correct TUI flow for `validator install -o --apply` ([#169](https://github.com/validator-labs/validatorctl/issues/169)) ([0912f6e](https://github.com/validator-labs/validatorctl/commit/0912f6e6dcae8e3c82e6967b8adb93b5dbad7c37))
+* export creds for aws and azure direct check ([#167](https://github.com/validator-labs/validatorctl/issues/167)) ([5d569de](https://github.com/validator-labs/validatorctl/commit/5d569deb02bf2a442ae62e912cdff5416f379a9f))
+
+
+### Dependency Updates
+
+* **deps:** update anchore/sbom-action action to v0.17.1 ([#163](https://github.com/validator-labs/validatorctl/issues/163)) ([416d23c](https://github.com/validator-labs/validatorctl/commit/416d23cfe9fe43aa95dca044874f4504101561ae))
+* **deps:** update github.com/validator-labs/validator-plugin-azure digest to b4687e5 ([#149](https://github.com/validator-labs/validatorctl/issues/149)) ([e7ab9a6](https://github.com/validator-labs/validatorctl/commit/e7ab9a637676d1640b2e60e5772f50f436a094e7))
+* **deps:** update github.com/validator-labs/validator-plugin-vsphere digest to a93cb70 ([#147](https://github.com/validator-labs/validatorctl/issues/147)) ([79304b9](https://github.com/validator-labs/validatorctl/commit/79304b9087afd98348bb56ebb7716999d9d2e357))
+* **deps:** update module github.com/vmware/govmomi to v0.40.0 ([#162](https://github.com/validator-labs/validatorctl/issues/162)) ([acf4a25](https://github.com/validator-labs/validatorctl/commit/acf4a25efb8ad90b1c1c5a1fef14688dafd96cab))
+
+
+### Refactoring
+
+* lazy configuration of oci auth and signature verification secrets ([#168](https://github.com/validator-labs/validatorctl/issues/168)) ([cc2c056](https://github.com/validator-labs/validatorctl/commit/cc2c05644d6877fd78d3d8713703bfa200b4b4a5))
+* remove explicit TypeMetas; use vapi constants ([#154](https://github.com/validator-labs/validatorctl/issues/154)) ([28b321c](https://github.com/validator-labs/validatorctl/commit/28b321c1494ec616c1778e0356b04d9ab93600f1))
+
 ## [0.1.1](https://github.com/validator-labs/validatorctl/compare/v0.1.0...v0.1.1) (2024-08-08)
 
 
