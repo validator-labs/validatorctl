@@ -565,6 +565,9 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
+		if vrOk := validationResponseOk(vrr, l); !vrOk {
+			ok = false
+		}
 		results = append(results, vr)
 	}
 
