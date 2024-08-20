@@ -86,6 +86,9 @@ func ReadValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig, vc *components.Valid
 		return err
 	}
 	if vc.KindConfig.UseKindCluster {
+		if err := exec.CheckBinaries([]exec.Binary{exec.DockerBin, exec.KindBin}); err != nil {
+			return err
+		}
 		if err := kind.ValidateClusters("Validator installation"); err != nil {
 			return err
 		}

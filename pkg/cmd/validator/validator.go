@@ -49,6 +49,7 @@ import (
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services/validator"
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
+	"github.com/validator-labs/validatorctl/pkg/utils/exec"
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	"github.com/validator-labs/validatorctl/pkg/utils/kube"
@@ -89,6 +90,11 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		vc, err = components.NewValidatorFromConfig(tc)
 		if err != nil {
 			return errors.Wrap(err, "failed to load validator configuration file")
+		}
+		if vc.KindConfig.UseKindCluster {
+			if err := exec.CheckBinaries([]exec.Binary{exec.DockerBin, exec.KindBin}); err != nil {
+				return err
+			}
 		}
 		if tc.UpdatePasswords {
 			log.Header("Updating credentials in validator configuration file")
@@ -271,6 +277,11 @@ func UndeployValidatorCommand(tc *cfg.TaskConfig) error {
 	vc, err := components.NewValidatorFromConfig(tc)
 	if err != nil {
 		return errors.Wrap(err, "failed to load validator configuration file")
+	}
+	if vc.KindConfig.UseKindCluster && tc.DeleteCluster {
+		if err := exec.CheckBinaries([]exec.Binary{exec.KindBin}); err != nil {
+			return err
+		}
 	}
 
 	log.Header("Uninstalling validator")

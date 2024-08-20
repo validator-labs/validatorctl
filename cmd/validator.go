@@ -47,7 +47,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 		SilenceErrors: true,
 		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			if err := exec.CheckBinaries(exec.AllBins); err != nil {
+			if err := exec.CheckBinaries([]exec.Binary{exec.HelmBin, exec.KubectlBin}); err != nil {
 				return err
 			}
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
@@ -268,7 +268,7 @@ func NewUndeployValidatorCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  false,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			if err := exec.CheckBinaries([]exec.Binary{exec.HelmBin, exec.KindBin}); err != nil {
+			if err := exec.CheckBinaries([]exec.Binary{exec.HelmBin}); err != nil {
 				return err
 			}
 			return validator.InitWorkspace(c, cfg.Validator, cfg.ValidatorSubdirs, true)
