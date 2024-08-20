@@ -74,11 +74,8 @@ func NewValidatorConfig() *ValidatorConfig {
 			Validator: &aws.AwsValidatorSpec{},
 		},
 		AzurePlugin: &AzurePluginConfig{
-			Release:                &validator.HelmRelease{},
-			Validator:              &azure.AzureValidatorSpec{},
-			RuleTypes:              make(map[int]string),
-			StaticDeploymentTypes:  make(map[int]string),
-			StaticDeploymentValues: make(map[int]*AzureStaticDeploymentValues),
+			Release:   &validator.HelmRelease{},
+			Validator: &azure.AzureValidatorSpec{},
 		},
 		MaasPlugin: &MaasPluginConfig{
 			Release:   &validator.HelmRelease{},
@@ -372,17 +369,14 @@ func (c *AWSPluginConfig) decrypt() error {
 
 // AzurePluginConfig represents the Azure plugin configuration.
 type AzurePluginConfig struct {
-	Enabled                bool                                 `yaml:"enabled"`
-	Release                *validator.HelmRelease               `yaml:"helmRelease"`
-	ServiceAccountName     string                               `yaml:"serviceAccountName,omitempty"`
-	Cloud                  string                               `yaml:"cloud"`
-	TenantID               string                               `yaml:"tenantId"`
-	ClientID               string                               `yaml:"clientId"`
-	ClientSecret           string                               `yaml:"clientSecret"`
-	RuleTypes              map[int]string                       `yaml:"ruleTypes"`
-	StaticDeploymentTypes  map[int]string                       `yaml:"staticDeploymentTypes"`
-	StaticDeploymentValues map[int]*AzureStaticDeploymentValues `yaml:"staticDeploymentValues"`
-	Validator              *azure.AzureValidatorSpec            `yaml:"validator"`
+	Enabled            bool                      `yaml:"enabled"`
+	Release            *validator.HelmRelease    `yaml:"helmRelease"`
+	ServiceAccountName string                    `yaml:"serviceAccountName,omitempty"`
+	Cloud              string                    `yaml:"cloud"`
+	TenantID           string                    `yaml:"tenantId"`
+	ClientID           string                    `yaml:"clientId"`
+	ClientSecret       string                    `yaml:"clientSecret"`
+	Validator          *azure.AzureValidatorSpec `yaml:"validator"`
 }
 
 func (c *AzurePluginConfig) encrypt() error {
@@ -403,15 +397,6 @@ func (c *AzurePluginConfig) decrypt() error {
 	c.ClientSecret = string(*bytes)
 
 	return nil
-}
-
-// AzureStaticDeploymentValues represents the static deployment values for Azure.
-type AzureStaticDeploymentValues struct {
-	Subscription   string `yaml:"subscriptionUuid"`
-	ResourceGroup  string `yaml:"resourceGroupUuid"`
-	VirtualNetwork string `yaml:"virtualNetworkUuid"`
-	Subnet         string `yaml:"subnetUuid"`
-	ComputeGallery string `yaml:"computeGalleryUuid"`
 }
 
 // MaasPluginConfig represents the MAAS plugin configuration.

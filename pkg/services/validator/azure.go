@@ -22,8 +22,6 @@ import (
 )
 
 const (
-	ruleTypeRBAC = "RBAC"
-
 	mustBeValidUUID = "must be valid UUID"
 
 	azureNoCredsErr = "DefaultAzureCredential: "
@@ -31,6 +29,8 @@ const (
 	mockAzureScope = "00000000-0000-0000-0000-000000000000"
 
 	mockAzureRoleAssignment = "00000000-000000-0000000000"
+
+	regexOneCharString = ".+"
 )
 
 var (
@@ -62,16 +62,21 @@ func readAzurePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClie
 // readAzurePluginRules reads Azure plugin configuration and rules from the user.
 func readAzurePluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _ kubernetes.Interface) error {
 	log.Header("Azure Plugin Rule Configuration")
-	// Configure RBAC rules. Unlike how other plugins are styled, no prompt for whether the user
-	// wants to configure this rule type because right now it is the only rule type for the plugin.
-	if err := configureAzureRBACRules(vc.AzurePlugin); err != nil {
-		return fmt.Errorf("failed to configure RBAC rules: %w", err)
+
+	c := vc.AzurePlugin
+	ruleNames := make([]string, 0)
+
+	if err := configureRBACRules(c, &ruleNames); err != nil {
+		return err
+	}
+	if err := configureCommunityGalleryImageRules(c, &ruleNames); err != nil {
+		return err
 	}
 
-	// impossible at present. uncomment if/when additional azure rule types are added.
-	// if c.Validator.ResultCount() == 0 {
-	// 	return errNoRulesEnabled
-	// }
+	if c.Validator.ResultCount() == 0 {
+		return errNoRulesEnabled
+	}
+
 	return nil
 }
 
@@ -193,25 +198,27 @@ func readAzureCredsHelper(c *components.AzurePluginConfig) error {
 	return nil
 }
 
-// configureAzureRBACRules sets up zero or more RBAC rules based on pre-existing files or user
-// input.
-func configureAzureRBACRules(c *components.AzurePluginConfig) error {
-	var err error
-	addRules := true
-	ruleNames := make([]string, 0)
+// configureRBACRules sets up zero or more RBAC rules based on pre-existing files or user input.
+func configureRBACRules(c *components.AzurePluginConfig, ruleNames *[]string) error {
+	log.InfoCLI(`
+	RBAC validation rules ensure that security principals have the required permissions.
+	`)
 
+	validateRBAC, err := prompts.ReadBool("Enable Azure RBAC validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateRBAC {
+		c.Validator.RBACRules = nil
+		return nil
+	}
 	for i, r := range c.Validator.RBACRules {
 		r := r
-		ruleType := c.RuleTypes[i]
-		log.InfoCLI("Reconfiguring Azure RBAC %s rule: %s", ruleType, r.Name)
-
-		if err = configureAzureRBACRule(&ruleNames, &r); err != nil {
-			return fmt.Errorf("failed to configure RBAC rule: %w", err)
+		if err := readRBACRule(c, &r, i, ruleNames); err != nil {
+			return err
 		}
-
-		c.Validator.RBACRules[i] = r
 	}
-
+	addRules := true
 	if len(c.Validator.RBACRules) == 0 {
 		c.Validator.RBACRules = make([]plug.RBACRule, 0)
 	} else {
@@ -223,82 +230,62 @@ func configureAzureRBACRules(c *components.AzurePluginConfig) error {
 	if !addRules {
 		return nil
 	}
-
-	log.InfoCLI("Note: You must configure at least one rule for plugin configuration.")
-	ruleIdx := len(c.Validator.RBACRules)
-
 	for {
-		log.InfoCLI("Note: Collecting input for rule #%d", ruleIdx+1)
-
-		// This is intentional. We only have one rule type in the Azure plugin now, so we don't
-		// prompt the user for rule type. But we are keeping the rest of the type-oriented code here
-		// (e.g. the rule types tracked in the YAML config file) to avoid less refactor work later
-		// when we add more rule types for Azure.
-		ruleType := ruleTypeRBAC
-		c.RuleTypes[ruleIdx] = ruleType
-
-		rule := &plug.RBACRule{
-			Permissions: []plug.PermissionSet{},
+		if err := readRBACRule(c, nil, -1, ruleNames); err != nil {
+			return err
 		}
-
-		switch ruleType {
-		case ruleTypeRBAC:
-			if err := configureAzureRBACRule(&ruleNames, rule); err != nil {
-				return fmt.Errorf("failed to configure RBAC rule: %w", err)
-			}
-		default:
-			return fmt.Errorf("unknown rule type (%s)", ruleType)
-		}
-
-		c.Validator.RBACRules = append(c.Validator.RBACRules, *rule)
-
-		addRBACRule, err := prompts.ReadBool("Add additional RBAC rule", false)
-		if err != nil {
-			return fmt.Errorf("failed to prompt for bool for add an RBAC rule: %w", err)
-		}
-		if !addRBACRule {
-			break
-		}
-		ruleIdx++
-	}
-
-	return nil
-}
-
-func initRbacRule(ruleNames *[]string, r *plug.RBACRule) error {
-	var err error
-	if r.Name != "" {
-		log.InfoCLI("Reconfiguring RBAC rule: %s", r.Name)
-		*ruleNames = append(*ruleNames, r.Name)
-	} else {
-		r.Name, err = getRuleName(ruleNames)
+		add, err := prompts.ReadBool("Add additional RBAC rule", false)
 		if err != nil {
 			return err
 		}
+		if !add {
+			break
+		}
 	}
 	return nil
 }
 
-// Allows the user to configure an Azure RBAC rule where they specify every detail.
-func configureAzureRBACRule(ruleNames *[]string, r *plug.RBACRule) error {
-	err := initRbacRule(ruleNames, r)
-	if err != nil {
-		return err
+// readRBACRule begins the process of reconfiguring or beginning a new RBAC rule.
+func readRBACRule(c *components.AzurePluginConfig, r *plug.RBACRule, idx int, ruleNames *[]string) error {
+	if r == nil {
+		r = &plug.RBACRule{}
 	}
+
+	name := r.Name
+	if name != "" {
+		log.InfoCLI("Reconfiguring RBAC rule %s", name)
+		*ruleNames = append(*ruleNames, name)
+	} else {
+		name, err := getRuleName(ruleNames)
+		if err != nil {
+			return err
+		}
+		r.Name = name
+	}
+
+	var err error
 
 	logToCollect("security principal", formatAzureGUID)
 	r.PrincipalID, err = prompts.ReadTextRegex("Security principal", r.PrincipalID, mustBeValidUUID, prompts.UUIDRegex)
 	if err != nil {
-		return fmt.Errorf("failed to prompt for text for service principal: %w", err)
+		return err
 	}
 
-	if err := configureAzureRBACRulePermissionSets(r); err != nil {
-		return fmt.Errorf("failed to configure permission sets: %w", err)
+	if err := readRBACRulePermissionSets(r); err != nil {
+		return err
+	}
+
+	if idx == -1 {
+		c.Validator.RBACRules = append(c.Validator.RBACRules, *r)
+	} else {
+		c.Validator.RBACRules[idx] = *r
 	}
 	return nil
 }
 
-func configureAzureRBACRulePermissionSets(r *plug.RBACRule) error {
+// readRBACRulePermissionSets begins the process of beginning a new list of permission sets. Users
+// can provide input via file or prompts.
+func readRBACRulePermissionSets(r *plug.RBACRule) error {
 	log.InfoCLI("Note: You must configure at least one permission set for rule.")
 	log.InfoCLI("If you're updating an existing RBAC rule, its permission sets will be replaced.")
 
@@ -347,8 +334,100 @@ func configureAzureRBACRulePermissionSets(r *plug.RBACRule) error {
 	}
 }
 
+// configureCommunityGalleryImageRules sets up zero or more Community Gallery Image rules based on
+// pre-existing files or user input.
+func configureCommunityGalleryImageRules(c *components.AzurePluginConfig, ruleNames *[]string) error {
+	log.InfoCLI(`
+	Community gallery image validation rules ensure that images are publicly available via community galleries.
+	`)
+
+	validateCommunityGalleryImage, err := prompts.ReadBool("Enable Community Gallery Image validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateCommunityGalleryImage {
+		c.Validator.CommunityGalleryImageRules = nil
+	}
+	for i, r := range c.Validator.CommunityGalleryImageRules {
+		r := r
+		if err := readCommunityGalleryImageRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if c.Validator.CommunityGalleryImageRules == nil {
+		c.Validator.CommunityGalleryImageRules = make([]plug.CommunityGalleryImageRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another Community Gallery Image rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readCommunityGalleryImageRule(c, &plug.CommunityGalleryImageRule{}, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add additional Community Gallery Image rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+// readCommunityGalleryImageRule begins the process of reconfiguring or beginning a new Community
+// Gallery Image rule.
+func readCommunityGalleryImageRule(c *components.AzurePluginConfig, r *plug.CommunityGalleryImageRule, idx int, ruleNames *[]string) error {
+	name := r.Name
+	if name != "" {
+		log.InfoCLI("Reconfiguring Community Gallery Image rule %s", name)
+		*ruleNames = append(*ruleNames, name)
+	} else {
+		name, err := getRuleName(ruleNames)
+		if err != nil {
+			return err
+		}
+		r.Name = name
+	}
+
+	var err error
+
+	logToCollect("gallery location", formatAzureLocation)
+	if r.Gallery.Location, err = prompts.ReadText("Gallery location", r.Gallery.Location, false, -1); err != nil {
+		return err
+	}
+
+	if r.Gallery.Name, err = prompts.ReadText("Gallery name", r.Gallery.Name, false, -1); err != nil {
+		return err
+	}
+
+	if r.Images, err = prompts.ReadTextSlice("Images", strings.Join(r.Images, "\n"), "image names must be at least one character", regexOneCharString, false); err != nil {
+		return fmt.Errorf("failed to prompt for images: %w", err)
+	}
+
+	log.InfoCLI("The subscription ID is that of the subscription that should have access to the gallery.")
+	logToCollect("subscription ID", formatAzureGUID)
+	if r.SubscriptionID, err = prompts.ReadTextRegex("Subscription ID", r.SubscriptionID, mustBeValidUUID, prompts.UUIDRegex); err != nil {
+		return err
+	}
+
+	if idx == -1 {
+		c.Validator.CommunityGalleryImageRules = append(c.Validator.CommunityGalleryImageRules, *r)
+	} else {
+		c.Validator.CommunityGalleryImageRules[idx] = *r
+	}
+	return nil
+}
+
 const (
-	formatAzureGUID = iota
+	formatAzureGUID     = iota
+	formatAzureLocation = iota
 )
 
 // logToCollect logs a few messages to guide the user when we need to collect data from them.
@@ -367,6 +446,9 @@ func logToCollect(dataToCollect string, format int) {
 	case formatAzureGUID:
 		formatLabel = "Azure GUID"
 		example = exampleGUID
+	case formatAzureLocation:
+		formatLabel = "Azure location"
+		example = "westus"
 	}
 
 	log.InfoCLI("Format: %s", formatLabel)
