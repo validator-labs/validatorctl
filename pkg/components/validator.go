@@ -123,8 +123,7 @@ func (c *ValidatorConfig) EnabledPluginsHaveRules() (bool, []string) {
 		invalidPlugins = append(invalidPlugins, c.MaasPlugin.Validator.PluginCode())
 	}
 	if c.MaasPlugin.Enabled && c.MaasPlugin.Validator.ResultCount() == 0 {
-		// invalidPlugins = append(invalidPlugins, c.MaasPlugin.Validator.PluginCode())
-		invalidPlugins = append(invalidPlugins, "MAAS")
+		invalidPlugins = append(invalidPlugins, c.MaasPlugin.Validator.PluginCode())
 	}
 	if c.NetworkPlugin.Enabled && c.NetworkPlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, c.NetworkPlugin.Validator.PluginCode())
