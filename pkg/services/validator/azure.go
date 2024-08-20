@@ -199,6 +199,7 @@ func readAzureCredsHelper(c *components.AzurePluginConfig) error {
 }
 
 // configureRBACRules sets up zero or more RBAC rules based on pre-existing files or user input.
+// nolint:dupl
 func configureRBACRules(c *components.AzurePluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	RBAC validation rules ensure that security principals have the required permissions.
