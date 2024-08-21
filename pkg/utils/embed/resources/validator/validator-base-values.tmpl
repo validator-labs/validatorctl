@@ -203,13 +203,4 @@ pluginSecrets:
   {{- else }}
   vSphere: {}
   {{- end }}
-
-  {{- if .MAASPlugin.Validator.Auth.SecretName }}
-  maas:
-    secretName: {{ .MAASPlugin.Validator.Auth.SecretName }}
-    tokenKey: {{ .MAASPlugin.Validator.Auth.TokenKey }}
-    maasApiToken: {{ .MAASPlugin.MaasAPIToken }}
-  {{- else }}
-  maas: {}
-  {{- end }}
   

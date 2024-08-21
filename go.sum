@@ -868,8 +868,8 @@ github.com/validator-labs/validator-plugin-aws v0.1.4 h1:0SMEIddrCRJfHvsqkyMCmkD
 github.com/validator-labs/validator-plugin-aws v0.1.4/go.mod h1:Nh/RM9SygPPV9aMmMoOHg7PnYlCRYEHeOfOQ0qk5hBs=
 github.com/validator-labs/validator-plugin-azure v0.0.17 h1:4LrXisaemQ1j1adj1lwk1dxyuWfKavgPnFE9QPf/ses=
 github.com/validator-labs/validator-plugin-azure v0.0.17/go.mod h1:T13K/0EjDN0L6A8h7+OgxK7Ni2L7WYZXapGZCZgtgmY=
-github.com/validator-labs/validator-plugin-maas v0.0.8-0.20240809210245-5894f5118612 h1:dM8Ot/EX0/tNvGfOtK8OMPwpYfXltxWJeN7yO49SzwY=
-github.com/validator-labs/validator-plugin-maas v0.0.8-0.20240809210245-5894f5118612/go.mod h1:sla9fLOH2YRzKYfzqCf4ljA7LtiPT+DxuI8R/X0GZh8=
+github.com/validator-labs/validator-plugin-maas v0.0.8-0.20240820005521-e903cc7f7fc4 h1:Kd8qBL10cUx/VbPO8NNAF525UFBKLF/NldtfLfxUl1Y=
+github.com/validator-labs/validator-plugin-maas v0.0.8-0.20240820005521-e903cc7f7fc4/go.mod h1:otiQUFctfzJgNgvWI/+DLDdlWMUjRpHJUoT7LA3k5K4=
 github.com/validator-labs/validator-plugin-network v0.0.23 h1:+1fooiXuve73NAOUTTjf2jPd9DDYHekzEKh7bLtrOFc=
 github.com/validator-labs/validator-plugin-network v0.0.23/go.mod h1:9f7tzIR1toQD0XVMTIba/42V+06j4IoUhwELe+V0Jfs=
 github.com/validator-labs/validator-plugin-oci v0.2.1 h1:FlT0zv5j7XrrRdPgxbJgy8U6mWrNYb0R4ZXs7zuiPKE=
@@ -878,8 +878,8 @@ github.com/validator-labs/validator-plugin-vsphere v0.0.30 h1:CgJUW8vEftslSAb/xm
 github.com/validator-labs/validator-plugin-vsphere v0.0.30/go.mod h1:g2+O2WYlXYYX5FxHfa7Vu7GCJLtX9QgQ0A8+9IODpQY=
 github.com/vbatts/tar-split v0.11.5 h1:3bHCTIheBm1qFTcgh9oPu+nNBtX+XJIupG/vacinCts=
 github.com/vbatts/tar-split v0.11.5/go.mod h1:yZbwRsSeGjusneWgA781EKej9HF8vme8okylkAeNKLk=
-github.com/vmware/govmomi v0.40.0 h1:7xzJLA7CD7teyeToYWS3tapZtZX9x0sBfjBvbnsVllI=
-github.com/vmware/govmomi v0.40.0/go.mod h1:1H5LWwsBif8HKZqbFp0FdoKTHyJE4FzL6ACequMKYQg=
+github.com/vmware/govmomi v0.42.0 h1:MbvAlVfjNBE1mHMaQ7yOSop1KLB0/93x6VAGuCtjqtI=
+github.com/vmware/govmomi v0.42.0/go.mod h1:1H5LWwsBif8HKZqbFp0FdoKTHyJE4FzL6ACequMKYQg=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/xanzy/go-gitlab v0.107.0 h1:P2CT9Uy9yN9lJo3FLxpMZ4xj6uWcpnigXsjvqJ6nd2Y=
