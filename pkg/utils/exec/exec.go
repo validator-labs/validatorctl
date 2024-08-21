@@ -50,9 +50,6 @@ var (
 	Ping string
 	// PingBin is a Binary struct that references the ping binary.
 	PingBin = Binary{"ping", &Ping}
-
-	// AllBins is a list of all binaries used by the CLI.
-	AllBins = []Binary{DockerBin, HelmBin, KindBin, KubectlBin}
 )
 
 // CheckBinaries checks if the required binaries are installed and available on the PATH and returns an error if any are missing.
