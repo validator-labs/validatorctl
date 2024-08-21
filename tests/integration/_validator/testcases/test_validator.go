@@ -149,7 +149,7 @@ func (t *ValidatorTest) testInstallInteractiveApply(ctx *test.TestContext) (tr *
 	// Plugin values
 	tuiSliceVals := make([][]string, 0)
 	tuiVals, tuiSliceVals = t.awsPluginValues(ctx, tuiVals, tuiSliceVals)
-	tuiVals = t.azurePluginValues(ctx, tuiVals)
+	tuiVals, tuiSliceVals = t.azurePluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals, tuiSliceVals = t.maasPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals, tuiSliceVals = t.networkPluginValues(ctx, tuiVals, tuiSliceVals)
 	tuiVals, tuiSliceVals = t.ociPluginValues(ctx, tuiVals, tuiSliceVals)
@@ -307,16 +307,25 @@ func (t *ValidatorTest) azurePluginInstallValues(ctx *test.TestContext, vals []s
 	return vals
 }
 
-func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, vals []string) []string {
-	azureVals := []string{
+func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+	azureVals := []any{
+		"y",                                    // enable RBAC validation
 		"rule-1",                               // rule name
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // security principal
 		"Local Filepath",                       // Add permission sets via
 		t.filePath("azurePermissionSets.json"), // Permission sets file
 		"n",                                    // add RBAC rule
+
+		// new
+		"y",                                    // enable community gallery image validation
+		"rule-2",                               // rule name
+		"westus",                               // location
+		"testgallery",                          // gallery name
+		[]string{"a"},                          // images
+		"d551b7b1-78ae-43df-9d61-4935c843a454", // subscription
+		"n",                                    // add community gallery image rule
 	}
-	vals = append(vals, azureVals...)
-	return vals
+	return interleave(vals, sliceVals, azureVals)
 }
 
 func (t *ValidatorTest) networkPluginInstallValues(ctx *test.TestContext, vals []string) []string {
