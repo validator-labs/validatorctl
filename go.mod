@@ -24,7 +24,7 @@ require (
 	github.com/validator-labs/validator-plugin-network v0.0.23
 	github.com/validator-labs/validator-plugin-oci v0.2.1
 	github.com/validator-labs/validator-plugin-vsphere v0.0.30
-	github.com/vmware/govmomi v0.40.0
+	github.com/vmware/govmomi v0.42.0
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v2 v2.4.0
