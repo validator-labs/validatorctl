@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -36,6 +37,10 @@ const (
 var (
 	azureSecretName = "azure-creds"
 )
+
+type azureRule interface {
+	*plug.RBACRule | *plug.CommunityGalleryImageRule
+}
 
 func readAzurePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	c := vc.AzurePlugin
@@ -198,6 +203,21 @@ func readAzureCredsHelper(c *components.AzurePluginConfig) error {
 	return nil
 }
 
+func initAzureRule[R azureRule](r R, ruleType string, ruleNames *[]string) error {
+	name := reflect.ValueOf(r).Elem().FieldByName("Name").String()
+	if name != "" {
+		log.InfoCLI("Reconfiguring %s rule: %s", ruleType, name)
+		*ruleNames = append(*ruleNames, name)
+	} else {
+		name, err := getRuleName(ruleNames)
+		if err != nil {
+			return err
+		}
+		reflect.ValueOf(r).Elem().FieldByName("Name").Set(reflect.ValueOf(name))
+	}
+	return nil
+}
+
 // configureRBACRules sets up zero or more RBAC rules based on pre-existing files or user input.
 // nolint:dupl
 func configureRBACRules(c *components.AzurePluginConfig, ruleNames *[]string) error {
@@ -252,19 +272,10 @@ func readRBACRule(c *components.AzurePluginConfig, r *plug.RBACRule, idx int, ru
 		r = &plug.RBACRule{}
 	}
 
-	name := r.Name
-	if name != "" {
-		log.InfoCLI("Reconfiguring RBAC rule %s", name)
-		*ruleNames = append(*ruleNames, name)
-	} else {
-		name, err := getRuleName(ruleNames)
-		if err != nil {
-			return err
-		}
-		r.Name = name
+	err := initAzureRule(r, "RBAC", ruleNames)
+	if err != nil {
+		return err
 	}
-
-	var err error
 
 	logToCollect("security principal", formatAzureGUID)
 	r.PrincipalID, err = prompts.ReadTextRegex("Security principal", r.PrincipalID, mustBeValidUUID, prompts.UUIDRegex)
@@ -368,7 +379,7 @@ func configureCommunityGalleryImageRules(c *components.AzurePluginConfig, ruleNa
 		return nil
 	}
 	for {
-		if err := readCommunityGalleryImageRule(c, &plug.CommunityGalleryImageRule{}, -1, ruleNames); err != nil {
+		if err := readCommunityGalleryImageRule(c, nil, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add additional Community Gallery Image rule", false)
@@ -385,19 +396,14 @@ func configureCommunityGalleryImageRules(c *components.AzurePluginConfig, ruleNa
 // readCommunityGalleryImageRule begins the process of reconfiguring or beginning a new Community
 // Gallery Image rule.
 func readCommunityGalleryImageRule(c *components.AzurePluginConfig, r *plug.CommunityGalleryImageRule, idx int, ruleNames *[]string) error {
-	name := r.Name
-	if name != "" {
-		log.InfoCLI("Reconfiguring Community Gallery Image rule %s", name)
-		*ruleNames = append(*ruleNames, name)
-	} else {
-		name, err := getRuleName(ruleNames)
-		if err != nil {
-			return err
-		}
-		r.Name = name
+	if r == nil {
+		r = &plug.CommunityGalleryImageRule{}
 	}
 
-	var err error
+	err := initAzureRule(r, "Community Gallery Image", ruleNames)
+	if err != nil {
+		return err
+	}
 
 	logToCollect("gallery location", formatAzureLocation)
 	if r.Gallery.Location, err = prompts.ReadText("Gallery location", r.Gallery.Location, false, -1); err != nil {
@@ -412,7 +418,9 @@ func readCommunityGalleryImageRule(c *components.AzurePluginConfig, r *plug.Comm
 		return fmt.Errorf("failed to prompt for images: %w", err)
 	}
 
-	log.InfoCLI("Community gallery images are accessed via subscriptions. You must provide the ID of the subscription you want to verify that community gallery image can be accessed with. This can be any subscription the security principal you authed the Azure plugin with has access to.")
+	log.InfoCLI(`Community gallery images are accessed via subscriptions.
+You must provide the ID of the subscription you want to verify that community gallery image can be accessed with.
+This can be any subscription the security principal you authed the Azure plugin with has access to.`)
 	logToCollect("subscription ID", formatAzureGUID)
 	if r.SubscriptionID, err = prompts.ReadTextRegex("Subscription ID", r.SubscriptionID, mustBeValidUUID, prompts.UUIDRegex); err != nil {
 		return err
