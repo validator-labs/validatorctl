@@ -418,9 +418,11 @@ func readCommunityGalleryImageRule(c *components.AzurePluginConfig, r *plug.Comm
 		return fmt.Errorf("failed to prompt for images: %w", err)
 	}
 
-	log.InfoCLI(`Community gallery images are accessed via subscriptions.
-You must provide the ID of the subscription you want to verify that community gallery image can be accessed with.
-This can be any subscription the security principal you authed the Azure plugin with has access to.`)
+	log.InfoCLI(`
+ 	Community gallery images are accessed via subscriptions.
+	Provide the ID of the subscription you want to verify can access the community gallery image(s).
+	This can be any subscription the security principal you authed the Azure plugin with has access to.
+	`)
 	logToCollect("subscription ID", formatAzureGUID)
 	if r.SubscriptionID, err = prompts.ReadTextRegex("Subscription ID", r.SubscriptionID, mustBeValidUUID, prompts.UUIDRegex); err != nil {
 		return err
