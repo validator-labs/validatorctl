@@ -14,7 +14,6 @@ import (
 	network "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	oci "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
 	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
-	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	validator "github.com/validator-labs/validator/api/v1alpha1"
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -96,7 +95,6 @@ func NewValidatorConfig() *ValidatorConfig {
 		VspherePlugin: &VspherePluginConfig{
 			Release:   &validator.HelmRelease{},
 			Validator: &vsphereapi.VsphereValidatorSpec{},
-			Account:   &vsphere.CloudAccount{},
 		},
 	}
 }
@@ -559,7 +557,6 @@ func (c *OCIPluginConfig) decrypt() error {
 type VspherePluginConfig struct {
 	Enabled                     bool                             `yaml:"enabled"`
 	Release                     *validator.HelmRelease           `yaml:"helmRelease"`
-	Account                     *vsphere.CloudAccount            `yaml:"account"`
 	Validator                   *vsphereapi.VsphereValidatorSpec `yaml:"validator"`
 	VsphereEntityPrivilegeRules []VsphereEntityPrivilegeRule     `yaml:"vsphereEntityPrivilegeRules"`
 	VsphereRolePrivilegeRules   []VsphereRolePrivilegeRule       `yaml:"vsphereRolePrivilegeRules"`
@@ -567,23 +564,23 @@ type VspherePluginConfig struct {
 }
 
 func (c *VspherePluginConfig) encrypt() error {
-	if c.Account != nil {
-		password, err := crypto.EncryptB64([]byte(c.Account.Password))
+	if c.Validator.Auth.CloudAccount != nil {
+		password, err := crypto.EncryptB64([]byte(c.Validator.Auth.CloudAccount.Password))
 		if err != nil {
 			return errors.Wrap(err, "failed to encrypt password")
 		}
-		c.Account.Password = password
+		c.Validator.Auth.CloudAccount.Password = password
 	}
 	return nil
 }
 
 func (c *VspherePluginConfig) decrypt() error {
-	if c.Account != nil {
-		bytes, err := crypto.DecryptB64(c.Account.Password)
+	if c.Validator.Auth.CloudAccount != nil {
+		bytes, err := crypto.DecryptB64(c.Validator.Auth.CloudAccount.Password)
 		if err != nil {
 			return errors.Wrap(err, "failed to decrypt password")
 		}
-		c.Account.Password = string(*bytes)
+		c.Validator.Auth.CloudAccount.Password = string(*bytes)
 	}
 	return nil
 }

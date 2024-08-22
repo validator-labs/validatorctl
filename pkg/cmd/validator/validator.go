@@ -636,7 +636,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.VspherePlugin.Validator,
 		}
 		vr := vres.Build(v)
-		vrr := vsphereval.Validate(context.Background(), *vc.VspherePlugin.Validator, vc.VspherePlugin.Account, l)
+		vrr := vsphereval.Validate(context.Background(), *vc.VspherePlugin.Validator, vc.VspherePlugin.Validator.Auth.CloudAccount, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}

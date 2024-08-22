@@ -234,14 +234,14 @@ vspherePlugin:
       repository: validator-plugin-vsphere
       version: v0.0.31
     values: ""
-  account:
-    insecure: true
-    password: vn0cCP3U08iqDUwwCgBFWBbfekA+4TTe
-    username: bob@vsphere.com
-    vcenterServer: fake.vsphere.com
   validator:
     auth:
       secretName: vsphere-creds
+      cloudAccount:
+        insecure: true
+        password: vn0cCP3U08iqDUwwCgBFWBbfekA+4TTe
+        username: bob@vsphere.com
+        vcenterServer: fake.vsphere.com
     datacenter: DC0
     entityPrivilegeValidationRules:
     - name: 'Read folder: spectro-templates'
