@@ -5,7 +5,7 @@ helmRelease:
   chart:
     name: validator
     repository: validator
-    version: v0.1.6
+    version: v0.1.7
   values: ""
 helmReleaseSecret:
   name: validator-helm-release-validator
@@ -232,7 +232,7 @@ vspherePlugin:
     chart:
       name: validator-plugin-vsphere
       repository: validator-plugin-vsphere
-      version: v0.0.30
+      version: v0.0.31
     values: ""
   account:
     insecure: true

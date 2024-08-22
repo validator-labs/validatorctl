@@ -110,25 +110,22 @@ func (c *ValidatorConfig) AnyPluginEnabled() bool {
 func (c *ValidatorConfig) EnabledPluginsHaveRules() (bool, []string) {
 	var ok bool
 	invalidPlugins := []string{}
-	if c.AWSPlugin.Enabled && c.AWSPlugin.Validator.ResultCount() == 0 {
+	if c.AWSPlugin != nil && c.AWSPlugin.Enabled && c.AWSPlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, c.AWSPlugin.Validator.PluginCode())
 	}
-	if c.AzurePlugin.Enabled && c.AzurePlugin.Validator.ResultCount() == 0 {
+	if c.AzurePlugin != nil && c.AzurePlugin.Enabled && c.AzurePlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, c.AzurePlugin.Validator.PluginCode())
 	}
-	if c.MaasPlugin.Enabled && c.MaasPlugin.Validator.ResultCount() == 0 {
+	if c.MaasPlugin != nil && c.MaasPlugin.Enabled && c.MaasPlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, c.MaasPlugin.Validator.PluginCode())
 	}
-	if c.MaasPlugin.Enabled && c.MaasPlugin.Validator.ResultCount() == 0 {
-		invalidPlugins = append(invalidPlugins, c.MaasPlugin.Validator.PluginCode())
-	}
-	if c.NetworkPlugin.Enabled && c.NetworkPlugin.Validator.ResultCount() == 0 {
+	if c.NetworkPlugin != nil && c.NetworkPlugin.Enabled && c.NetworkPlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, c.NetworkPlugin.Validator.PluginCode())
 	}
-	if c.OCIPlugin.Enabled && c.OCIPlugin.Validator.ResultCount() == 0 {
+	if c.OCIPlugin != nil && c.OCIPlugin.Enabled && c.OCIPlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, c.OCIPlugin.Validator.PluginCode())
 	}
-	if c.VspherePlugin.Enabled && c.VspherePlugin.Validator.ResultCount() == 0 {
+	if c.VspherePlugin != nil && c.VspherePlugin.Enabled && c.VspherePlugin.Validator.ResultCount() == 0 {
 		invalidPlugins = append(invalidPlugins, c.VspherePlugin.Validator.PluginCode())
 	}
 	if len(invalidPlugins) == 0 {
