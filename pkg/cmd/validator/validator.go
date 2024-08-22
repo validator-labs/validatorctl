@@ -515,6 +515,7 @@ func configurePlugins(c *cfg.Config, vc *components.ValidatorConfig, tc *cfg.Tas
 	return nil
 }
 
+// nolint:gocyclo
 func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	log.Header("Executing validator plugin(s)")
 
@@ -525,7 +526,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	ok := true
 	results := make([]*vapi.ValidationResult, 0)
 
-	if vc.AWSPlugin.Enabled {
+	if vc.AWSPlugin != nil && vc.AWSPlugin.Enabled {
 		v := &awsapi.AwsValidator{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "aws-validator",
@@ -544,7 +545,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		results = append(results, vr)
 	}
 
-	if vc.AzurePlugin.Enabled {
+	if vc.AzurePlugin != nil && vc.AzurePlugin.Enabled {
 		v := &azureapi.AzureValidator{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "azure-validator",
@@ -563,7 +564,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		results = append(results, vr)
 	}
 
-	if vc.MaasPlugin.Enabled {
+	if vc.MaasPlugin != nil && vc.MaasPlugin.Enabled {
 		v := &maasapi.MaasValidator{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "maas-validator",
@@ -582,7 +583,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		results = append(results, vr)
 	}
 
-	if vc.NetworkPlugin.Enabled {
+	if vc.NetworkPlugin != nil && vc.NetworkPlugin.Enabled {
 		v := &netapi.NetworkValidator{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "network-validator",
@@ -604,7 +605,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		results = append(results, vr)
 	}
 
-	if vc.OCIPlugin.Enabled {
+	if vc.OCIPlugin != nil && vc.OCIPlugin.Enabled {
 		v := &ociapi.OciValidator{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "oci-validator",
@@ -626,7 +627,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		results = append(results, vr)
 	}
 
-	if vc.VspherePlugin.Enabled {
+	if vc.VspherePlugin != nil && vc.VspherePlugin.Enabled {
 		v := &vsphereapi.VsphereValidator{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "vsphere-validator",
