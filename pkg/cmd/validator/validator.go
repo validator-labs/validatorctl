@@ -25,21 +25,28 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	awsapi "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
+	awsconst "github.com/validator-labs/validator-plugin-aws/pkg/constants"
 	awsval "github.com/validator-labs/validator-plugin-aws/pkg/validate"
 	azureapi "github.com/validator-labs/validator-plugin-azure/api/v1alpha1"
+	azureconst "github.com/validator-labs/validator-plugin-azure/pkg/constants"
 	azureval "github.com/validator-labs/validator-plugin-azure/pkg/validate"
 	maasapi "github.com/validator-labs/validator-plugin-maas/api/v1alpha1"
+	maasconst "github.com/validator-labs/validator-plugin-maas/pkg/constants"
 	maasval "github.com/validator-labs/validator-plugin-maas/pkg/validate"
-	netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
-	netval "github.com/validator-labs/validator-plugin-network/pkg/validate"
-	ociapi "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
+	//netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
+	//netconst "github.com/validator-labs/validator-plugin-network/pkg/constants"
+	//netval "github.com/validator-labs/validator-plugin-network/pkg/validate"
+	//ociapi "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
 	ociauth "github.com/validator-labs/validator-plugin-oci/pkg/auth"
+	//ociconst "github.com/validator-labs/validator-plugin-oci/pkg/constants"
 	ocic "github.com/validator-labs/validator-plugin-oci/pkg/ociclient"
-	ocival "github.com/validator-labs/validator-plugin-oci/pkg/validate"
+	//ocival "github.com/validator-labs/validator-plugin-oci/pkg/validate"
 	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	vsphereconst "github.com/validator-labs/validator-plugin-vsphere/pkg/constants"
 	vsphereval "github.com/validator-labs/validator-plugin-vsphere/pkg/validate"
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
 	"github.com/validator-labs/validator/pkg/helm"
+	"github.com/validator-labs/validator/pkg/plugins"
 	"github.com/validator-labs/validator/pkg/sinks"
 	"github.com/validator-labs/validator/pkg/types"
 	vres "github.com/validator-labs/validator/pkg/validationresult"
@@ -190,6 +197,12 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var err error
 	var saveConfig bool
 
+	if tc.CRDPath != "" && tc.Direct {
+		// add function for unmarshalling crds
+
+		// a call to execute plugins
+	}
+
 	if !tc.Reconfigure {
 		// Silent Mode
 		vc, err = components.NewValidatorFromConfig(tc)
@@ -241,7 +254,7 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	}
 
 	if tc.Direct {
-		return executePlugins(c, vc)
+		return executePlugins(c, pluginSpecs(vc), vc.SinkConfig)
 	}
 
 	// upgrade the validator helm release so that plugin rule secrets
@@ -258,6 +271,29 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		return err
 	}
 	return nil
+}
+
+func pluginSpecs(vc *components.ValidatorConfig) []plugins.PluginSpec {
+	pluginSpecs := make([]plugins.PluginSpec, 0)
+	if vc.AWSPlugin != nil && vc.AWSPlugin.Enabled {
+		pluginSpecs = append(pluginSpecs, vc.AWSPlugin.Validator)
+	}
+	if vc.AzurePlugin != nil && vc.AzurePlugin.Enabled {
+		pluginSpecs = append(pluginSpecs, vc.AzurePlugin.Validator)
+	}
+	if vc.MaasPlugin != nil && vc.MaasPlugin.Enabled {
+		pluginSpecs = append(pluginSpecs, vc.MaasPlugin.Validator)
+	}
+	if vc.NetworkPlugin != nil && vc.NetworkPlugin.Enabled {
+		pluginSpecs = append(pluginSpecs, vc.NetworkPlugin.Validator)
+	}
+	if vc.OCIPlugin != nil && vc.OCIPlugin.Enabled {
+		pluginSpecs = append(pluginSpecs, vc.OCIPlugin.Validator)
+	}
+	if vc.VspherePlugin != nil && vc.VspherePlugin.Enabled {
+		pluginSpecs = append(pluginSpecs, vc.VspherePlugin.Validator)
+	}
+	return pluginSpecs
 }
 
 // UpgradeValidatorCommand upgrades validator and its plugins
@@ -516,7 +552,7 @@ func configurePlugins(c *cfg.Config, vc *components.ValidatorConfig, tc *cfg.Tas
 }
 
 // nolint:gocyclo
-func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
+func executePlugins(c *cfg.Config, pluginSpecs []plugins.PluginSpec, sc *components.SinkConfig) error {
 	log.Header("Executing validator plugin(s)")
 
 	// Initialize a new logr.Logger that writes to the same
@@ -526,129 +562,146 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	ok := true
 	results := make([]*vapi.ValidationResult, 0)
 
-	if vc.AWSPlugin != nil && vc.AWSPlugin.Enabled {
-		v := &awsapi.AwsValidator{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "aws-validator",
-				Namespace: "N/A",
-			},
-			Spec: *vc.AWSPlugin.Validator,
-		}
-		vr := vres.Build(v)
-		vrr := awsval.Validate(*vc.AWSPlugin.Validator, l)
-		if err := vres.Finalize(vr, vrr, l); err != nil {
-			return err
-		}
-		if vrOk := validationResponseOk(vc.AWSPlugin.Validator.ResultCount(), vrr, l); !vrOk {
-			ok = false
-		}
-		results = append(results, vr)
-	}
+	for _, ps := range pluginSpecs {
 
-	if vc.AzurePlugin != nil && vc.AzurePlugin.Enabled {
-		v := &azureapi.AzureValidator{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "azure-validator",
-				Namespace: "N/A",
-			},
-			Spec: *vc.AzurePlugin.Validator,
-		}
-		vr := vres.Build(v)
-		vrr := azureval.Validate(context.Background(), *vc.AzurePlugin.Validator, l)
-		if err := vres.Finalize(vr, vrr, l); err != nil {
-			return err
-		}
-		if vrOk := validationResponseOk(vc.AzurePlugin.Validator.ResultCount(), vrr, l); !vrOk {
-			ok = false
-		}
-		results = append(results, vr)
-	}
+		switch ps.PluginCode() {
+		case awsconst.PluginCode:
+			s := ps.(*awsapi.AwsValidatorSpec)
 
-	if vc.MaasPlugin != nil && vc.MaasPlugin.Enabled {
-		v := &maasapi.MaasValidator{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "maas-validator",
-				Namespace: "N/A",
-			},
-			Spec: *vc.MaasPlugin.Validator,
-		}
-		vr := vres.Build(v)
-		vrr := maasval.Validate(*vc.MaasPlugin.Validator, l)
-		if err := vres.Finalize(vr, vrr, l); err != nil {
-			return err
-		}
-		if vrOk := validationResponseOk(vc.MaasPlugin.Validator.ResultCount(), vrr, l); !vrOk {
-			ok = false
-		}
-		results = append(results, vr)
-	}
+			v := &awsapi.AwsValidator{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "aws-validator",
+					Namespace: "N/A",
+				},
+				Spec: *s,
+			}
 
-	if vc.NetworkPlugin != nil && vc.NetworkPlugin.Enabled {
-		v := &netapi.NetworkValidator{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "network-validator",
-				Namespace: "N/A",
-			},
-			Spec: *vc.NetworkPlugin.Validator,
-		}
-		vr := vres.Build(v)
-		vrr := netval.Validate(*vc.NetworkPlugin.Validator,
-			vc.NetworkPlugin.Validator.CACerts.RawCerts(),
-			vc.NetworkPlugin.HTTPFileAuthBytes(), l,
-		)
-		if err := vres.Finalize(vr, vrr, l); err != nil {
-			return err
-		}
-		if vrOk := validationResponseOk(vc.NetworkPlugin.Validator.ResultCount(), vrr, l); !vrOk {
-			ok = false
-		}
-		results = append(results, vr)
-	}
+			vr := vres.Build(v)
+			vrr := awsval.Validate(*s, l)
+			if err := vres.Finalize(vr, vrr, l); err != nil {
+				return err
+			}
+			if vrOk := validationResponseOk(s.ResultCount(), vrr, l); !vrOk {
+				ok = false
+			}
+			results = append(results, vr)
 
-	if vc.OCIPlugin != nil && vc.OCIPlugin.Enabled {
-		v := &ociapi.OciValidator{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "oci-validator",
-				Namespace: "N/A",
-			},
-			Spec: *vc.OCIPlugin.Validator,
-		}
-		vr := vres.Build(v)
-		vrr := ocival.Validate(*vc.OCIPlugin.Validator,
-			vc.OCIPlugin.BasicAuths(),
-			vc.OCIPlugin.AllPubKeys(), l,
-		)
-		if err := vres.Finalize(vr, vrr, l); err != nil {
-			return err
-		}
-		if vrOk := validationResponseOk(vc.OCIPlugin.Validator.ResultCount(), vrr, l); !vrOk {
-			ok = false
-		}
-		results = append(results, vr)
-	}
+		case azureconst.PluginCode:
+			s := ps.(*azureapi.AzureValidatorSpec)
 
-	if vc.VspherePlugin != nil && vc.VspherePlugin.Enabled {
-		v := &vsphereapi.VsphereValidator{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "vsphere-validator",
-				Namespace: "N/A",
-			},
-			Spec: *vc.VspherePlugin.Validator,
+			v := &azureapi.AzureValidator{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "azure-validator",
+					Namespace: "N/A",
+				},
+				Spec: *s,
+			}
+			vr := vres.Build(v)
+			vrr := azureval.Validate(context.Background(), *s, l)
+			if err := vres.Finalize(vr, vrr, l); err != nil {
+				return err
+			}
+			if vrOk := validationResponseOk(s.ResultCount(), vrr, l); !vrOk {
+				ok = false
+			}
+			results = append(results, vr)
+
+		case maasconst.PluginCode:
+			s := ps.(*maasapi.MaasValidatorSpec)
+
+			v := &maasapi.MaasValidator{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "maas-validator",
+					Namespace: "N/A",
+				},
+				Spec: *s,
+			}
+			vr := vres.Build(v)
+			vrr := maasval.Validate(*s, l)
+			if err := vres.Finalize(vr, vrr, l); err != nil {
+				return err
+			}
+			if vrOk := validationResponseOk(s.ResultCount(), vrr, l); !vrOk {
+				ok = false
+			}
+			results = append(results, vr)
+
+			/*
+				case netconst.PluginCode:
+					s := ps.(*netapi.NetworkValidatorSpec)
+
+					v := &netapi.NetworkValidator{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "network-validator",
+							Namespace: "N/A",
+						},
+						Spec: *s,
+					}
+					vr := vres.Build(v)
+					vrr := netval.Validate(*s,
+						s.CACerts.RawCerts(),
+						vc.NetworkPlugin.HTTPFileAuthBytes(), // TODO: https://github.com/validator-labs/validator-plugin-network/issues/263
+						l,
+					)
+					if err := vres.Finalize(vr, vrr, l); err != nil {
+						return err
+					}
+					if vrOk := validationResponseOk(s.ResultCount(), vrr, l); !vrOk {
+						ok = false
+					}
+					results = append(results, vr)
+
+				case ociconst.PluginCode:
+					s := ps.(*ociapi.OciValidatorSpec)
+
+					v := &ociapi.OciValidator{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "oci-validator",
+							Namespace: "N/A",
+						},
+						Spec: *s,
+					}
+					vr := vres.Build(v)
+					vrr := ocival.Validate(*s,
+						vc.OCIPlugin.BasicAuths(), // TODO: https://github.com/validator-labs/validator-plugin-oci/issues/279
+						vc.OCIPlugin.AllPubKeys(), // TODO: https://github.com/validator-labs/validator-plugin-oci/issues/279
+						l,
+					)
+					if err := vres.Finalize(vr, vrr, l); err != nil {
+						return err
+					}
+					if vrOk := validationResponseOk(s.ResultCount(), vrr, l); !vrOk {
+						ok = false
+					}
+					results = append(results, vr)
+			*/
+
+		case vsphereconst.PluginCode:
+			s := ps.(*vsphereapi.VsphereValidatorSpec)
+
+			v := &vsphereapi.VsphereValidator{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "vsphere-validator",
+					Namespace: "N/A",
+				},
+				Spec: *s,
+			}
+			vr := vres.Build(v)
+			vrr := vsphereval.Validate(context.Background(), *s, s.Auth.CloudAccount, l)
+			if err := vres.Finalize(vr, vrr, l); err != nil {
+				return err
+			}
+			if vrOk := validationResponseOk(s.ResultCount(), vrr, l); !vrOk {
+				ok = false
+			}
+			results = append(results, vr)
+
 		}
-		vr := vres.Build(v)
-		vrr := vsphereval.Validate(context.Background(), *vc.VspherePlugin.Validator, vc.VspherePlugin.Validator.Auth.CloudAccount, l)
-		if err := vres.Finalize(vr, vrr, l); err != nil {
-			return err
-		}
-		if vrOk := validationResponseOk(vc.VspherePlugin.Validator.ResultCount(), vrr, l); !vrOk {
-			ok = false
-		}
-		results = append(results, vr)
 	}
 
 	// Optionally emit results to a sink
-	if vc.SinkConfig.Enabled {
-		if err := emitToSink(vc, results, l); err != nil {
+	if sc != nil && sc.Enabled {
+		if err := emitToSink(sc, results, l); err != nil {
 			return err
 		}
 	}
@@ -719,11 +772,11 @@ func validationResponseOk(expected int, vr types.ValidationResponse, log logr.Lo
 	return true
 }
 
-func emitToSink(vc *components.ValidatorConfig, results []*vapi.ValidationResult, log logr.Logger) error {
-	sink := sinks.NewSink(types.SinkType(vc.SinkConfig.Type), log)
+func emitToSink(sc *components.SinkConfig, results []*vapi.ValidationResult, log logr.Logger) error {
+	sink := sinks.NewSink(types.SinkType(sc.Type), log)
 
-	sinkConfig := make(map[string][]byte, len(vc.SinkConfig.Values))
-	for k, v := range vc.SinkConfig.Values {
+	sinkConfig := make(map[string][]byte, len(sc.Values))
+	for k, v := range sc.Values {
 		sinkConfig[k] = []byte(v)
 	}
 
