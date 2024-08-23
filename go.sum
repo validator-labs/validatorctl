@@ -691,8 +691,8 @@ github.com/onsi/ginkgo v1.16.4/go.mod h1:dX+/inL/fNMqNlz0e9LfyB9TswhZpCVdJM/Z6Vv
 github.com/onsi/ginkgo v1.16.5 h1:8xi0RTUf59SOSfEtZMvwTvXYMzG4gV23XVHOZiXNtnE=
 github.com/onsi/ginkgo v1.16.5/go.mod h1:+E8gABHa3K6zRBolWtd+ROzc/U5bkGt0FwiG042wbpU=
 github.com/onsi/ginkgo/v2 v2.1.3/go.mod h1:vw5CSIxN1JObi/U8gcbwft7ZxR2dgaR70JSE3/PpL4c=
-github.com/onsi/ginkgo/v2 v2.20.0 h1:PE84V2mHqoT1sglvHc8ZdQtPcwmvvt29WLEEO3xmdZw=
-github.com/onsi/ginkgo/v2 v2.20.0/go.mod h1:lG9ey2Z29hR41WMVthyJBGUBcBhGOtoPF2VFMvBXFCI=
+github.com/onsi/ginkgo/v2 v2.20.1 h1:YlVIbqct+ZmnEph770q9Q7NVAz4wwIiVNahee6JyUzo=
+github.com/onsi/ginkgo/v2 v2.20.1/go.mod h1:lG9ey2Z29hR41WMVthyJBGUBcBhGOtoPF2VFMvBXFCI=
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
@@ -874,8 +874,8 @@ github.com/validator-labs/validator-plugin-network v0.0.23 h1:+1fooiXuve73NAOUTT
 github.com/validator-labs/validator-plugin-network v0.0.23/go.mod h1:9f7tzIR1toQD0XVMTIba/42V+06j4IoUhwELe+V0Jfs=
 github.com/validator-labs/validator-plugin-oci v0.2.1 h1:FlT0zv5j7XrrRdPgxbJgy8U6mWrNYb0R4ZXs7zuiPKE=
 github.com/validator-labs/validator-plugin-oci v0.2.1/go.mod h1:G8oa+TXAiwul9ryFmnEcPZfCvdrt7TXPnQPXXNEnua8=
-github.com/validator-labs/validator-plugin-vsphere v0.0.30 h1:CgJUW8vEftslSAb/xmHZW5dtS51tEA/n6pmN+dwk9Ao=
-github.com/validator-labs/validator-plugin-vsphere v0.0.30/go.mod h1:g2+O2WYlXYYX5FxHfa7Vu7GCJLtX9QgQ0A8+9IODpQY=
+github.com/validator-labs/validator-plugin-vsphere v0.0.31 h1:pCb+gZ7EOK+AjLmcpMv4anWF35tTqgq6vtYEgL6gISI=
+github.com/validator-labs/validator-plugin-vsphere v0.0.31/go.mod h1:zqYtw16TtRD5Q6CrIXEwkPxEVsbhW5ImBgDavGZu1UI=
 github.com/vbatts/tar-split v0.11.5 h1:3bHCTIheBm1qFTcgh9oPu+nNBtX+XJIupG/vacinCts=
 github.com/vbatts/tar-split v0.11.5/go.mod h1:yZbwRsSeGjusneWgA781EKej9HF8vme8okylkAeNKLk=
 github.com/vmware/govmomi v0.42.0 h1:MbvAlVfjNBE1mHMaQ7yOSop1KLB0/93x6VAGuCtjqtI=

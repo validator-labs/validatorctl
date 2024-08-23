@@ -67,7 +67,7 @@ func readVspherePluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	vSphereCloudDriver, err := clouds.GetVSphereDriver(c.Account)
+	vSphereCloudDriver, err := clouds.GetVSphereDriver(c.Validator.Auth.CloudAccount)
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func readVspherePluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _
 
 func readVsphereCredentials(c *components.VspherePluginConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	var err error
-
+	c.Validator.Auth.CloudAccount = &vsphere.CloudAccount{}
 	// always create vSphere credential secret if creating a new kind cluster
 	createSecret := true
 
@@ -133,7 +133,7 @@ func readVsphereCredentials(c *components.VspherePluginConfig, tc *cfg.TaskConfi
 				return err
 			}
 		}
-		if err := clouds.ReadVsphereAccountProps(c.Account); err != nil {
+		if err := clouds.ReadVsphereAccountProps(c.Validator.Auth.CloudAccount); err != nil {
 			return err
 		}
 	} else {
@@ -146,14 +146,14 @@ func readVsphereCredentials(c *components.VspherePluginConfig, tc *cfg.TaskConfi
 		if err != nil {
 			return err
 		}
-		c.Account.VcenterServer = string(secret.Data["vcenterServer"])
-		c.Account.Username = string(secret.Data["username"])
-		c.Account.Password = string(secret.Data["password"])
-		c.Account.Insecure = insecure
+		c.Validator.Auth.CloudAccount.VcenterServer = string(secret.Data["vcenterServer"])
+		c.Validator.Auth.CloudAccount.Username = string(secret.Data["username"])
+		c.Validator.Auth.CloudAccount.Password = string(secret.Data["password"])
+		c.Validator.Auth.CloudAccount.Insecure = insecure
 	}
 
 	// validate vSphere version
-	vSphereCloudDriver, err := clouds.GetVSphereDriver(c.Account)
+	vSphereCloudDriver, err := clouds.GetVSphereDriver(c.Validator.Auth.CloudAccount)
 	if err != nil {
 		return err
 	}
@@ -366,8 +366,8 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 			return err
 		}
 	} else {
-		log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Account.Username)
-		r.Username = c.Account.Username
+		log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Validator.Auth.CloudAccount.Username)
+		r.Username = c.Validator.Auth.CloudAccount.Username
 	}
 
 	if reconfigurePrivileges {
@@ -580,8 +580,8 @@ func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig
 			return err
 		}
 	} else {
-		log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Account.Username)
-		r.Username = c.Account.Username
+		log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Validator.Auth.CloudAccount.Username)
+		r.Username = c.Validator.Auth.CloudAccount.Username
 	}
 
 	if reconfigureEntity {
