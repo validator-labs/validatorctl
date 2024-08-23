@@ -234,6 +234,14 @@ vspherePlugin:
       repository: validator-plugin-vsphere
       version: v0.0.33
     values: ""
+<<<<<<< HEAD
+=======
+  account:
+    insecure: true
+    password: vn0cCP3U08iqDUwwCgBFWBbfekA+4TTe
+    username: bob@vsphere.com
+    vcenterServer: fake.vsphere.com
+>>>>>>> 5d1f150 (make reviewable)
   validator:
     auth:
       secretName: vsphere-creds
