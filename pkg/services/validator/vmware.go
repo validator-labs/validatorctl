@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"reflect"
 	"slices"
 	"sort"
 	"strconv"
@@ -16,9 +15,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/yaml"
 
-	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	"github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+
+	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -38,11 +38,6 @@ func init() {
 	for _, v := range cfg.ValidatorPluginVsphereEntityMap {
 		vsphereEntityTypes = append(vsphereEntityTypes, v)
 	}
-}
-
-type vSphereRule interface {
-	*components.VsphereEntityPrivilegeRule | *components.VsphereRolePrivilegeRule | *components.VsphereTagRule |
-		*v1alpha1.ComputeResourceRule | *v1alpha1.NTPValidationRule
 }
 
 func readVspherePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
@@ -165,24 +160,6 @@ func readVsphereCredentials(c *components.VspherePluginConfig, tc *cfg.TaskConfi
 	return nil
 }
 
-func initVsphereRule[R vSphereRule](r R, ruleType, message string, ruleNames *[]string) error {
-	name := reflect.ValueOf(r).Elem().FieldByName("Name").String()
-	if name != "" {
-		log.InfoCLI("\nReconfiguring %s validation rule: %s", ruleType, name)
-		if message != "" {
-			log.InfoCLI(message)
-		}
-		*ruleNames = append(*ruleNames, name)
-	} else {
-		name, err := getRuleName(ruleNames)
-		if err != nil {
-			return err
-		}
-		reflect.ValueOf(r).Elem().FieldByName("Name").Set(reflect.ValueOf(name))
-	}
-	return nil
-}
-
 // nolint:dupl
 func configureNtpRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.Driver, ruleNames *[]string) error {
 	log.InfoCLI(`
@@ -232,7 +209,7 @@ func configureNtpRules(ctx context.Context, c *components.VspherePluginConfig, d
 }
 
 func readNtpRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.NTPValidationRule, driver vsphere.Driver, idx int, ruleNames *[]string) error {
-	err := initVsphereRule(r, "NTP", "The rule's ESXi host selection will be replaced.", ruleNames)
+	err := initRule(r, "NTP", "The rule's ESXi host selection will be replaced.", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -347,7 +324,7 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 	var initMsg string
 	reconfigurePrivileges := true
 
-	if r.Name != "" {
+	if r.Name() != "" {
 		reconfigurePrivileges, err = prompts.ReadBool("Reconfigure privilege set for role privilege rule", false)
 		if err != nil {
 			return err
@@ -356,7 +333,7 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 			initMsg = "The rule's vSphere privilege set will be replaced."
 		}
 	}
-	if err := initVsphereRule(r, "role privilege", initMsg, ruleNames); err != nil {
+	if err := initRule(r, "role privilege", initMsg, ruleNames); err != nil {
 		return err
 	}
 
@@ -543,7 +520,7 @@ func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginCon
 	var initMsg string
 	reconfigureEntity := true
 
-	if r.Name != "" {
+	if r.Name() != "" {
 		reconfigureEntity, err = prompts.ReadBool("Reconfigure entity and privilege set for entity privilege rule", false)
 		if err != nil {
 			return err
@@ -552,7 +529,7 @@ func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginCon
 			initMsg = "The rule's entity and privilege set will be replaced."
 		}
 	}
-	if err := initVsphereRule(r, "entity privilege", initMsg, ruleNames); err != nil {
+	if err := initRule(r, "entity privilege", initMsg, ruleNames); err != nil {
 		return err
 	}
 
@@ -647,7 +624,7 @@ func configureResourceRequirementRules(ctx context.Context, c *components.Vspher
 }
 
 func readResourceRequirementRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.ComputeResourceRule, driver vsphere.Driver, idx int, ruleNames *[]string) error {
-	err := initVsphereRule(r, "resource requirement", "", ruleNames)
+	err := initRule(r, "resource requirement", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -787,7 +764,7 @@ func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginCo
 }
 
 func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver vsphere.Driver, idx int, ruleNames *[]string) error {
-	err := initVsphereRule(r, "tag", "", ruleNames)
+	err := initRule(r, "tag", "", ruleNames)
 	if err != nil {
 		return err
 	}

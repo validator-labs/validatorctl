@@ -17,6 +17,7 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
+<<<<<<< HEAD
 	github.com/validator-labs/validator v0.1.6
 	github.com/validator-labs/validator-plugin-aws v0.1.4
 	github.com/validator-labs/validator-plugin-azure v0.0.17
@@ -24,8 +25,17 @@ require (
 	github.com/validator-labs/validator-plugin-network v0.0.23
 	github.com/validator-labs/validator-plugin-oci v0.2.1
 	github.com/validator-labs/validator-plugin-vsphere v0.0.31
+=======
+	github.com/validator-labs/validator v0.1.8
+	github.com/validator-labs/validator-plugin-aws v0.1.6
+	github.com/validator-labs/validator-plugin-azure v0.0.19
+	github.com/validator-labs/validator-plugin-maas v0.0.10
+	github.com/validator-labs/validator-plugin-network v0.0.25
+	github.com/validator-labs/validator-plugin-oci v0.3.1
+	github.com/validator-labs/validator-plugin-vsphere v0.0.33
+>>>>>>> 3301e19 (Make initRule function and use it for all plugin prompts.)
 	github.com/vmware/govmomi v0.42.0
-	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
+	golang.org/x/exp v0.0.0-20240822175202-778ce7bba035
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.31.0
@@ -47,7 +57,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.7.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.10.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2 v2.2.0 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6 v6.0.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6 v6.1.0 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.11.29 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.23 // indirect

@@ -2,23 +2,19 @@ package validator
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	network "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
+
+	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
 )
-
-type networkRule interface {
-	*network.DNSRule | *network.ICMPRule | *network.IPRangeRule | *network.MTURule | *network.TCPConnRule | *network.HTTPFileRule
-}
 
 func readNetworkPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, _ kubernetes.Interface) error {
 	c := vc.NetworkPlugin
@@ -431,23 +427,8 @@ func configureHTTPFileRules(c *components.NetworkPluginConfig, tc *cfg.TaskConfi
 	return nil
 }
 
-func initNetworkRule[R networkRule](r R, ruleType string, ruleNames *[]string) error {
-	name := reflect.ValueOf(r).Elem().FieldByName("RuleName").String()
-	if name != "" {
-		log.InfoCLI("Reconfiguring %s rule: %s", ruleType, name)
-		*ruleNames = append(*ruleNames, name)
-	} else {
-		name, err := getRuleName(ruleNames)
-		if err != nil {
-			return err
-		}
-		reflect.ValueOf(r).Elem().FieldByName("RuleName").Set(reflect.ValueOf(name))
-	}
-	return nil
-}
-
 func readDNSRule(c *components.NetworkPluginConfig, r *network.DNSRule, idx int, ruleNames *[]string) error {
-	err := initNetworkRule(r, "DNS", ruleNames)
+	err := initRule(r, "DNS", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -468,7 +449,7 @@ func readDNSRule(c *components.NetworkPluginConfig, r *network.DNSRule, idx int,
 }
 
 func readIcmpRule(c *components.NetworkPluginConfig, r *network.ICMPRule, idx int, ruleNames *[]string) error {
-	err := initNetworkRule(r, "ICMP", ruleNames)
+	err := initRule(r, "ICMP", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -485,7 +466,7 @@ func readIcmpRule(c *components.NetworkPluginConfig, r *network.ICMPRule, idx in
 }
 
 func readIPRangeRule(c *components.NetworkPluginConfig, r *network.IPRangeRule, idx int, ruleNames *[]string) error {
-	err := initNetworkRule(r, "IP range", ruleNames)
+	err := initRule(r, "IP range", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -506,7 +487,7 @@ func readIPRangeRule(c *components.NetworkPluginConfig, r *network.IPRangeRule, 
 }
 
 func readMtuRule(c *components.NetworkPluginConfig, r *network.MTURule, idx int, ruleNames *[]string) error {
-	err := initNetworkRule(r, "MTU", ruleNames)
+	err := initRule(r, "MTU", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -527,7 +508,7 @@ func readMtuRule(c *components.NetworkPluginConfig, r *network.MTURule, idx int,
 }
 
 func readTCPConnRule(c *components.NetworkPluginConfig, r *network.TCPConnRule, idx int, ruleNames *[]string) error {
-	err := initNetworkRule(r, "TCP connection", ruleNames)
+	err := initRule(r, "TCP connection", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -556,7 +537,7 @@ func readTCPConnRule(c *components.NetworkPluginConfig, r *network.TCPConnRule, 
 }
 
 func readHTTPFileRule(c *components.NetworkPluginConfig, tc *cfg.TaskConfig, r *network.HTTPFileRule, idx int, ruleNames *[]string, kClient kubernetes.Interface) error {
-	err := initNetworkRule(r, "HTTP file", ruleNames)
+	err := initRule(r, "HTTP file", "", ruleNames)
 	if err != nil {
 		return err
 	}

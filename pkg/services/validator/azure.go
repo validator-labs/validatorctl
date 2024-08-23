@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
@@ -37,10 +36,6 @@ const (
 var (
 	azureSecretName = "azure-creds"
 )
-
-type azureRule interface {
-	*plug.RBACRule | *plug.CommunityGalleryImageRule
-}
 
 func readAzurePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	c := vc.AzurePlugin
@@ -203,21 +198,6 @@ func readAzureCredsHelper(c *components.AzurePluginConfig) error {
 	return nil
 }
 
-func initAzureRule[R azureRule](r R, ruleType string, ruleNames *[]string) error {
-	name := reflect.ValueOf(r).Elem().FieldByName("Name").String()
-	if name != "" {
-		log.InfoCLI("Reconfiguring %s rule: %s", ruleType, name)
-		*ruleNames = append(*ruleNames, name)
-	} else {
-		name, err := getRuleName(ruleNames)
-		if err != nil {
-			return err
-		}
-		reflect.ValueOf(r).Elem().FieldByName("Name").Set(reflect.ValueOf(name))
-	}
-	return nil
-}
-
 // configureRBACRules sets up zero or more RBAC rules based on pre-existing files or user input.
 // nolint:dupl
 func configureRBACRules(c *components.AzurePluginConfig, ruleNames *[]string) error {
@@ -272,7 +252,7 @@ func readRBACRule(c *components.AzurePluginConfig, r *plug.RBACRule, idx int, ru
 		r = &plug.RBACRule{}
 	}
 
-	err := initAzureRule(r, "RBAC", ruleNames)
+	err := initRule(r, "RBAC", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -400,7 +380,7 @@ func readCommunityGalleryImageRule(c *components.AzurePluginConfig, r *plug.Comm
 		r = &plug.CommunityGalleryImageRule{}
 	}
 
-	err := initAzureRule(r, "Community Gallery Image", ruleNames)
+	err := initRule(r, "Community Gallery Image", "", ruleNames)
 	if err != nil {
 		return err
 	}
