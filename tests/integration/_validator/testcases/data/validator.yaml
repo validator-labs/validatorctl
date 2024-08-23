@@ -5,15 +5,7 @@ helmRelease:
   chart:
     name: validator
     repository: validator
-<<<<<<< HEAD
-<<<<<<< HEAD
-    version: v0.1.7
-=======
     version: v0.1.8
->>>>>>> 87bba8f (make reviewable)
-=======
-    version: v0.1.7
->>>>>>> 59f18cb (Reset tests/integration/_validator/testcases/data/validator.yaml.)
   values: ""
 helmReleaseSecret:
   name: validator-helm-release-validator
@@ -240,15 +232,7 @@ vspherePlugin:
     chart:
       name: validator-plugin-vsphere
       repository: validator-plugin-vsphere
-<<<<<<< HEAD
-<<<<<<< HEAD
-      version: v0.0.31
-=======
       version: v0.0.32
->>>>>>> 87bba8f (make reviewable)
-=======
-      version: v0.0.31
->>>>>>> 59f18cb (Reset tests/integration/_validator/testcases/data/validator.yaml.)
     values: ""
   account:
     insecure: true
