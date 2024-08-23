@@ -267,5 +267,11 @@ require (
 )
 
 // replace github.com/validator-labs/validator => ../validator
+replace github.com/validator-labs/validator-plugin-aws => ../validator-plugin-aws
+replace github.com/validator-labs/validator-plugin-azure => ../validator-plugin-azure
+replace github.com/validator-labs/validator-plugin-vsphere => ../validator-plugin-vsphere
+replace github.com/validator-labs/validator-plugin-maas => ../validator-plugin-maas
+replace github.com/validator-labs/validator-plugin-network => ../validator-plugin-network
+replace github.com/validator-labs/validator-plugin-oci => ../validator-plugin-oci
 
 replace github.com/canonical/gomaasclient v0.6.0 => github.com/arturshadnik/gomaasclient v0.0.0-20240731231205-8239cfb13409
