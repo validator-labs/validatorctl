@@ -24,7 +24,6 @@ func initRule(rule validationrule.Interface, ruleType, message string, ruleNames
 
 	// If it doesn't have a name, we aren't reconfiguring it. Prompt the user for a name.
 	if rule.RequiresName() {
-		// This also
 		name, err := getRuleName(ruleNames)
 		if err != nil {
 			return err
