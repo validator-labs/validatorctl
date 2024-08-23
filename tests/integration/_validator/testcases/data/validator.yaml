@@ -1,6 +1,5 @@
 helmConfig:
   registry: https://validator-labs.github.io
-  insecureSkipVerify: false
 helmRelease:
   chart:
     name: validator
@@ -18,8 +17,9 @@ helmReleaseSecret:
     password: ""
   exists: false
 kindConfig:
-  useKindCluster: true
-  kindClusterName: "<kind_cluster_name>"
+  useKindCluster: false
+  kindClusterName: validator-kind-cluster-6e678
+kubeconfig: /home/matt/.validator/validator-20240822233443/kind-cluster.kubeconfig
 registryConfig:
   enabled: false
   registry:
@@ -42,10 +42,10 @@ sinkConfig:
   type: alertmanager
   values:
     caCert: ""
-    endpoint: jpumctAu1P2XrbMtcBmSlZPTtSk1/mOMt2Njxf/HH5bZc/cBkdrPDLnh9hs=
-    insecureSkipVerify: 1F49dw3qWQrlk5KqKBgJfQPcbGc=
-    password: DbrMXgDDv3RUAI4aUDhawf+Wtw==
-    username: OmVfeZPe1Va+S2K6BuaURChRQg==
+    endpoint: VHYKwsJlItJ4yffxa61jaBr1dNN3/CTNCQTwsQnFqoHCIkYin+jDIwTGbgQ=
+    insecureSkipVerify: 3l2CyYTMFCY3Kq5owwT+b7Bq17E=
+    password: eZcDSVWu9xR6wKcQvfRavf7rsQ==
+    username: 2l0D6tF43iFxryuJGfPPnCI2ZA==
 proxyConfig:
   enabled: false
   env:
@@ -65,8 +65,8 @@ awsPlugin:
       repository: validator-plugin-aws
       version: v0.1.5
     values: ""
-  accessKeyId: a0XCQd+Emx7/bwAaTyY13ipTRychb4MiQw==
-  secretAccessKey: IrGIW8FPVuOxVDRWQUdTa22SDf1MQ2PBw0kdngVq+w==
+  accessKeyId: VsH52NAvEQzJyaiKMxoXIkwb4F7Eom3RMg==
+  secretAccessKey: Z/pDA5qP3xZbTY+TM2rGQEOn6Ws8/DRU7u+/iafWxA==
   validator:
     auth:
       implicit: false
@@ -77,7 +77,8 @@ awsPlugin:
         durationSeconds: 3600
     defaultRegion: us-west-2
     iamRoleRules:
-    - iamRoleName: SpectroCloudRole
+    - automaticallynamed: {}
+      iamRoleName: SpectroCloudRole
       iamPolicies:
       - name: ""
         version: "2012-10-17"
@@ -97,7 +98,8 @@ awsPlugin:
           resources:
           - '*'
     iamUserRules:
-    - iamUserName: SpectroCloudUser
+    - automaticallynamed: {}
+      iamUserName: SpectroCloudUser
       iamPolicies:
       - name: ""
         version: "2012-10-17"
@@ -117,7 +119,8 @@ awsPlugin:
           resources:
           - '*'
     iamGroupRules:
-    - iamGroupName: SpectroCloudGroup
+    - automaticallynamed: {}
+      iamGroupName: SpectroCloudGroup
       iamPolicies:
       - name: ""
         version: "2012-10-17"
@@ -137,7 +140,8 @@ awsPlugin:
           resources:
           - '*'
     iamPolicyRules:
-    - iamPolicyArn: arn:aws:iam::account-num:policy/some-policy
+    - automaticallynamed: {}
+      iamPolicyArn: arn:aws:iam::account-num:policy/some-policy
       iamPolicies:
       - name: ""
         version: "2012-10-17"
@@ -157,20 +161,336 @@ awsPlugin:
           resources:
           - '*'
     serviceQuotaRules:
-    - name: EC2
+    - manuallynamed: {}
+      name: EC2
       region: us-west-2
       serviceCode: ec2
       serviceQuotas:
       - name: EC2-VPC Elastic IPs
         buffer: 5
     tagRules:
-    - name: elb tag rule
+    - manuallynamed: {}
+      name: elb tag rule
       key: foo
       expectedValue: bar
       region: us-west-2
       resourceType: subnet
       arns:
       - baz
+azurePlugin:
+  enabled: true
+  helmRelease:
+    chart:
+      name: validator-plugin-azure
+      repository: validator-plugin-azure
+      version: v0.0.18
+    values: ""
+  cloud: ""
+  tenantId: d551b7b1-78ae-43df-9d61-4935c843a454
+  clientId: d551b7b1-78ae-43df-9d61-4935c843a454
+  clientSecret: i+9qSgvyXww8SNc+xKnSDvvFjBUYWMnQr3OEKM6IewElow==
+  validator:
+    rbacRules:
+    - manuallynamed: {}
+      name: rule-1
+      permissionSets:
+      - actions:
+        - Microsoft.Compute/disks/delete
+        - Microsoft.Compute/disks/read
+        - Microsoft.Compute/disks/write
+        - Microsoft.Compute/virtualMachines/delete
+        - Microsoft.Compute/virtualMachines/extensions/delete
+        - Microsoft.Compute/virtualMachines/extensions/read
+        - Microsoft.Compute/virtualMachines/extensions/write
+        - Microsoft.Compute/virtualMachines/read
+        - Microsoft.Compute/virtualMachines/write
+        - Microsoft.Network/loadBalancers/backendAddressPools/join/action
+        - Microsoft.Network/loadBalancers/delete
+        - Microsoft.Network/loadBalancers/inboundNatRules/delete
+        - Microsoft.Network/loadBalancers/inboundNatRules/join/action
+        - Microsoft.Network/loadBalancers/inboundNatRules/read
+        - Microsoft.Network/loadBalancers/inboundNatRules/write
+        - Microsoft.Network/loadBalancers/read
+        - Microsoft.Network/loadBalancers/write
+        - Microsoft.Network/networkInterfaces/delete
+        - Microsoft.Network/networkInterfaces/join/action
+        - Microsoft.Network/networkInterfaces/read
+        - Microsoft.Network/networkInterfaces/write
+        - Microsoft.Network/networkSecurityGroups/read
+        - Microsoft.Network/networkSecurityGroups/securityRules/delete
+        - Microsoft.Network/networkSecurityGroups/securityRules/read
+        - Microsoft.Network/networkSecurityGroups/securityRules/write
+        - Microsoft.Network/privateDnsZones/A/delete
+        - Microsoft.Network/privateDnsZones/A/read
+        - Microsoft.Network/privateDnsZones/A/write
+        - Microsoft.Network/privateDnsZones/delete
+        - Microsoft.Network/privateDnsZones/read
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/read
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/write
+        - Microsoft.Network/privateDnsZones/write
+        - Microsoft.Network/publicIPAddresses/delete
+        - Microsoft.Network/publicIPAddresses/join/action
+        - Microsoft.Network/publicIPAddresses/read
+        - Microsoft.Network/publicIPAddresses/write
+        - Microsoft.Network/routeTables/delete
+        - Microsoft.Network/routeTables/read
+        - Microsoft.Network/routeTables/write
+        - Microsoft.Network/virtualNetworks/join/action
+        - Microsoft.Resources/subscriptions/resourceGroups/read
+        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454/resourceGroups/rg
+      - actions:
+        - Microsoft.Network/virtualNetworks/read
+        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vn
+      - actions:
+        - Microsoft.Network/virtualNetworks/subnets/join/action
+        - Microsoft.Network/virtualNetworks/subnets/read
+        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vn/subnets/s
+      - actions:
+        - Microsoft.Compute/galleries/images/read
+        - Microsoft.Compute/galleries/images/versions/read
+        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454/resourceGroups/rg/providers/Microsoft.Compute/galleries/acg
+      principalId: d551b7b1-78ae-43df-9d61-4935c843a454
+    - manuallynamed: {}
+      name: rule-2
+      permissionSets:
+      - actions:
+        - Microsoft.Compute/disks/delete
+        - Microsoft.Compute/disks/read
+        - Microsoft.Compute/disks/write
+        - Microsoft.Compute/virtualMachines/delete
+        - Microsoft.Compute/virtualMachines/extensions/delete
+        - Microsoft.Compute/virtualMachines/extensions/read
+        - Microsoft.Compute/virtualMachines/extensions/write
+        - Microsoft.Compute/virtualMachines/read
+        - Microsoft.Compute/virtualMachines/write
+        - Microsoft.Network/loadBalancers/backendAddressPools/join/action
+        - Microsoft.Network/loadBalancers/delete
+        - Microsoft.Network/loadBalancers/inboundNatRules/delete
+        - Microsoft.Network/loadBalancers/inboundNatRules/join/action
+        - Microsoft.Network/loadBalancers/inboundNatRules/read
+        - Microsoft.Network/loadBalancers/inboundNatRules/write
+        - Microsoft.Network/loadBalancers/read
+        - Microsoft.Network/loadBalancers/write
+        - Microsoft.Network/networkInterfaces/delete
+        - Microsoft.Network/networkInterfaces/join/action
+        - Microsoft.Network/networkInterfaces/read
+        - Microsoft.Network/networkInterfaces/write
+        - Microsoft.Network/networkSecurityGroups/read
+        - Microsoft.Network/networkSecurityGroups/securityRules/delete
+        - Microsoft.Network/networkSecurityGroups/securityRules/read
+        - Microsoft.Network/networkSecurityGroups/securityRules/write
+        - Microsoft.Network/privateDnsZones/A/delete
+        - Microsoft.Network/privateDnsZones/A/read
+        - Microsoft.Network/privateDnsZones/A/write
+        - Microsoft.Network/privateDnsZones/delete
+        - Microsoft.Network/privateDnsZones/read
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/read
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/write
+        - Microsoft.Network/privateDnsZones/write
+        - Microsoft.Network/publicIPAddresses/delete
+        - Microsoft.Network/publicIPAddresses/join/action
+        - Microsoft.Network/publicIPAddresses/read
+        - Microsoft.Network/publicIPAddresses/write
+        - Microsoft.Network/routeTables/delete
+        - Microsoft.Network/routeTables/read
+        - Microsoft.Network/routeTables/write
+        - Microsoft.Network/virtualNetworks/join/action
+        - Microsoft.Resources/subscriptions/resourceGroups/read
+        - Microsoft.Network/virtualNetworks/read
+        - Microsoft.Network/virtualNetworks/subnets/join/action
+        - Microsoft.Network/virtualNetworks/subnets/read
+        - Microsoft.Compute/galleries/images/read
+        - Microsoft.Compute/galleries/images/versions/read
+        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454/resourceGroups/rg
+      principalId: d551b7b1-78ae-43df-9d61-4935c843a454
+    - manuallynamed: {}
+      name: rule-3
+      permissionSets:
+      - actions:
+        - Microsoft.Compute/disks/delete
+        - Microsoft.Compute/disks/read
+        - Microsoft.Compute/disks/write
+        - Microsoft.Compute/virtualMachines/delete
+        - Microsoft.Compute/virtualMachines/extensions/delete
+        - Microsoft.Compute/virtualMachines/extensions/read
+        - Microsoft.Compute/virtualMachines/extensions/write
+        - Microsoft.Compute/virtualMachines/read
+        - Microsoft.Compute/virtualMachines/write
+        - Microsoft.Network/loadBalancers/backendAddressPools/join/action
+        - Microsoft.Network/loadBalancers/delete
+        - Microsoft.Network/loadBalancers/inboundNatRules/delete
+        - Microsoft.Network/loadBalancers/inboundNatRules/join/action
+        - Microsoft.Network/loadBalancers/inboundNatRules/read
+        - Microsoft.Network/loadBalancers/inboundNatRules/write
+        - Microsoft.Network/loadBalancers/read
+        - Microsoft.Network/loadBalancers/write
+        - Microsoft.Network/networkInterfaces/delete
+        - Microsoft.Network/networkInterfaces/join/action
+        - Microsoft.Network/networkInterfaces/read
+        - Microsoft.Network/networkInterfaces/write
+        - Microsoft.Network/networkSecurityGroups/read
+        - Microsoft.Network/networkSecurityGroups/securityRules/delete
+        - Microsoft.Network/networkSecurityGroups/securityRules/read
+        - Microsoft.Network/networkSecurityGroups/securityRules/write
+        - Microsoft.Network/privateDnsZones/A/delete
+        - Microsoft.Network/privateDnsZones/A/read
+        - Microsoft.Network/privateDnsZones/A/write
+        - Microsoft.Network/privateDnsZones/delete
+        - Microsoft.Network/privateDnsZones/read
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/read
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/write
+        - Microsoft.Network/privateDnsZones/write
+        - Microsoft.Network/publicIPAddresses/delete
+        - Microsoft.Network/publicIPAddresses/join/action
+        - Microsoft.Network/publicIPAddresses/read
+        - Microsoft.Network/publicIPAddresses/write
+        - Microsoft.Network/routeTables/delete
+        - Microsoft.Network/routeTables/read
+        - Microsoft.Network/routeTables/write
+        - Microsoft.Network/virtualNetworks/join/action
+        - Microsoft.Resources/subscriptions/resourceGroups/read
+        - Microsoft.Network/virtualNetworks/read
+        - Microsoft.Network/virtualNetworks/subnets/join/action
+        - Microsoft.Network/virtualNetworks/subnets/read
+        - Microsoft.Compute/galleries/images/read
+        - Microsoft.Compute/galleries/images/versions/read
+        scope: d551b7b1-78ae-43df-9d61-4935c843a454
+      principalId: d551b7b1-78ae-43df-9d61-4935c843a454
+    - manuallynamed: {}
+      name: rule-4
+      permissionSets:
+      - actions:
+        - Microsoft.Compute/disks/delete
+        - Microsoft.Compute/disks/read
+        - Microsoft.Compute/disks/write
+        - Microsoft.Compute/virtualMachines/delete
+        - Microsoft.Compute/virtualMachines/extensions/delete
+        - Microsoft.Compute/virtualMachines/extensions/read
+        - Microsoft.Compute/virtualMachines/extensions/write
+        - Microsoft.Compute/virtualMachines/read
+        - Microsoft.Compute/virtualMachines/write
+        - Microsoft.Network/loadBalancers/backendAddressPools/join/action
+        - Microsoft.Network/loadBalancers/delete
+        - Microsoft.Network/loadBalancers/inboundNatRules/delete
+        - Microsoft.Network/loadBalancers/inboundNatRules/join/action
+        - Microsoft.Network/loadBalancers/inboundNatRules/read
+        - Microsoft.Network/loadBalancers/inboundNatRules/write
+        - Microsoft.Network/loadBalancers/read
+        - Microsoft.Network/loadBalancers/write
+        - Microsoft.Network/networkInterfaces/delete
+        - Microsoft.Network/networkInterfaces/join/action
+        - Microsoft.Network/networkInterfaces/read
+        - Microsoft.Network/networkInterfaces/write
+        - Microsoft.Network/networkSecurityGroups/read
+        - Microsoft.Network/networkSecurityGroups/securityRules/delete
+        - Microsoft.Network/networkSecurityGroups/securityRules/read
+        - Microsoft.Network/networkSecurityGroups/securityRules/write
+        - Microsoft.Network/publicIPAddresses/delete
+        - Microsoft.Network/publicIPAddresses/join/action
+        - Microsoft.Network/publicIPAddresses/read
+        - Microsoft.Network/publicIPAddresses/write
+        - Microsoft.Network/routeTables/delete
+        - Microsoft.Network/routeTables/read
+        - Microsoft.Network/routeTables/write
+        - Microsoft.Resources/subscriptions/resourceGroups/read
+        - Microsoft.Network/privateDnsZones/read
+        - Microsoft.Network/privateDnsZones/write
+        - Microsoft.Network/privateDnsZones/delete
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/read
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/write
+        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete
+        - Microsoft.Network/virtualNetworks/join/action
+        - Microsoft.Network/privateDnsZones/A/write
+        - Microsoft.Network/privateDnsZones/A/read
+        - Microsoft.Network/privateDnsZones/A/delete
+        - Microsoft.Storage/storageAccounts/blobServices/containers/write
+        - Microsoft.Storage/storageAccounts/blobServices/containers/read
+        - Microsoft.Storage/storageAccounts/write
+        - Microsoft.Storage/storageAccounts/read
+        - Microsoft.Storage/storageAccounts/blobServices/listKeys/action
+        - Microsoft.Network/virtualNetworks/write
+        - Microsoft.Network/virtualNetworks/read
+        - Microsoft.Network/virtualNetworks/delete
+        - Microsoft.Network/virtualNetworks/virtualMachines/read
+        - Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read
+        - Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write
+        - Microsoft.Network/virtualNetworks/virtualNetworkPeerings/delete
+        - Microsoft.Network/virtualNetworks/peer/action
+        - Microsoft.Network/virtualNetworks/join/action
+        - Microsoft.Network/virtualNetworks/joinLoadBalancer/action
+        - Microsoft.Network/virtualNetworks/subnets/write
+        - Microsoft.Network/virtualNetworks/subnets/read
+        - Microsoft.Network/virtualNetworks/subnets/delete
+        - Microsoft.Network/virtualNetworks/subnets/virtualMachines/read
+        - Microsoft.Network/virtualNetworks/subnets/join/action
+        - Microsoft.Network/virtualNetworks/subnets/joinLoadBalancer/action
+        - Microsoft.Compute/images/write
+        - Microsoft.Compute/images/read
+        - Microsoft.Compute/galleries/write
+        - Microsoft.Compute/galleries/read
+        - Microsoft.Compute/galleries/images/write
+        - Microsoft.Compute/galleries/images/read
+        - Microsoft.Compute/galleries/images/versions/read
+        - Microsoft.Compute/galleries/images/versions/write
+        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454
+      principalId: d551b7b1-78ae-43df-9d61-4935c843a454
+    - manuallynamed: {}
+      name: rule-5
+      permissionSets:
+      - actions:
+        - a
+        dataActions:
+        - da
+        scope: s
+      principalId: d551b7b1-78ae-43df-9d61-4935c843a454
+    auth:
+      implicit: false
+      secretName: azure-creds
+maasPlugin:
+  enabled: true
+  helmRelease:
+    chart:
+      name: validator-plugin-maas
+      repository: validator-plugin-maas
+      version: v0.0.9
+    values: ""
+  validator:
+    auth:
+      secretName: maas-creds
+      tokenKey: MAAS_API_KEY
+    host: http://example.com/MAAS
+    imageRules:
+    - manuallynamed: {}
+      name: Image Rule
+      images:
+      - name: example
+        architecture: amd64/ga-20.04
+    internalDNSRules:
+    - automaticallynamed: {}
+      maasDomain: example.com
+      dnsResources:
+      - fqdn: foo.example.com
+        dnsRecords:
+        - ip: 0.0.0.0
+          type: A
+          ttl: 10
+    upstreamDNSRules:
+    - manuallynamed: {}
+      name: upstream dns
+      numDNSServers: 1
+    resourceAvailabilityRules:
+    - manuallynamed: {}
+      name: AZ1
+      az: az1
+      resources:
+      - numMachines: 1
+        numCPU: 16
+        ram: 16
+        disk: 100
+  maasApiToken: cZk3qSauOU0vJ2BSAU5zHH5HOXndNuXAB9K8l+klTb3YUQ==
 networkPlugin:
   enabled: true
   helmRelease:
@@ -181,21 +501,26 @@ networkPlugin:
     values: ""
   validator:
     dnsRules:
-    - name: resolve foo
+    - manuallynamed: {}
+      name: resolve foo
       host: foo
     icmpRules:
-    - name: ping foo
+    - manuallynamed: {}
+      name: ping foo
       host: foo
     ipRangeRules:
-    - name: check ips
+    - manuallynamed: {}
+      name: check ips
       startIp: 10.10.10.10
       length: 1
     mtuRules:
-    - name: check mtu
+    - manuallynamed: {}
+      name: check mtu
       host: foo
       mtu: 1500
     tcpConnRules:
-    - name: check tcp
+    - manuallynamed: {}
+      name: check tcp
       host: foo
       ports:
       - 80
@@ -209,9 +534,6 @@ ociPlugin:
     values: ""
   secrets:
   - name: oci-creds
-    username: user1
-    password: VE74qaSN2qFqBJifybU/Dy/lceRliQGC
-    caCertFile: ""
     exists: false
   publicKeySecrets:
   - name: cosign-pubkeys
@@ -225,7 +547,8 @@ ociPlugin:
     0: ""
   validator:
     ociRegistryRules:
-    - name: public ecr registry
+    - manuallynamed: {}
+      name: public ecr registry
       host: public.ecr.aws
       validationType: none
       artifacts:
@@ -244,7 +567,7 @@ vspherePlugin:
     values: ""
   account:
     insecure: true
-    password: vn0cCP3U08iqDUwwCgBFWBbfekA+4TTe
+    password: ire6cnyqlMTd7vuZbWe4kqWD+0WG5cTU
     username: bob@vsphere.com
     vcenterServer: fake.vsphere.com
   validator:
@@ -252,7 +575,8 @@ vspherePlugin:
       secretName: vsphere-creds
     datacenter: DC0
     entityPrivilegeValidationRules:
-    - name: 'Read folder: spectro-templates'
+    - manuallynamed: {}
+      name: 'Read folder: spectro-templates'
       username: user2@vsphere.local
       clusterName: ""
       entityType: folder
@@ -260,7 +584,8 @@ vspherePlugin:
       privileges:
       - Folder.Create
     rolePrivilegeValidationRules:
-    - username: user1@vsphere.local
+    - automaticallynamed: {}
+      username: user1@vsphere.local
       privileges:
       - Cns.Searchable
       - Host.Config.Storage
@@ -371,14 +696,16 @@ vspherePlugin:
       - VirtualMachine.Provisioning.DiskRandomRead
       - Vsan.Cluster.ShallowRekey
     tagValidationRules:
-    - name: 'Cluster: k8s-zone (ensure that the selected cluster has a ''k8s-zone''
+    - manuallynamed: {}
+      name: 'Cluster: k8s-zone (ensure that the selected cluster has a ''k8s-zone''
         tag)'
       clusterName: C0
       entityType: cluster
       entityName: C0
       tag: k8s-zone
     computeResourceRules:
-    - name: resource requirement rule 1
+    - manuallynamed: {}
+      name: resource requirement rule 1
       clusterName: C0
       scope: cluster
       entityName: C0
@@ -394,13 +721,15 @@ vspherePlugin:
         memory: 8Gi
         diskSpace: 20Gi
     ntpValidationRules:
-    - name: ntpd
+    - manuallynamed: {}
+      name: ntpd
       clusterName: C0
       hosts:
       - DC0_C0_H0
       - DC0_C0_H1
   vsphereEntityPrivilegeRules:
-  - name: 'Read folder: spectro-templates'
+  - manuallynamed: {}
+    name: 'Read folder: spectro-templates'
     username: user2@vsphere.local
     clusterName: ""
     entityType: folder
@@ -409,7 +738,9 @@ vspherePlugin:
     - Folder.Create
     clusterScoped: false
   vsphereRolePrivilegeRules:
-  - username: user1@vsphere.local
+  - manuallynamed: {}
+    automaticallynamed: {}
+    username: user1@vsphere.local
     privileges:
     - Cns.Searchable
     - Host.Config.Storage
@@ -521,354 +852,10 @@ vspherePlugin:
     - Vsan.Cluster.ShallowRekey
     name: role rule 1
   vsphereTagRules:
-  - name: 'Cluster: k8s-zone (ensure that the selected cluster has a ''k8s-zone''
+  - manuallynamed: {}
+    name: 'Cluster: k8s-zone (ensure that the selected cluster has a ''k8s-zone''
       tag)'
     clusterName: C0
     entityType: cluster
     entityName: C0
     tag: k8s-zone
-azurePlugin:
-  enabled: true
-  helmRelease:
-    chart:
-      name: validator-plugin-azure
-      repository: validator-plugin-azure
-      version: v0.0.18
-      insecureSkipVerify: true
-    values: ""
-  tenantId: d551b7b1-78ae-43df-9d61-4935c843a454
-  clientId: d551b7b1-78ae-43df-9d61-4935c843a454
-  clientSecret: qC9aFbiDg/O2Ef31aqEBrbYXb/I+t+qXA4swfguuEBRRAQ==
-  ruleTypes:
-    0: Cluster Deployment
-    1: Cluster Deployment
-    2: Cluster Deployment
-    3: Cluster Deployment
-    4: Custom
-  placementTypes:
-    0: Static
-    1: Static
-    2: Static
-    3: Dynamic
-  staticDeploymentTypes:
-    0: Single cluster
-    1: Multiple clusters in a single resource group
-    2: Multiple clusters in a single subscription
-  staticDeploymentValues:
-    0:
-      subscriptionUuid: d551b7b1-78ae-43df-9d61-4935c843a454
-      resourceGroupUuid: rg
-      virtualNetworkUuid: vn
-      subnetUuid: s
-      computeGalleryUuid: acg
-    1:
-      subscriptionUuid: d551b7b1-78ae-43df-9d61-4935c843a454
-      resourceGroupUuid: rg
-      virtualNetworkUuid: ""
-      subnetUuid: ""
-      computeGalleryUuid: ""
-    2:
-      subscriptionUuid: d551b7b1-78ae-43df-9d61-4935c843a454
-      resourceGroupUuid: ""
-      virtualNetworkUuid: ""
-      subnetUuid: ""
-      computeGalleryUuid: ""
-    3:
-      subscriptionUuid: d551b7b1-78ae-43df-9d61-4935c843a454
-      resourceGroupUuid: ""
-      virtualNetworkUuid: ""
-      subnetUuid: ""
-      computeGalleryUuid: ""
-  validator:
-    rbacRules:
-    - name: rule-1
-      permissionSets:
-      - actions:
-        - Microsoft.Compute/disks/delete
-        - Microsoft.Compute/disks/read
-        - Microsoft.Compute/disks/write
-        - Microsoft.Compute/virtualMachines/delete
-        - Microsoft.Compute/virtualMachines/extensions/delete
-        - Microsoft.Compute/virtualMachines/extensions/read
-        - Microsoft.Compute/virtualMachines/extensions/write
-        - Microsoft.Compute/virtualMachines/read
-        - Microsoft.Compute/virtualMachines/write
-        - Microsoft.Network/loadBalancers/backendAddressPools/join/action
-        - Microsoft.Network/loadBalancers/delete
-        - Microsoft.Network/loadBalancers/inboundNatRules/delete
-        - Microsoft.Network/loadBalancers/inboundNatRules/join/action
-        - Microsoft.Network/loadBalancers/inboundNatRules/read
-        - Microsoft.Network/loadBalancers/inboundNatRules/write
-        - Microsoft.Network/loadBalancers/read
-        - Microsoft.Network/loadBalancers/write
-        - Microsoft.Network/networkInterfaces/delete
-        - Microsoft.Network/networkInterfaces/join/action
-        - Microsoft.Network/networkInterfaces/read
-        - Microsoft.Network/networkInterfaces/write
-        - Microsoft.Network/networkSecurityGroups/read
-        - Microsoft.Network/networkSecurityGroups/securityRules/delete
-        - Microsoft.Network/networkSecurityGroups/securityRules/read
-        - Microsoft.Network/networkSecurityGroups/securityRules/write
-        - Microsoft.Network/privateDnsZones/A/delete
-        - Microsoft.Network/privateDnsZones/A/read
-        - Microsoft.Network/privateDnsZones/A/write
-        - Microsoft.Network/privateDnsZones/delete
-        - Microsoft.Network/privateDnsZones/read
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/read
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/write
-        - Microsoft.Network/privateDnsZones/write
-        - Microsoft.Network/publicIPAddresses/delete
-        - Microsoft.Network/publicIPAddresses/join/action
-        - Microsoft.Network/publicIPAddresses/read
-        - Microsoft.Network/publicIPAddresses/write
-        - Microsoft.Network/routeTables/delete
-        - Microsoft.Network/routeTables/read
-        - Microsoft.Network/routeTables/write
-        - Microsoft.Network/virtualNetworks/join/action
-        - Microsoft.Resources/subscriptions/resourceGroups/read
-        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454/resourceGroups/rg
-      - actions:
-        - Microsoft.Network/virtualNetworks/read
-        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vn
-      - actions:
-        - Microsoft.Network/virtualNetworks/subnets/join/action
-        - Microsoft.Network/virtualNetworks/subnets/read
-        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vn/subnets/s
-      - actions:
-        - Microsoft.Compute/galleries/images/read
-        - Microsoft.Compute/galleries/images/versions/read
-        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454/resourceGroups/rg/providers/Microsoft.Compute/galleries/acg
-      principalId: d551b7b1-78ae-43df-9d61-4935c843a454
-    - name: rule-2
-      permissionSets:
-      - actions:
-        - Microsoft.Compute/disks/delete
-        - Microsoft.Compute/disks/read
-        - Microsoft.Compute/disks/write
-        - Microsoft.Compute/virtualMachines/delete
-        - Microsoft.Compute/virtualMachines/extensions/delete
-        - Microsoft.Compute/virtualMachines/extensions/read
-        - Microsoft.Compute/virtualMachines/extensions/write
-        - Microsoft.Compute/virtualMachines/read
-        - Microsoft.Compute/virtualMachines/write
-        - Microsoft.Network/loadBalancers/backendAddressPools/join/action
-        - Microsoft.Network/loadBalancers/delete
-        - Microsoft.Network/loadBalancers/inboundNatRules/delete
-        - Microsoft.Network/loadBalancers/inboundNatRules/join/action
-        - Microsoft.Network/loadBalancers/inboundNatRules/read
-        - Microsoft.Network/loadBalancers/inboundNatRules/write
-        - Microsoft.Network/loadBalancers/read
-        - Microsoft.Network/loadBalancers/write
-        - Microsoft.Network/networkInterfaces/delete
-        - Microsoft.Network/networkInterfaces/join/action
-        - Microsoft.Network/networkInterfaces/read
-        - Microsoft.Network/networkInterfaces/write
-        - Microsoft.Network/networkSecurityGroups/read
-        - Microsoft.Network/networkSecurityGroups/securityRules/delete
-        - Microsoft.Network/networkSecurityGroups/securityRules/read
-        - Microsoft.Network/networkSecurityGroups/securityRules/write
-        - Microsoft.Network/privateDnsZones/A/delete
-        - Microsoft.Network/privateDnsZones/A/read
-        - Microsoft.Network/privateDnsZones/A/write
-        - Microsoft.Network/privateDnsZones/delete
-        - Microsoft.Network/privateDnsZones/read
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/read
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/write
-        - Microsoft.Network/privateDnsZones/write
-        - Microsoft.Network/publicIPAddresses/delete
-        - Microsoft.Network/publicIPAddresses/join/action
-        - Microsoft.Network/publicIPAddresses/read
-        - Microsoft.Network/publicIPAddresses/write
-        - Microsoft.Network/routeTables/delete
-        - Microsoft.Network/routeTables/read
-        - Microsoft.Network/routeTables/write
-        - Microsoft.Network/virtualNetworks/join/action
-        - Microsoft.Resources/subscriptions/resourceGroups/read
-        - Microsoft.Network/virtualNetworks/read
-        - Microsoft.Network/virtualNetworks/subnets/join/action
-        - Microsoft.Network/virtualNetworks/subnets/read
-        - Microsoft.Compute/galleries/images/read
-        - Microsoft.Compute/galleries/images/versions/read
-        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454/resourceGroups/rg
-      principalId: d551b7b1-78ae-43df-9d61-4935c843a454
-    - name: rule-3
-      permissionSets:
-      - actions:
-        - Microsoft.Compute/disks/delete
-        - Microsoft.Compute/disks/read
-        - Microsoft.Compute/disks/write
-        - Microsoft.Compute/virtualMachines/delete
-        - Microsoft.Compute/virtualMachines/extensions/delete
-        - Microsoft.Compute/virtualMachines/extensions/read
-        - Microsoft.Compute/virtualMachines/extensions/write
-        - Microsoft.Compute/virtualMachines/read
-        - Microsoft.Compute/virtualMachines/write
-        - Microsoft.Network/loadBalancers/backendAddressPools/join/action
-        - Microsoft.Network/loadBalancers/delete
-        - Microsoft.Network/loadBalancers/inboundNatRules/delete
-        - Microsoft.Network/loadBalancers/inboundNatRules/join/action
-        - Microsoft.Network/loadBalancers/inboundNatRules/read
-        - Microsoft.Network/loadBalancers/inboundNatRules/write
-        - Microsoft.Network/loadBalancers/read
-        - Microsoft.Network/loadBalancers/write
-        - Microsoft.Network/networkInterfaces/delete
-        - Microsoft.Network/networkInterfaces/join/action
-        - Microsoft.Network/networkInterfaces/read
-        - Microsoft.Network/networkInterfaces/write
-        - Microsoft.Network/networkSecurityGroups/read
-        - Microsoft.Network/networkSecurityGroups/securityRules/delete
-        - Microsoft.Network/networkSecurityGroups/securityRules/read
-        - Microsoft.Network/networkSecurityGroups/securityRules/write
-        - Microsoft.Network/privateDnsZones/A/delete
-        - Microsoft.Network/privateDnsZones/A/read
-        - Microsoft.Network/privateDnsZones/A/write
-        - Microsoft.Network/privateDnsZones/delete
-        - Microsoft.Network/privateDnsZones/read
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/read
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/write
-        - Microsoft.Network/privateDnsZones/write
-        - Microsoft.Network/publicIPAddresses/delete
-        - Microsoft.Network/publicIPAddresses/join/action
-        - Microsoft.Network/publicIPAddresses/read
-        - Microsoft.Network/publicIPAddresses/write
-        - Microsoft.Network/routeTables/delete
-        - Microsoft.Network/routeTables/read
-        - Microsoft.Network/routeTables/write
-        - Microsoft.Network/virtualNetworks/join/action
-        - Microsoft.Resources/subscriptions/resourceGroups/read
-        - Microsoft.Network/virtualNetworks/read
-        - Microsoft.Network/virtualNetworks/subnets/join/action
-        - Microsoft.Network/virtualNetworks/subnets/read
-        - Microsoft.Compute/galleries/images/read
-        - Microsoft.Compute/galleries/images/versions/read
-        scope: d551b7b1-78ae-43df-9d61-4935c843a454
-      principalId: d551b7b1-78ae-43df-9d61-4935c843a454
-    - name: rule-4
-      permissionSets:
-      - actions:
-        - Microsoft.Compute/disks/delete
-        - Microsoft.Compute/disks/read
-        - Microsoft.Compute/disks/write
-        - Microsoft.Compute/virtualMachines/delete
-        - Microsoft.Compute/virtualMachines/extensions/delete
-        - Microsoft.Compute/virtualMachines/extensions/read
-        - Microsoft.Compute/virtualMachines/extensions/write
-        - Microsoft.Compute/virtualMachines/read
-        - Microsoft.Compute/virtualMachines/write
-        - Microsoft.Network/loadBalancers/backendAddressPools/join/action
-        - Microsoft.Network/loadBalancers/delete
-        - Microsoft.Network/loadBalancers/inboundNatRules/delete
-        - Microsoft.Network/loadBalancers/inboundNatRules/join/action
-        - Microsoft.Network/loadBalancers/inboundNatRules/read
-        - Microsoft.Network/loadBalancers/inboundNatRules/write
-        - Microsoft.Network/loadBalancers/read
-        - Microsoft.Network/loadBalancers/write
-        - Microsoft.Network/networkInterfaces/delete
-        - Microsoft.Network/networkInterfaces/join/action
-        - Microsoft.Network/networkInterfaces/read
-        - Microsoft.Network/networkInterfaces/write
-        - Microsoft.Network/networkSecurityGroups/read
-        - Microsoft.Network/networkSecurityGroups/securityRules/delete
-        - Microsoft.Network/networkSecurityGroups/securityRules/read
-        - Microsoft.Network/networkSecurityGroups/securityRules/write
-        - Microsoft.Network/publicIPAddresses/delete
-        - Microsoft.Network/publicIPAddresses/join/action
-        - Microsoft.Network/publicIPAddresses/read
-        - Microsoft.Network/publicIPAddresses/write
-        - Microsoft.Network/routeTables/delete
-        - Microsoft.Network/routeTables/read
-        - Microsoft.Network/routeTables/write
-        - Microsoft.Resources/subscriptions/resourceGroups/read
-        - Microsoft.Network/privateDnsZones/read
-        - Microsoft.Network/privateDnsZones/write
-        - Microsoft.Network/privateDnsZones/delete
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/read
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/write
-        - Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete
-        - Microsoft.Network/virtualNetworks/join/action
-        - Microsoft.Network/privateDnsZones/A/write
-        - Microsoft.Network/privateDnsZones/A/read
-        - Microsoft.Network/privateDnsZones/A/delete
-        - Microsoft.Storage/storageAccounts/blobServices/containers/write
-        - Microsoft.Storage/storageAccounts/blobServices/containers/read
-        - Microsoft.Storage/storageAccounts/write
-        - Microsoft.Storage/storageAccounts/read
-        - Microsoft.Storage/storageAccounts/blobServices/listKeys/action
-        - Microsoft.Network/virtualNetworks/write
-        - Microsoft.Network/virtualNetworks/read
-        - Microsoft.Network/virtualNetworks/delete
-        - Microsoft.Network/virtualNetworks/virtualMachines/read
-        - Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read
-        - Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write
-        - Microsoft.Network/virtualNetworks/virtualNetworkPeerings/delete
-        - Microsoft.Network/virtualNetworks/peer/action
-        - Microsoft.Network/virtualNetworks/join/action
-        - Microsoft.Network/virtualNetworks/joinLoadBalancer/action
-        - Microsoft.Network/virtualNetworks/subnets/write
-        - Microsoft.Network/virtualNetworks/subnets/read
-        - Microsoft.Network/virtualNetworks/subnets/delete
-        - Microsoft.Network/virtualNetworks/subnets/virtualMachines/read
-        - Microsoft.Network/virtualNetworks/subnets/join/action
-        - Microsoft.Network/virtualNetworks/subnets/joinLoadBalancer/action
-        - Microsoft.Compute/images/write
-        - Microsoft.Compute/images/read
-        - Microsoft.Compute/galleries/write
-        - Microsoft.Compute/galleries/read
-        - Microsoft.Compute/galleries/images/write
-        - Microsoft.Compute/galleries/images/read
-        - Microsoft.Compute/galleries/images/versions/read
-        - Microsoft.Compute/galleries/images/versions/write
-        scope: /subscriptions/d551b7b1-78ae-43df-9d61-4935c843a454
-      principalId: d551b7b1-78ae-43df-9d61-4935c843a454
-    - name: rule-5
-      permissionSets:
-      - actions:
-        - a
-        dataActions:
-        - da
-        scope: s
-      principalId: d551b7b1-78ae-43df-9d61-4935c843a454
-    auth:
-      implicit: false
-      secretName: azure-creds
-maasPlugin:
-  enabled: true
-  helmRelease:
-    chart:
-      name: validator-plugin-maas
-      repository: validator-plugin-maas
-      version: v0.0.9
-    values: ""
-  validator:
-    internalDNSRules:
-      - maasDomain: example.com
-        dnsResources:
-          - fqdn: foo.example.com
-            dnsRecords:
-            - type: A
-              ip: 0.0.0.0
-              ttl: 10
-    upstreamDNSRules:
-      - name: upstream dns
-        numDNSServers: 1
-    imageRules:
-      - name: Image Rule
-        images:
-          - name: example
-            architecture: amd64/ga-20.04
-    resourceAvailabilityRules:
-      - name: AZ1 
-        az: az1
-        resources:
-          - numMachines: 1
-            numCPU: 16
-            ram: 16
-            disk: 100
-    host: "http://example.com/MAAS"
-    auth:
-      secretName: maas-creds
-      tokenKey: MAAS_API_KEY
-  maasApiToken: "jG81nj7n8feUpHaIU/gFH2tLaqcnSshrpCiziFt+0JZ7OA=="
