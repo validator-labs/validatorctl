@@ -20,7 +20,7 @@ require (
 	github.com/validator-labs/validator v0.1.8
 	github.com/validator-labs/validator-plugin-aws v0.1.6
 	github.com/validator-labs/validator-plugin-azure v0.0.19
-	github.com/validator-labs/validator-plugin-maas v0.0.7
+	github.com/validator-labs/validator-plugin-maas v0.0.8
 	github.com/validator-labs/validator-plugin-network v0.0.25
 	github.com/validator-labs/validator-plugin-oci v0.3.1
 	github.com/validator-labs/validator-plugin-vsphere v0.0.33
