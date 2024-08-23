@@ -17,13 +17,13 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.1.7
-	github.com/validator-labs/validator-plugin-aws v0.1.5
-	github.com/validator-labs/validator-plugin-azure v0.0.18
-	github.com/validator-labs/validator-plugin-maas v0.0.9
-	github.com/validator-labs/validator-plugin-network v0.0.24
-	github.com/validator-labs/validator-plugin-oci v0.3.0
-	github.com/validator-labs/validator-plugin-vsphere v0.0.32
+	github.com/validator-labs/validator v0.1.8
+	github.com/validator-labs/validator-plugin-aws v0.1.6
+	github.com/validator-labs/validator-plugin-azure v0.0.19
+	github.com/validator-labs/validator-plugin-maas v0.0.7
+	github.com/validator-labs/validator-plugin-network v0.0.25
+	github.com/validator-labs/validator-plugin-oci v0.3.1
+	github.com/validator-labs/validator-plugin-vsphere v0.0.33
 	github.com/vmware/govmomi v0.42.0
 	golang.org/x/exp v0.0.0-20240822175202-778ce7bba035
 	gopkg.in/ini.v1 v1.67.0
@@ -267,11 +267,11 @@ require (
 )
 
 // replace github.com/validator-labs/validator => ../validator
-replace github.com/validator-labs/validator-plugin-aws => ../validator-plugin-aws
-replace github.com/validator-labs/validator-plugin-azure => ../validator-plugin-azure
-replace github.com/validator-labs/validator-plugin-vsphere => ../validator-plugin-vsphere
-replace github.com/validator-labs/validator-plugin-maas => ../validator-plugin-maas
-replace github.com/validator-labs/validator-plugin-network => ../validator-plugin-network
-replace github.com/validator-labs/validator-plugin-oci => ../validator-plugin-oci
+// replace github.com/validator-labs/validator-plugin-aws => ../validator-plugin-aws
+// replace github.com/validator-labs/validator-plugin-azure => ../validator-plugin-azure
+// replace github.com/validator-labs/validator-plugin-vsphere => ../validator-plugin-vsphere
+// replace github.com/validator-labs/validator-plugin-maas => ../validator-plugin-maas
+// replace github.com/validator-labs/validator-plugin-network => ../validator-plugin-network
+// replace github.com/validator-labs/validator-plugin-oci => ../validator-plugin-oci
 
 replace github.com/canonical/gomaasclient v0.6.0 => github.com/arturshadnik/gomaasclient v0.0.0-20240731231205-8239cfb13409
