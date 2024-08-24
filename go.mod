@@ -5,7 +5,7 @@ go 1.22.5
 require (
 	emperror.dev/errors v0.8.1
 	github.com/L30Bola/aws-policy v0.0.0-20230126045340-5e6118545ac1
-	github.com/canonical/gomaasclient v0.6.0
+	github.com/canonical/gomaasclient v0.7.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
