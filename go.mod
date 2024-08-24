@@ -18,7 +18,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/validator-labs/validator v0.1.8
-	github.com/validator-labs/validator-plugin-aws v0.1.4
+	github.com/validator-labs/validator-plugin-aws v0.1.7
 	github.com/validator-labs/validator-plugin-azure v0.0.17
 	github.com/validator-labs/validator-plugin-maas v0.0.8-0.20240820005521-e903cc7f7fc4
 	github.com/validator-labs/validator-plugin-network v0.0.23
