@@ -868,8 +868,8 @@ github.com/validator-labs/validator-plugin-aws v0.1.4 h1:0SMEIddrCRJfHvsqkyMCmkD
 github.com/validator-labs/validator-plugin-aws v0.1.4/go.mod h1:Nh/RM9SygPPV9aMmMoOHg7PnYlCRYEHeOfOQ0qk5hBs=
 github.com/validator-labs/validator-plugin-azure v0.0.17 h1:4LrXisaemQ1j1adj1lwk1dxyuWfKavgPnFE9QPf/ses=
 github.com/validator-labs/validator-plugin-azure v0.0.17/go.mod h1:T13K/0EjDN0L6A8h7+OgxK7Ni2L7WYZXapGZCZgtgmY=
-github.com/validator-labs/validator-plugin-maas v0.0.8-0.20240820005521-e903cc7f7fc4 h1:Kd8qBL10cUx/VbPO8NNAF525UFBKLF/NldtfLfxUl1Y=
-github.com/validator-labs/validator-plugin-maas v0.0.8-0.20240820005521-e903cc7f7fc4/go.mod h1:otiQUFctfzJgNgvWI/+DLDdlWMUjRpHJUoT7LA3k5K4=
+github.com/validator-labs/validator-plugin-maas v0.0.12 h1:MO6F/uDNryrSV2x6prV+Hp4DFKE6ml8XSicNMmRhSrA=
+github.com/validator-labs/validator-plugin-maas v0.0.12/go.mod h1:pbwTdZQNlfhoWF4pTucZxoKOflM35pJR3HuIBKNELbE=
 github.com/validator-labs/validator-plugin-network v0.0.23 h1:+1fooiXuve73NAOUTTjf2jPd9DDYHekzEKh7bLtrOFc=
 github.com/validator-labs/validator-plugin-network v0.0.23/go.mod h1:9f7tzIR1toQD0XVMTIba/42V+06j4IoUhwELe+V0Jfs=
 github.com/validator-labs/validator-plugin-oci v0.2.1 h1:FlT0zv5j7XrrRdPgxbJgy8U6mWrNYb0R4ZXs7zuiPKE=
