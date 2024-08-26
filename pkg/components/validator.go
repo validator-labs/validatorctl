@@ -15,7 +15,6 @@ import (
 	oci "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
 	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
 	validator "github.com/validator-labs/validator/api/v1alpha1"
-	"github.com/validator-labs/validator/pkg/validationrule"
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
@@ -556,12 +555,9 @@ func (c *OCIPluginConfig) decrypt() error {
 
 // VspherePluginConfig represents the vSphere plugin configuration.
 type VspherePluginConfig struct {
-	Enabled                     bool                             `yaml:"enabled"`
-	Release                     *validator.HelmRelease           `yaml:"helmRelease"`
-	Validator                   *vsphereapi.VsphereValidatorSpec `yaml:"validator"`
-	VsphereEntityPrivilegeRules []VsphereEntityPrivilegeRule     `yaml:"vsphereEntityPrivilegeRules"`
-	VsphereRolePrivilegeRules   []VsphereRolePrivilegeRule       `yaml:"vsphereRolePrivilegeRules"`
-	VsphereTagRules             []VsphereTagRule                 `yaml:"vsphereTagRules"`
+	Enabled   bool                             `yaml:"enabled"`
+	Release   *validator.HelmRelease           `yaml:"helmRelease"`
+	Validator *vsphereapi.VsphereValidatorSpec `yaml:"validator"`
 }
 
 func (c *VspherePluginConfig) encrypt() error {
@@ -584,37 +580,6 @@ func (c *VspherePluginConfig) decrypt() error {
 		c.Validator.Auth.CloudAccount.Password = string(*bytes)
 	}
 	return nil
-}
-
-// VsphereEntityPrivilegeRule represents a vSphere entity privilege rule.
-type VsphereEntityPrivilegeRule struct {
-	vsphereapi.EntityPrivilegeValidationRule `yaml:",inline"`
-	ClusterScoped                            bool `yaml:"clusterScoped"`
-}
-
-// VsphereRolePrivilegeRule represents a vSphere role privilege rule.
-type VsphereRolePrivilegeRule struct {
-	validationrule.ManuallyNamed `json:",inline"`
-
-	vsphereapi.GenericRolePrivilegeValidationRule `yaml:",inline"`
-	RuleName                                      string `yaml:"name"`
-}
-
-var _ validationrule.Interface = (*VsphereRolePrivilegeRule)(nil)
-
-// Name returns the name of the VsphereRolePrivilegeRule.
-func (r VsphereRolePrivilegeRule) Name() string {
-	return r.RuleName
-}
-
-// SetName sets the name of the VsphereRolePrivilegeRule.
-func (r *VsphereRolePrivilegeRule) SetName(name string) {
-	r.RuleName = name
-}
-
-// VsphereTagRule represents a vSphere tag rule.
-type VsphereTagRule struct {
-	vsphereapi.TagValidationRule `yaml:",inline"`
 }
 
 // PublicKeySecret represents a public key secret.
