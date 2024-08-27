@@ -573,7 +573,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.MaasPlugin.Validator,
 		}
 		vr := vres.Build(v)
-		vrr := maasval.Validate(*vc.MaasPlugin.Validator, vc.MaasPlugin.Validator.Host, vc.MaasPlugin.MaasAPIToken, l)
+		vrr := maasval.Validate(*vc.MaasPlugin.Validator, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}

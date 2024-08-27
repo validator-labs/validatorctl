@@ -112,7 +112,7 @@ func readMaasCredentials(c *components.MaasPluginConfig, tc *cfg.TaskConfig, k8s
 			return fmt.Errorf("failed to read k8s Secret: %w", err)
 		}
 		c.Validator.Auth.SecretName = secret.Name
-		c.MaasAPIToken = string(secret.Data[c.Validator.Auth.TokenKey])
+		c.Validator.Auth.APIToken = string(secret.Data[c.Validator.Auth.TokenKey])
 	}
 
 	return nil

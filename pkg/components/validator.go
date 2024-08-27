@@ -396,28 +396,27 @@ func (c *AzurePluginConfig) decrypt() error {
 
 // MaasPluginConfig represents the MAAS plugin configuration.
 type MaasPluginConfig struct {
-	Enabled      bool                    `yaml:"enabled"`
-	Release      *validator.HelmRelease  `yaml:"helmRelease"`
-	Validator    *maas.MaasValidatorSpec `yaml:"validator"`
-	MaasAPIToken string                  `yaml:"maasApiToken"`
+	Enabled   bool                    `yaml:"enabled"`
+	Release   *validator.HelmRelease  `yaml:"helmRelease"`
+	Validator *maas.MaasValidatorSpec `yaml:"validator"`
 }
 
 func (c *MaasPluginConfig) encrypt() error {
-	token, err := crypto.EncryptB64([]byte(c.MaasAPIToken))
+	token, err := crypto.EncryptB64([]byte(c.Validator.Auth.APIToken))
 	if err != nil {
 		return errors.Wrap(err, "failed to encrypt token")
 	}
-	c.MaasAPIToken = token
+	c.Validator.Auth.APIToken = token
 
 	return nil
 }
 
 func (c *MaasPluginConfig) decrypt() error {
-	bytes, err := crypto.DecryptB64(c.MaasAPIToken)
+	bytes, err := crypto.DecryptB64(c.Validator.Auth.APIToken)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt token")
 	}
-	c.MaasAPIToken = string(*bytes)
+	c.Validator.Auth.APIToken = string(*bytes)
 
 	return nil
 }

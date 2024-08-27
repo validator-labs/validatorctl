@@ -5,7 +5,7 @@ helmRelease:
   chart:
     name: validator
     repository: validator
-    version: v0.1.8
+    version: v0.1.9
   values: ""
 helmReleaseSecret:
   name: validator-helm-release-validator
@@ -832,7 +832,7 @@ maasPlugin:
     chart:
       name: validator-plugin-maas
       repository: validator-plugin-maas
-      version: v0.0.11
+      version: v0.0.12
     values: ""
   validator:
     internalDNSRules:
@@ -863,4 +863,4 @@ maasPlugin:
     auth:
       secretName: maas-creds
       tokenKey: MAAS_API_KEY
-  maasApiToken: "jG81nj7n8feUpHaIU/gFH2tLaqcnSshrpCiziFt+0JZ7OA=="
+      apiToken: "jG81nj7n8feUpHaIU/gFH2tLaqcnSshrpCiziFt+0JZ7OA=="
