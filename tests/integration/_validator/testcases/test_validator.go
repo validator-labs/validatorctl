@@ -451,13 +451,12 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"n",                                 // add more hosts
 		"n",                                 // add more validation rules
 		"y",                                 // Enable role privileges validation
-		"role rule 1",                       // Role privilege rule name
 		"user1@vsphere.local",               // user to check role privileges against
 		"Local Filepath",                    // vCenter privileges Source
 		t.filePath("vCenterPrivileges.txt"), // privileges File
 		"n",                                 // add another role privilege rule
 		"y",                                 // Enable entity privilege validation
-		"entity rule 1",                     // entity privilege rule name
+		"entity-rule-1",                     // entity privilege rule name
 		"user2@vsphere.local",               // user to check entity privileges against
 		"Folder",                            // entity type
 		"spectro-templates",                 // folder name
@@ -465,7 +464,7 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		t.filePath("vCenterPrivileges.txt"), // privileges File
 		"n",                                 // add more entity privilege rules
 		"y",                                 // Enable compute resource validation
-		"resource requirement rule 1",       // resource requirement rule name
+		"resource-requirement-rule-1",       // resource requirement rule name
 		"Cluster",                           // select cluster for resource check
 		"C0",                                // cluster name for resource check
 		"master-pool",                       // node pool name
@@ -482,12 +481,12 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"n",                                 // add more node pools
 		"n",                                 // add more resource requirement checks
 		"y",                                 // Enable tags validation
-		"tag rule 1",                        // tag rule name
+		"tag-rule-1",                        // tag rule name
 		"Datacenter",                        // entity type
 		"DC0",                               // datacenter name
 		"k8s-region",                        // tag
 		"y",                                 // add another tag rule
-		"tag rule 2",                        // tag rule name
+		"tag-rule-2",                        // tag rule name
 		"Cluster",                           // entity type
 		"C0",                                // cluster name
 		"k8s-zone",                          // tag
