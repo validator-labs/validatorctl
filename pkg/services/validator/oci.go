@@ -8,8 +8,9 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	plug "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
+
+	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -241,23 +242,8 @@ func configureOciRegistryRules(c *components.OCIPluginConfig, ruleNames, authSec
 	return nil
 }
 
-func initOciRegistryRule(r *plug.OciRegistryRule, ruleType string, ruleNames *[]string) error {
-	name := r.Name()
-	if name != "" {
-		log.InfoCLI("Reconfiguring %s rule: %s", ruleType, name)
-		*ruleNames = append(*ruleNames, name)
-	} else {
-		name, err := getRuleName(ruleNames)
-		if err != nil {
-			return err
-		}
-		r.RuleName = name
-	}
-	return nil
-}
-
 func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule, idx int, ruleNames, authSecretNames, sigSecretNames *[]string, kClient kubernetes.Interface, direct bool) error {
-	err := initOciRegistryRule(r, "OCI", ruleNames)
+	err := initRule(r, "OCI", "", ruleNames)
 	if err != nil {
 		return err
 	}

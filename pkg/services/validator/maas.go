@@ -2,18 +2,17 @@ package validator
 
 import (
 	"fmt"
-	"reflect"
 	"slices"
-	"time"
 
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
+
+	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	vpmaasapi "github.com/validator-labs/validator-plugin-maas/api/v1alpha1"
 )
@@ -22,29 +21,6 @@ var (
 	maasSecretName = "maas-creds"
 	maasTokenKey   = "MAAS_API_KEY" //#nosec
 )
-
-type maasRule interface {
-	*vpmaasapi.ResourceAvailabilityRule | *vpmaasapi.ImageRule | *vpmaasapi.InternalDNSRule | *vpmaasapi.UpstreamDNSRule
-}
-
-func initMaasRule[R maasRule](r R, ruleType string, ruleNames *[]string) error {
-	name := reflect.ValueOf(r).Elem().FieldByName("Name").String()
-	if name != "" {
-		// not all maasRules have a Name field, for now we can create a unique name for them
-		if name == "<invalid Value>" {
-			name = ruleType + " - " + time.Now().Format("20060102T150405.000000000")
-		}
-		log.InfoCLI("\nReconfiguring %s validation rule: %s", ruleType, name)
-		*ruleNames = append(*ruleNames, name)
-	} else {
-		name, err := getRuleName(ruleNames)
-		if err != nil {
-			return err
-		}
-		reflect.ValueOf(r).Elem().FieldByName("Name").Set(reflect.ValueOf(name))
-	}
-	return nil
-}
 
 func readMaasPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	c := vc.MaasPlugin
@@ -136,7 +112,7 @@ func readMaasCredentials(c *components.MaasPluginConfig, tc *cfg.TaskConfig, k8s
 			return fmt.Errorf("failed to read k8s Secret: %w", err)
 		}
 		c.Validator.Auth.SecretName = secret.Name
-		c.MaasAPIToken = string(secret.Data[c.Validator.Auth.TokenKey])
+		c.Validator.Auth.APIToken = string(secret.Data[c.Validator.Auth.TokenKey])
 	}
 
 	return nil
@@ -198,13 +174,13 @@ func configureMaasResourceRules(c *components.MaasPluginConfig, ruleNames *[]str
 func readMaasResourceRule(c *components.MaasPluginConfig, r *vpmaasapi.ResourceAvailabilityRule, idx int, ruleNames *[]string) error {
 	if r == nil {
 		r = &vpmaasapi.ResourceAvailabilityRule{
-			Name:      "",
+			RuleName:  "",
 			AZ:        "",
 			Resources: []vpmaasapi.Resource{},
 		}
 	}
 
-	err := initMaasRule(r, "Resource Availability", ruleNames)
+	err := initRule(r, "Resource Availability", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -349,12 +325,12 @@ func configureMaasImageRules(c *components.MaasPluginConfig, ruleNames *[]string
 func readMaasImageRule(c *components.MaasPluginConfig, r *vpmaasapi.ImageRule, idx int, ruleNames *[]string) error {
 	if r == nil {
 		r = &vpmaasapi.ImageRule{
-			Name:   "",
-			Images: []vpmaasapi.Image{},
+			RuleName: "",
+			Images:   []vpmaasapi.Image{},
 		}
 	}
 
-	err := initMaasRule(r, "OS Image", ruleNames)
+	err := initRule(r, "OS Image", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -458,7 +434,7 @@ func readMaasInternalDNSRule(c *components.MaasPluginConfig, r *vpmaasapi.Intern
 		}
 	}
 
-	err := initMaasRule(r, "Internal DNS", ruleNames)
+	err := initRule(r, "Internal DNS", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -599,12 +575,12 @@ func configureMaasUpstreamDNSRules(c *components.MaasPluginConfig, ruleNames *[]
 func readMaasUpstreamDNSRule(c *components.MaasPluginConfig, r *vpmaasapi.UpstreamDNSRule, idx int, ruleNames *[]string) error {
 	if r == nil {
 		r = &vpmaasapi.UpstreamDNSRule{
-			Name:          "",
+			RuleName:      "",
 			NumDNSServers: 0,
 		}
 	}
 
-	err := initMaasRule(r, "Upstream DNS", ruleNames)
+	err := initRule(r, "Upstream DNS", "", ruleNames)
 	if err != nil {
 		return err
 	}

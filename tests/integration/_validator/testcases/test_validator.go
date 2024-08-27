@@ -451,7 +451,6 @@ func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string
 		"n",                                 // add more hosts
 		"n",                                 // add more validation rules
 		"y",                                 // Enable role privileges validation
-		"role rule 1",                       // Role privilege rule name
 		"user1@vsphere.local",               // user to check role privileges against
 		"Local Filepath",                    // vCenter privileges Source
 		t.filePath("vCenterPrivileges.txt"), // privileges File

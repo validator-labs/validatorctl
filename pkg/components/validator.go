@@ -396,28 +396,27 @@ func (c *AzurePluginConfig) decrypt() error {
 
 // MaasPluginConfig represents the MAAS plugin configuration.
 type MaasPluginConfig struct {
-	Enabled      bool                    `yaml:"enabled"`
-	Release      *validator.HelmRelease  `yaml:"helmRelease"`
-	Validator    *maas.MaasValidatorSpec `yaml:"validator"`
-	MaasAPIToken string                  `yaml:"maasApiToken"`
+	Enabled   bool                    `yaml:"enabled"`
+	Release   *validator.HelmRelease  `yaml:"helmRelease"`
+	Validator *maas.MaasValidatorSpec `yaml:"validator"`
 }
 
 func (c *MaasPluginConfig) encrypt() error {
-	token, err := crypto.EncryptB64([]byte(c.MaasAPIToken))
+	token, err := crypto.EncryptB64([]byte(c.Validator.Auth.APIToken))
 	if err != nil {
 		return errors.Wrap(err, "failed to encrypt token")
 	}
-	c.MaasAPIToken = token
+	c.Validator.Auth.APIToken = token
 
 	return nil
 }
 
 func (c *MaasPluginConfig) decrypt() error {
-	bytes, err := crypto.DecryptB64(c.MaasAPIToken)
+	bytes, err := crypto.DecryptB64(c.Validator.Auth.APIToken)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt token")
 	}
-	c.MaasAPIToken = string(*bytes)
+	c.Validator.Auth.APIToken = string(*bytes)
 
 	return nil
 }
@@ -555,12 +554,9 @@ func (c *OCIPluginConfig) decrypt() error {
 
 // VspherePluginConfig represents the vSphere plugin configuration.
 type VspherePluginConfig struct {
-	Enabled                     bool                             `yaml:"enabled"`
-	Release                     *validator.HelmRelease           `yaml:"helmRelease"`
-	Validator                   *vsphereapi.VsphereValidatorSpec `yaml:"validator"`
-	VsphereEntityPrivilegeRules []VsphereEntityPrivilegeRule     `yaml:"vsphereEntityPrivilegeRules"`
-	VsphereRolePrivilegeRules   []VsphereRolePrivilegeRule       `yaml:"vsphereRolePrivilegeRules"`
-	VsphereTagRules             []VsphereTagRule                 `yaml:"vsphereTagRules"`
+	Enabled   bool                             `yaml:"enabled"`
+	Release   *validator.HelmRelease           `yaml:"helmRelease"`
+	Validator *vsphereapi.VsphereValidatorSpec `yaml:"validator"`
 }
 
 func (c *VspherePluginConfig) encrypt() error {
@@ -583,23 +579,6 @@ func (c *VspherePluginConfig) decrypt() error {
 		c.Validator.Auth.CloudAccount.Password = string(*bytes)
 	}
 	return nil
-}
-
-// VsphereEntityPrivilegeRule represents a vSphere entity privilege rule.
-type VsphereEntityPrivilegeRule struct {
-	vsphereapi.EntityPrivilegeValidationRule `yaml:",inline"`
-	ClusterScoped                            bool `yaml:"clusterScoped"`
-}
-
-// VsphereRolePrivilegeRule represents a vSphere role privilege rule.
-type VsphereRolePrivilegeRule struct {
-	vsphereapi.GenericRolePrivilegeValidationRule `yaml:",inline"`
-	Name                                          string `yaml:"name"`
-}
-
-// VsphereTagRule represents a vSphere tag rule.
-type VsphereTagRule struct {
-	vsphereapi.TagValidationRule `yaml:",inline"`
 }
 
 // PublicKeySecret represents a public key secret.

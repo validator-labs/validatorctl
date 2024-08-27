@@ -3,20 +3,20 @@ package validator
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
 	awspolicy "github.com/L30Bola/aws-policy"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	vpawsapi "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
 	"github.com/validator-labs/validatorctl/pkg/services"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
+
+	"github.com/spectrocloud-labs/prompts-tui/prompts"
 )
 
 var (
@@ -24,11 +24,6 @@ var (
 	stsDurationSeconds = "3600"
 	awsSecretName      = "aws-creds"
 )
-
-type awsRule interface {
-	*vpawsapi.ServiceQuotaRule | *vpawsapi.TagRule | *vpawsapi.AmiRule |
-		*vpawsapi.IamRoleRule | *vpawsapi.IamUserRule | *vpawsapi.IamGroupRule | *vpawsapi.IamPolicyRule
-}
 
 func readAwsPlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
 	c := vc.AWSPlugin
@@ -145,7 +140,7 @@ func readIamRoleRule(c *components.AWSPluginConfig, r *vpawsapi.IamRoleRule, idx
 			Policies:    []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "IAM role", ruleNames)
+	err := initRule(r, "IAM role", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -234,7 +229,7 @@ func readIamUserRule(c *components.AWSPluginConfig, r *vpawsapi.IamUserRule, idx
 			Policies:    []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "IAM user", ruleNames)
+	err := initRule(r, "IAM user", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -323,7 +318,7 @@ func readIamGroupRule(c *components.AWSPluginConfig, r *vpawsapi.IamGroupRule, i
 			Policies:     []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "IAM group", ruleNames)
+	err := initRule(r, "IAM group", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -411,7 +406,7 @@ func readIamPolicyRule(c *components.AWSPluginConfig, r *vpawsapi.IamPolicyRule,
 			Policies:     []vpawsapi.PolicyDocument{},
 		}
 	}
-	err := initAwsRule(r, "IAM policy", ruleNames)
+	err := initRule(r, "IAM policy", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -827,25 +822,6 @@ func readAwsCredsHelper(c *components.AWSPluginConfig) error {
 	return nil
 }
 
-func initAwsRule[R awsRule](r R, ruleType string, ruleNames *[]string) error {
-	name := reflect.ValueOf(r).Elem().FieldByName("Name").String()
-	if name != "" {
-		// not all awsRules have a Name field, for now we can create a unique name for them
-		if name == "<invalid Value>" {
-			name = ruleType + " - " + time.Now().Format("20060102T150405.000000000")
-		}
-		log.InfoCLI("Reconfiguring %s rule: %s", ruleType, name)
-		*ruleNames = append(*ruleNames, name)
-	} else {
-		name, err := getRuleName(ruleNames)
-		if err != nil {
-			return err
-		}
-		reflect.ValueOf(r).Elem().FieldByName("Name").Set(reflect.ValueOf(name))
-	}
-	return nil
-}
-
 func readServiceQuotaRule(c *components.AWSPluginConfig, r *vpawsapi.ServiceQuotaRule, idx int, ruleNames *[]string) error {
 	if r == nil {
 		r = &vpawsapi.ServiceQuotaRule{
@@ -857,7 +833,7 @@ func readServiceQuotaRule(c *components.AWSPluginConfig, r *vpawsapi.ServiceQuot
 			},
 		}
 	}
-	err := initAwsRule(r, "service quota", ruleNames)
+	err := initRule(r, "service quota", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -898,7 +874,7 @@ func readSubnetTagRule(c *components.AWSPluginConfig, r *vpawsapi.TagRule, idx i
 				ARNs:         make([]string, 0),
 			}
 		}
-		err := initAwsRule(r, "subnet tag", ruleNames)
+		err := initRule(r, "subnet tag", "", ruleNames)
 		if err != nil {
 			return err
 		}
@@ -950,13 +926,13 @@ func readSubnetTagRule(c *components.AWSPluginConfig, r *vpawsapi.TagRule, idx i
 func readAmiRule(c *components.AWSPluginConfig, r *vpawsapi.AmiRule, idx int, ruleNames *[]string) error {
 	if r == nil {
 		r = &vpawsapi.AmiRule{
-			Name:    "",
-			AmiIDs:  []string{},
-			Filters: []vpawsapi.Filter{},
-			Owners:  []string{},
+			RuleName: "",
+			AmiIDs:   []string{},
+			Filters:  []vpawsapi.Filter{},
+			Owners:   []string{},
 		}
 	}
-	err := initAwsRule(r, "AMI", ruleNames)
+	err := initRule(r, "AMI", "", ruleNames)
 	if err != nil {
 		return err
 	}

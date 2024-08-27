@@ -19,7 +19,7 @@ var (
 // ReadMaasClientProps gathers and validates MAAS client credentials
 func ReadMaasClientProps(c *components.MaasPluginConfig) error {
 	var err error
-	c.MaasAPIToken, err = prompts.ReadPassword("MAAS API token", c.MaasAPIToken, false, -1)
+	c.Validator.Auth.APIToken, err = prompts.ReadPassword("MAAS API token", c.Validator.Auth.APIToken, false, -1)
 	if err != nil {
 		return fmt.Errorf("failed to prompt for password for MAAS API token: %w", err)
 	}
@@ -32,7 +32,7 @@ func ReadMaasClientProps(c *components.MaasPluginConfig) error {
 		return err
 	}
 
-	if err := validateMaasClient(c.Validator.Host, c.MaasAPIToken); err != nil {
+	if err := validateMaasClient(c.Validator.Host, c.Validator.Auth.APIToken); err != nil {
 		val, err := handleMaasClientError(err)
 		if err != nil {
 			return err
@@ -73,7 +73,7 @@ func handleMaasClientError(err error) (string, error) {
 
 // GetMaasResourcePools fetches a list of resource pools in the cluster
 func GetMaasResourcePools(c *components.MaasPluginConfig) ([]string, error) {
-	client, err := GetMaasClient(c.Validator.Host, c.MaasAPIToken)
+	client, err := GetMaasClient(c.Validator.Host, c.Validator.Auth.APIToken)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func GetMaasResourcePools(c *components.MaasPluginConfig) ([]string, error) {
 
 // GetMaasZones fetches a list of availability zones in the cluster
 func GetMaasZones(c *components.MaasPluginConfig) ([]string, error) {
-	client, err := GetMaasClient(c.Validator.Host, c.MaasAPIToken)
+	client, err := GetMaasClient(c.Validator.Host, c.Validator.Auth.APIToken)
 	if err != nil {
 		return nil, err
 	}

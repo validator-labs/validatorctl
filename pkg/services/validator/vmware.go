@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"reflect"
 	"slices"
 	"sort"
 	"strconv"
@@ -16,9 +15,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/yaml"
 
-	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	"github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+
+	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
 	"github.com/validator-labs/validatorctl/pkg/components"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
@@ -38,11 +38,6 @@ func init() {
 	for _, v := range cfg.ValidatorPluginVsphereEntityMap {
 		vsphereEntityTypes = append(vsphereEntityTypes, v)
 	}
-}
-
-type vSphereRule interface {
-	*components.VsphereEntityPrivilegeRule | *components.VsphereRolePrivilegeRule | *components.VsphereTagRule |
-		*v1alpha1.ComputeResourceRule | *v1alpha1.NTPValidationRule
 }
 
 func readVspherePlugin(vc *components.ValidatorConfig, tc *cfg.TaskConfig, k8sClient kubernetes.Interface) error {
@@ -165,24 +160,6 @@ func readVsphereCredentials(c *components.VspherePluginConfig, tc *cfg.TaskConfi
 	return nil
 }
 
-func initVsphereRule[R vSphereRule](r R, ruleType, message string, ruleNames *[]string) error {
-	name := reflect.ValueOf(r).Elem().FieldByName("Name").String()
-	if name != "" {
-		log.InfoCLI("\nReconfiguring %s validation rule: %s", ruleType, name)
-		if message != "" {
-			log.InfoCLI(message)
-		}
-		*ruleNames = append(*ruleNames, name)
-	} else {
-		name, err := getRuleName(ruleNames)
-		if err != nil {
-			return err
-		}
-		reflect.ValueOf(r).Elem().FieldByName("Name").Set(reflect.ValueOf(name))
-	}
-	return nil
-}
-
 // nolint:dupl
 func configureNtpRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.Driver, ruleNames *[]string) error {
 	log.InfoCLI(`
@@ -232,7 +209,7 @@ func configureNtpRules(ctx context.Context, c *components.VspherePluginConfig, d
 }
 
 func readNtpRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.NTPValidationRule, driver vsphere.Driver, idx int, ruleNames *[]string) error {
-	err := initVsphereRule(r, "NTP", "The rule's ESXi host selection will be replaced.", ruleNames)
+	err := initRule(r, "NTP", "The rule's ESXi host selection will be replaced.", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -287,6 +264,7 @@ func selectEsxiHosts(ctx context.Context, datacenter string, clusterName string,
 	return selectedHosts, nil
 }
 
+// nolint:dupl
 func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[]string, vSphereCloudDriver vsphere.Driver) error {
 	log.InfoCLI(`
 	Role privilege validation ensures that a vSphere user has a
@@ -298,7 +276,6 @@ func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[
 		return err
 	}
 	if !validateRolePrivileges {
-		c.VsphereRolePrivilegeRules = nil
 		c.Validator.RolePrivilegeValidationRules = nil
 		return nil
 	}
@@ -308,15 +285,14 @@ func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[
 		return err
 	}
 
-	for i, r := range c.VsphereRolePrivilegeRules {
+	for i, r := range c.Validator.RolePrivilegeValidationRules {
 		r := r
 		if err := readRolePrivilegeRule(c, &r, i, ruleNames, isAdmin); err != nil {
 			return err
 		}
 	}
 	addRules := true
-	if len(c.VsphereRolePrivilegeRules) == 0 {
-		c.VsphereRolePrivilegeRules = make([]components.VsphereRolePrivilegeRule, 0)
+	if len(c.Validator.RolePrivilegeValidationRules) == 0 {
 		c.Validator.RolePrivilegeValidationRules = make([]v1alpha1.GenericRolePrivilegeValidationRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another role privilege validation rule", false)
@@ -328,7 +304,7 @@ func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[
 		return nil
 	}
 	for {
-		if err := readRolePrivilegeRule(c, &components.VsphereRolePrivilegeRule{}, -1, ruleNames, isAdmin); err != nil {
+		if err := readRolePrivilegeRule(c, &v1alpha1.GenericRolePrivilegeValidationRule{}, -1, ruleNames, isAdmin); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another role privilege validation rule", false)
@@ -342,12 +318,12 @@ func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[
 	return nil
 }
 
-func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.VsphereRolePrivilegeRule, idx int, ruleNames *[]string, isAdmin bool) error {
+func readRolePrivilegeRule(c *components.VspherePluginConfig, r *v1alpha1.GenericRolePrivilegeValidationRule, idx int, ruleNames *[]string, isAdmin bool) error {
 	var err error
 	var initMsg string
 	reconfigurePrivileges := true
 
-	if r.Name != "" {
+	if r.Name() != "" {
 		reconfigurePrivileges, err = prompts.ReadBool("Reconfigure privilege set for role privilege rule", false)
 		if err != nil {
 			return err
@@ -356,7 +332,7 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 			initMsg = "The rule's vSphere privilege set will be replaced."
 		}
 	}
-	if err := initVsphereRule(r, "role privilege", initMsg, ruleNames); err != nil {
+	if err := initRule(r, "role privilege", initMsg, ruleNames); err != nil {
 		return err
 	}
 
@@ -378,11 +354,9 @@ func readRolePrivilegeRule(c *components.VspherePluginConfig, r *components.Vsph
 	}
 
 	if idx == -1 {
-		c.VsphereRolePrivilegeRules = append(c.VsphereRolePrivilegeRules, *r)
-		c.Validator.RolePrivilegeValidationRules = append(c.Validator.RolePrivilegeValidationRules, r.GenericRolePrivilegeValidationRule)
+		c.Validator.RolePrivilegeValidationRules = append(c.Validator.RolePrivilegeValidationRules, *r)
 	} else {
-		c.VsphereRolePrivilegeRules[idx] = *r
-		c.Validator.RolePrivilegeValidationRules[idx] = r.GenericRolePrivilegeValidationRule
+		c.Validator.RolePrivilegeValidationRules[idx] = *r
 	}
 
 	return nil
@@ -483,6 +457,7 @@ func readPrivilegesFromFile(validate func(string) error) ([]string, error) {
 	return privileges, nil
 }
 
+// nolint:dupl
 func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.Driver, ruleNames *[]string, vSphereCloudDriver vsphere.Driver) error {
 	log.InfoCLI(`
 	Entity privilege validation ensures that a vSphere user has certain
@@ -494,7 +469,6 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 		return err
 	}
 	if !validateEntityPrivileges {
-		c.VsphereEntityPrivilegeRules = nil
 		c.Validator.EntityPrivilegeValidationRules = nil
 		return nil
 	}
@@ -504,7 +478,7 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 		return err
 	}
 
-	for i, r := range c.VsphereEntityPrivilegeRules {
+	for i, r := range c.Validator.EntityPrivilegeValidationRules {
 		r := r
 		if err := readEntityPrivilegeRule(ctx, c, &r, driver, i, ruleNames, isAdmin); err != nil {
 			return err
@@ -512,7 +486,6 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 	}
 	addRules := true
 	if len(c.Validator.EntityPrivilegeValidationRules) == 0 {
-		c.VsphereEntityPrivilegeRules = make([]components.VsphereEntityPrivilegeRule, 0)
 		c.Validator.EntityPrivilegeValidationRules = make([]v1alpha1.EntityPrivilegeValidationRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another entity privilege validation rule", false)
@@ -524,7 +497,7 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 		return nil
 	}
 	for {
-		if err := readEntityPrivilegeRule(ctx, c, &components.VsphereEntityPrivilegeRule{}, driver, -1, ruleNames, isAdmin); err != nil {
+		if err := readEntityPrivilegeRule(ctx, c, &v1alpha1.EntityPrivilegeValidationRule{}, driver, -1, ruleNames, isAdmin); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another entity privilege validation rule", false)
@@ -538,12 +511,12 @@ func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePlu
 	return nil
 }
 
-func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.Driver, idx int, ruleNames *[]string, isAdmin bool) error {
+func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.EntityPrivilegeValidationRule, driver vsphere.Driver, idx int, ruleNames *[]string, isAdmin bool) error {
 	var err error
 	var initMsg string
 	reconfigureEntity := true
 
-	if r.Name != "" {
+	if r.Name() != "" {
 		reconfigureEntity, err = prompts.ReadBool("Reconfigure entity and privilege set for entity privilege rule", false)
 		if err != nil {
 			return err
@@ -552,7 +525,7 @@ func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginCon
 			initMsg = "The rule's entity and privilege set will be replaced."
 		}
 	}
-	if err := initVsphereRule(r, "entity privilege", initMsg, ruleNames); err != nil {
+	if err := initRule(r, "entity privilege", initMsg, ruleNames); err != nil {
 		return err
 	}
 
@@ -561,17 +534,15 @@ func readEntityPrivilegeRule(ctx context.Context, c *components.VspherePluginCon
 	}
 
 	if idx == -1 {
-		c.VsphereEntityPrivilegeRules = append(c.VsphereEntityPrivilegeRules, *r)
-		c.Validator.EntityPrivilegeValidationRules = append(c.Validator.EntityPrivilegeValidationRules, r.EntityPrivilegeValidationRule)
+		c.Validator.EntityPrivilegeValidationRules = append(c.Validator.EntityPrivilegeValidationRules, *r)
 	} else {
-		c.VsphereEntityPrivilegeRules[idx] = *r
-		c.Validator.EntityPrivilegeValidationRules[idx] = r.EntityPrivilegeValidationRule
+		c.Validator.EntityPrivilegeValidationRules[idx] = *r
 	}
 
 	return nil
 }
 
-func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereEntityPrivilegeRule, driver vsphere.Driver, isAdmin, reconfigureEntity bool) error {
+func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.EntityPrivilegeValidationRule, driver vsphere.Driver, isAdmin, reconfigureEntity bool) error {
 	var err error
 
 	if isAdmin {
@@ -647,7 +618,7 @@ func configureResourceRequirementRules(ctx context.Context, c *components.Vspher
 }
 
 func readResourceRequirementRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.ComputeResourceRule, driver vsphere.Driver, idx int, ruleNames *[]string) error {
-	err := initVsphereRule(r, "resource requirement", "", ruleNames)
+	err := initRule(r, "resource requirement", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -737,6 +708,7 @@ func readResourceRequirements(r *v1alpha1.ComputeResourceRule, n *v1alpha1.Nodep
 	return nil
 }
 
+// nolint:dupl
 func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.Driver, ruleNames *[]string) error {
 	log.InfoCLI(`
 	Tag validation ensures that a specific tag is present on a particular vSphere resource.
@@ -747,20 +719,18 @@ func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginCo
 		return err
 	}
 	if !validateTags {
-		c.VsphereTagRules = nil
 		c.Validator.TagValidationRules = nil
 		return nil
 	}
 
-	for i, r := range c.VsphereTagRules {
+	for i, r := range c.Validator.TagValidationRules {
 		r := r
 		if err := readVsphereTagRule(ctx, c, &r, driver, i, ruleNames); err != nil {
 			return err
 		}
 	}
 	addRules := true
-	if len(c.VsphereTagRules) == 0 {
-		c.VsphereTagRules = make([]components.VsphereTagRule, 0)
+	if len(c.Validator.TagValidationRules) == 0 {
 		c.Validator.TagValidationRules = make([]v1alpha1.TagValidationRule, 0)
 	} else {
 		addRules, err = prompts.ReadBool("Add another tag validation rule", false)
@@ -772,7 +742,7 @@ func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginCo
 		return nil
 	}
 	for {
-		if err := readVsphereTagRule(ctx, c, &components.VsphereTagRule{}, driver, -1, ruleNames); err != nil {
+		if err := readVsphereTagRule(ctx, c, &v1alpha1.TagValidationRule{}, driver, -1, ruleNames); err != nil {
 			return err
 		}
 		add, err := prompts.ReadBool("Add another tag validation rule", false)
@@ -786,8 +756,8 @@ func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginCo
 	return nil
 }
 
-func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver vsphere.Driver, idx int, ruleNames *[]string) error {
-	err := initVsphereRule(r, "tag", "", ruleNames)
+func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.TagValidationRule, driver vsphere.Driver, idx int, ruleNames *[]string) error {
+	err := initRule(r, "tag", "", ruleNames)
 	if err != nil {
 		return err
 	}
@@ -797,17 +767,15 @@ func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, 
 	}
 
 	if idx == -1 {
-		c.VsphereTagRules = append(c.VsphereTagRules, *r)
-		c.Validator.TagValidationRules = append(c.Validator.TagValidationRules, r.TagValidationRule)
+		c.Validator.TagValidationRules = append(c.Validator.TagValidationRules, *r)
 	} else {
-		c.VsphereTagRules[idx] = *r
-		c.Validator.TagValidationRules[idx] = r.TagValidationRule
+		c.Validator.TagValidationRules[idx] = *r
 	}
 
 	return nil
 }
 
-func readCustomVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *components.VsphereTagRule, driver vsphere.Driver) error {
+func readCustomVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, r *v1alpha1.TagValidationRule, driver vsphere.Driver) error {
 	var err error
 	r.EntityType, r.EntityName, r.ClusterName, err = getEntityInfo(ctx, r.EntityType, "Entity Type", c.Validator.Datacenter, cfg.ValidatorPluginVsphereEntities, driver)
 	if err != nil {

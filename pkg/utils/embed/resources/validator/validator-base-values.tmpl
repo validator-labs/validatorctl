@@ -138,9 +138,11 @@ pluginSecrets:
 
   {{- if .MAASPlugin.Enabled }}
   maas:
+    {{- if .MAASPlugin.Validator.Auth.SecretName }}
     secretName: {{ .MAASPlugin.Validator.Auth.SecretName }}
+    {{- end }}
     tokenKey: {{ .MAASPlugin.Validator.Auth.TokenKey }}
-    maasApiToken: {{ .MAASPlugin.MaasAPIToken }}
+    apiToken: {{ .MAASPlugin.Validator.Auth.APIToken }}
   {{- else }}
   maas: {}
   {{- end }}
