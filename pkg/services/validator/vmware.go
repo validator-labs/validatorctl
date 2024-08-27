@@ -264,6 +264,7 @@ func selectEsxiHosts(ctx context.Context, datacenter string, clusterName string,
 	return selectedHosts, nil
 }
 
+// nolint:dupl
 func configureRolePrivilegeRules(c *components.VspherePluginConfig, ruleNames *[]string, vSphereCloudDriver vsphere.Driver) error {
 	log.InfoCLI(`
 	Role privilege validation ensures that a vSphere user has a
@@ -456,6 +457,7 @@ func readPrivilegesFromFile(validate func(string) error) ([]string, error) {
 	return privileges, nil
 }
 
+// nolint:dupl
 func configureEntityPrivilegeRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.Driver, ruleNames *[]string, vSphereCloudDriver vsphere.Driver) error {
 	log.InfoCLI(`
 	Entity privilege validation ensures that a vSphere user has certain
@@ -706,6 +708,7 @@ func readResourceRequirements(r *v1alpha1.ComputeResourceRule, n *v1alpha1.Nodep
 	return nil
 }
 
+// nolint:dupl
 func configureVsphereTagRules(ctx context.Context, c *components.VspherePluginConfig, driver vsphere.Driver, ruleNames *[]string) error {
 	log.InfoCLI(`
 	Tag validation ensures that a specific tag is present on a particular vSphere resource.
