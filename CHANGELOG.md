@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.1.3](https://github.com/validator-labs/validatorctl/compare/v0.1.2...v0.1.3) (2024-09-03)
+
+
+### Features
+
+* inline auth for MAAS ([#198](https://github.com/validator-labs/validatorctl/issues/198)) ([ed78617](https://github.com/validator-labs/validatorctl/commit/ed78617fe4386d8db2739f70af24f1cf90c474c0))
+* support Azure plugin community gallery image rule ([#181](https://github.com/validator-labs/validatorctl/issues/181)) ([3d20725](https://github.com/validator-labs/validatorctl/commit/3d207256dbd269bc4c1c0f7f02ea67335147b631))
+
+
+### Bug Fixes
+
+* ensure ErrValidationFailed is returned for maas direct validation failures ([#179](https://github.com/validator-labs/validatorctl/issues/179)) ([0e0e7b9](https://github.com/validator-labs/validatorctl/commit/0e0e7b9ada5158fe258353e5df9daf968b0173c7))
+* handle validation errors, result count mismatch ([#204](https://github.com/validator-labs/validatorctl/issues/204)) ([a2ea08b](https://github.com/validator-labs/validatorctl/commit/a2ea08b58d89f89d42deb92dda3cf1b16929c7d3))
+* only require docker, kind when provisioning kind cluster ([#180](https://github.com/validator-labs/validatorctl/issues/180)) ([1bbdb0e](https://github.com/validator-labs/validatorctl/commit/1bbdb0e5505d023f2a84703f82f54020e22017a5))
+* remove duplicate maas base values from template ([#182](https://github.com/validator-labs/validatorctl/issues/182)) ([cfa39a8](https://github.com/validator-labs/validatorctl/commit/cfa39a87423ff833f781d053fc57bbe4c750f329))
+* support `validator rules check -f config.yaml` without all plugins defined ([#191](https://github.com/validator-labs/validatorctl/issues/191)) ([6829834](https://github.com/validator-labs/validatorctl/commit/6829834ee5323c0f6928b55a40b0112eeed53eaf))
+
+
+### Other
+
+* cleanup comment ([#176](https://github.com/validator-labs/validatorctl/issues/176)) ([f371927](https://github.com/validator-labs/validatorctl/commit/f3719278be6c023b79699dab3e898e73bdc6af84))
+
+
+### Dependency Updates
+
+* **deps:** update anchore/sbom-action action to v0.17.2 ([#184](https://github.com/validator-labs/validatorctl/issues/184)) ([00d3a5c](https://github.com/validator-labs/validatorctl/commit/00d3a5c47adcfd06f66f8d09799a2cf38fdeaf3a))
+* **deps:** update github.com/validator-labs/validator-plugin-maas digest to e903cc7 ([#175](https://github.com/validator-labs/validatorctl/issues/175)) ([09c3ad1](https://github.com/validator-labs/validatorctl/commit/09c3ad12546849039fb9791d300384bd41a868c6))
+* **deps:** update golang.org/x/exp digest to 9b4947d ([#190](https://github.com/validator-labs/validatorctl/issues/190)) ([8c427e9](https://github.com/validator-labs/validatorctl/commit/8c427e93ca0fd7ee6b1b76bcbe08d05bbafe23d9))
+* **deps:** update module github.com/canonical/gomaasclient to v0.7.0 ([#197](https://github.com/validator-labs/validatorctl/issues/197)) ([f43a5ba](https://github.com/validator-labs/validatorctl/commit/f43a5baec0491721409657cb7bb0a69b8b31d6c5))
+* **deps:** update module github.com/validator-labs/validator to v0.1.8 ([#120](https://github.com/validator-labs/validatorctl/issues/120)) ([fe587c6](https://github.com/validator-labs/validatorctl/commit/fe587c6e95d3a5f96bfb21ed874afcb1b8aef625))
+* **deps:** update module github.com/vmware/govmomi to v0.42.0 ([#172](https://github.com/validator-labs/validatorctl/issues/172)) ([f0488c9](https://github.com/validator-labs/validatorctl/commit/f0488c940bfedcfb62256272f66bbd3fb26b1972))
+
+
+### Refactoring
+
+* move vsphere account under auth to match new plugin api ([#189](https://github.com/validator-labs/validatorctl/issues/189)) ([90352e1](https://github.com/validator-labs/validatorctl/commit/90352e1c81974558ca1ef96ad7af76e653f93b7a))
+
 ## [0.1.2](https://github.com/validator-labs/validatorctl/compare/v0.1.1...v0.1.2) (2024-08-19)
 
 
