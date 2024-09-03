@@ -539,7 +539,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
-		if vrOk := validationResponseOk(vrr, l); !vrOk {
+		if vrOk := validationResponseOk(vc.AWSPlugin.Validator.ResultCount(), vrr, l); !vrOk {
 			ok = false
 		}
 		results = append(results, vr)
@@ -558,7 +558,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
-		if vrOk := validationResponseOk(vrr, l); !vrOk {
+		if vrOk := validationResponseOk(vc.AzurePlugin.Validator.ResultCount(), vrr, l); !vrOk {
 			ok = false
 		}
 		results = append(results, vr)
@@ -577,7 +577,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
-		if vrOk := validationResponseOk(vrr, l); !vrOk {
+		if vrOk := validationResponseOk(vc.MaasPlugin.Validator.ResultCount(), vrr, l); !vrOk {
 			ok = false
 		}
 		results = append(results, vr)
@@ -599,7 +599,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
-		if vrOk := validationResponseOk(vrr, l); !vrOk {
+		if vrOk := validationResponseOk(vc.NetworkPlugin.Validator.ResultCount(), vrr, l); !vrOk {
 			ok = false
 		}
 		results = append(results, vr)
@@ -621,7 +621,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
-		if vrOk := validationResponseOk(vrr, l); !vrOk {
+		if vrOk := validationResponseOk(vc.OCIPlugin.Validator.ResultCount(), vrr, l); !vrOk {
 			ok = false
 		}
 		results = append(results, vr)
@@ -640,7 +640,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
-		if vrOk := validationResponseOk(vrr, l); !vrOk {
+		if vrOk := validationResponseOk(vc.VspherePlugin.Validator.ResultCount(), vrr, l); !vrOk {
 			ok = false
 		}
 		results = append(results, vr)
@@ -684,7 +684,24 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 	return nil
 }
 
-func validationResponseOk(vr types.ValidationResponse, log logr.Logger) bool {
+func validationResponseOk(expected int, vr types.ValidationResponse, log logr.Logger) bool {
+	var hasRuleError, hasResultCountError, hasValidationError bool
+
+	for _, err := range vr.ValidationRuleErrors {
+		log.V(0).Info("validation rule failed: unexpected error",
+			"error", err,
+		)
+		hasRuleError = true
+	}
+
+	if len(vr.ValidationRuleResults) != expected {
+		log.V(0).Info("validation rule failed: unexpected number of validation results",
+			"expected", expected,
+			"actual", len(vr.ValidationRuleResults),
+		)
+		hasResultCountError = true
+	}
+
 	for _, vrr := range vr.ValidationRuleResults {
 		if vrr.State != nil && *vrr.State == vapi.ValidationFailed {
 			log.V(0).Info("validation rule failed",
@@ -692,8 +709,12 @@ func validationResponseOk(vr types.ValidationResponse, log logr.Logger) bool {
 				"type", vrr.Condition.ValidationType,
 				"message", vrr.Condition.Message,
 			)
-			return false
+			hasValidationError = true
 		}
+	}
+
+	if hasRuleError || hasResultCountError || hasValidationError {
+		return false
 	}
 	return true
 }
