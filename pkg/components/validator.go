@@ -402,6 +402,10 @@ type MaasPluginConfig struct {
 }
 
 func (c *MaasPluginConfig) encrypt() error {
+	if c.Validator == nil {
+		return nil
+	}
+
 	token, err := crypto.EncryptB64([]byte(c.Validator.Auth.APIToken))
 	if err != nil {
 		return errors.Wrap(err, "failed to encrypt token")
@@ -412,6 +416,10 @@ func (c *MaasPluginConfig) encrypt() error {
 }
 
 func (c *MaasPluginConfig) decrypt() error {
+	if c.Validator == nil {
+		return nil
+	}
+
 	bytes, err := crypto.DecryptB64(c.Validator.Auth.APIToken)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt token")
@@ -455,6 +463,7 @@ func (c *NetworkPluginConfig) encrypt() error {
 	if c.HTTPFileAuths == nil {
 		return nil
 	}
+
 	for i, auth := range c.HTTPFileAuths {
 		password, err := crypto.EncryptB64([]byte(auth[1]))
 		if err != nil {
@@ -462,6 +471,7 @@ func (c *NetworkPluginConfig) encrypt() error {
 		}
 		c.HTTPFileAuths[i][1] = password
 	}
+
 	return nil
 }
 
@@ -469,6 +479,7 @@ func (c *NetworkPluginConfig) decrypt() error {
 	if c.HTTPFileAuths == nil {
 		return nil
 	}
+
 	for i, auth := range c.HTTPFileAuths {
 		bytes, err := crypto.DecryptB64(auth[1])
 		if err != nil {
@@ -476,6 +487,7 @@ func (c *NetworkPluginConfig) decrypt() error {
 		}
 		c.HTTPFileAuths[i][1] = string(*bytes)
 	}
+
 	return nil
 }
 
@@ -560,24 +572,36 @@ type VspherePluginConfig struct {
 }
 
 func (c *VspherePluginConfig) encrypt() error {
-	if c.Validator.Auth.CloudAccount != nil {
-		password, err := crypto.EncryptB64([]byte(c.Validator.Auth.CloudAccount.Password))
-		if err != nil {
-			return errors.Wrap(err, "failed to encrypt password")
-		}
-		c.Validator.Auth.CloudAccount.Password = password
+	if c.Validator == nil {
+		return nil
 	}
+	if c.Validator.Auth.CloudAccount == nil {
+		return nil
+	}
+
+	password, err := crypto.EncryptB64([]byte(c.Validator.Auth.CloudAccount.Password))
+	if err != nil {
+		return errors.Wrap(err, "failed to encrypt password")
+	}
+	c.Validator.Auth.CloudAccount.Password = password
+
 	return nil
 }
 
 func (c *VspherePluginConfig) decrypt() error {
-	if c.Validator.Auth.CloudAccount != nil {
-		bytes, err := crypto.DecryptB64(c.Validator.Auth.CloudAccount.Password)
-		if err != nil {
-			return errors.Wrap(err, "failed to decrypt password")
-		}
-		c.Validator.Auth.CloudAccount.Password = string(*bytes)
+	if c.Validator == nil {
+		return nil
 	}
+	if c.Validator.Auth.CloudAccount == nil {
+		return nil
+	}
+
+	bytes, err := crypto.DecryptB64(c.Validator.Auth.CloudAccount.Password)
+	if err != nil {
+		return errors.Wrap(err, "failed to decrypt password")
+	}
+	c.Validator.Auth.CloudAccount.Password = string(*bytes)
+
 	return nil
 }
 
