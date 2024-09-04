@@ -33,14 +33,15 @@ import (
 	maasapi "github.com/validator-labs/validator-plugin-maas/api/v1alpha1"
 	maasconst "github.com/validator-labs/validator-plugin-maas/pkg/constants"
 	maasval "github.com/validator-labs/validator-plugin-maas/pkg/validate"
+
 	//netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	//netconst "github.com/validator-labs/validator-plugin-network/pkg/constants"
 	//netval "github.com/validator-labs/validator-plugin-network/pkg/validate"
-	//ociapi "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
+	ociapi "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
 	ociauth "github.com/validator-labs/validator-plugin-oci/pkg/auth"
-	//ociconst "github.com/validator-labs/validator-plugin-oci/pkg/constants"
+	ociconst "github.com/validator-labs/validator-plugin-oci/pkg/constants"
 	ocic "github.com/validator-labs/validator-plugin-oci/pkg/ociclient"
-	//ocival "github.com/validator-labs/validator-plugin-oci/pkg/validate"
+	ocival "github.com/validator-labs/validator-plugin-oci/pkg/validate"
 	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
 	vsphereconst "github.com/validator-labs/validator-plugin-vsphere/pkg/constants"
 	vsphereval "github.com/validator-labs/validator-plugin-vsphere/pkg/validate"
@@ -197,11 +198,13 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var err error
 	var saveConfig bool
 
-	if tc.CRDPath != "" && tc.Direct {
-		// add function for unmarshalling crds
+	/*
+		if tc.CRDPath != "" && tc.Direct {
+			// add function for unmarshalling crds
 
-		// a call to execute plugins
-	}
+			// a call to execute plugins
+		}
+	*/
 
 	if !tc.Reconfigure {
 		// Silent Mode
@@ -651,30 +654,30 @@ func executePlugins(c *cfg.Config, pluginSpecs []plugins.PluginSpec, sc *compone
 					}
 					results = append(results, vr)
 
-				case ociconst.PluginCode:
-					s := ps.(*ociapi.OciValidatorSpec)
-
-					v := &ociapi.OciValidator{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "oci-validator",
-							Namespace: "N/A",
-						},
-						Spec: *s,
-					}
-					vr := vres.Build(v)
-					vrr := ocival.Validate(*s,
-						vc.OCIPlugin.BasicAuths(), // TODO: https://github.com/validator-labs/validator-plugin-oci/issues/279
-						vc.OCIPlugin.AllPubKeys(), // TODO: https://github.com/validator-labs/validator-plugin-oci/issues/279
-						l,
-					)
-					if err := vres.Finalize(vr, vrr, l); err != nil {
-						return err
-					}
-					if vrOk := validationResponseOk(s.ResultCount(), vrr, l); !vrOk {
-						ok = false
-					}
-					results = append(results, vr)
 			*/
+		case ociconst.PluginCode:
+			s := ps.(*ociapi.OciValidatorSpec)
+
+			v := &ociapi.OciValidator{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "oci-validator",
+					Namespace: "N/A",
+				},
+				Spec: *s,
+			}
+			vr := vres.Build(v)
+			vrr := ocival.Validate(*s,
+				s.DeepCopy().BasicAuthsDirect(),
+				s.DeepCopy().AllPubKeysDirect(),
+				l,
+			)
+			if err := vres.Finalize(vr, vrr, l); err != nil {
+				return err
+			}
+			if vrOk := validationResponseOk(s.ResultCount(), vrr, l); !vrOk {
+				ok = false
+			}
+			results = append(results, vr)
 
 		case vsphereconst.PluginCode:
 			s := ps.(*vsphereapi.VsphereValidatorSpec)
