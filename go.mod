@@ -17,12 +17,12 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.2
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.1.8
+	github.com/validator-labs/validator v0.1.9
 	github.com/validator-labs/validator-plugin-aws v0.1.7
 	github.com/validator-labs/validator-plugin-azure v0.0.20
 	github.com/validator-labs/validator-plugin-maas v0.0.12
 	github.com/validator-labs/validator-plugin-network v0.0.26
-	github.com/validator-labs/validator-plugin-oci v0.3.2
+	github.com/validator-labs/validator-plugin-oci v0.3.3
 	github.com/validator-labs/validator-plugin-vsphere v0.0.34
 	github.com/vmware/govmomi v0.42.0
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
@@ -97,7 +97,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.5 // indirect
 	github.com/aws/smithy-go v1.20.4 // indirect
-	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240823171036-ae5ff3e791a3 // indirect
+	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240826150212-5dc58b6e29f8 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
@@ -195,7 +195,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nozzle/throttler v0.0.0-20180817012639-2ea982251481 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
-	github.com/onsi/gomega v1.34.1 // indirect
+	github.com/onsi/gomega v1.34.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
@@ -216,7 +216,7 @@ require (
 	github.com/sigstore/cosign/v2 v2.4.0 // indirect
 	github.com/sigstore/protobuf-specs v0.3.2 // indirect
 	github.com/sigstore/rekor v1.3.6 // indirect
-	github.com/sigstore/sigstore v1.8.8 // indirect
+	github.com/sigstore/sigstore v1.8.9 // indirect
 	github.com/sigstore/timestamp-authority v1.2.2 // indirect
 	github.com/slack-go/slack v0.14.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
@@ -245,7 +245,7 @@ require (
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
+	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
