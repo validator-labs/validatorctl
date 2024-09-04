@@ -51,7 +51,7 @@ const (
 	ValidatorVsphereEntityVirtualMachine = "Virtual Machine"
 	ValidatorVsphereEntityVirtualApp     = "Virtual App"
 	ValidatorVsphereVersionConstraint    = ">= 6.0, < 9.0"
-	ValidatorVspherePrivilegeFile        = "vsphere-root-level-privileges-all.yaml"
+	ValidatorVspherePrivilegeFile        = "vsphere-privileges-7.x.yaml"
 
 	AWSPolicyDocumentPrompt   = "# Provide the AWS policy document for IAM validation rule. The policy document should be in JSON format. Type :wq to save and exit (if using vi).\n"
 	AzurePermissionSetPrompt  = "# Provide the Azure permission set for IAM validation rule. The permission set should be in JSON format. Type :wq to save and exit (if using vi).\n"

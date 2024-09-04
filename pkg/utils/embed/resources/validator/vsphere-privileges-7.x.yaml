@@ -1,3 +1,5 @@
+# vSphere version: 7.0.3.01900
+# retrieved via 'govc role.ls Admin'
 privilegeIds:
 - Alarm.Acknowledge
 - Alarm.Create
@@ -167,6 +169,7 @@ privilegeIds:
 - Host.Config.Resources
 - Host.Config.Settings
 - Host.Config.Snmp
+- Host.Config.Storage
 - Host.Config.SystemManagement
 - Host.Hbr.HbrManagement
 - Host.Inventory.AddHostToCluster
