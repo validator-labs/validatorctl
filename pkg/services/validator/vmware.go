@@ -377,10 +377,11 @@ func loadPrivileges(privilegeFile string) (string, func(string) error, error) {
 	slices.Sort(privileges)
 
 	validate := func(input string) error {
-		if strings.HasPrefix(input, "#") {
+		s := strings.TrimSpace(input)
+		if s == "" || strings.HasPrefix(s, "#") {
 			return nil
 		}
-		if !slices.Contains(privileges, strings.TrimSpace(input)) {
+		if !slices.Contains(privileges, s) {
 			log.ErrorCLI("failed to read vCenter privileges", "invalidPrivilege", input)
 			return prompts.ErrValidationFailed
 		}
@@ -414,21 +415,37 @@ func readPrivileges(rulePrivileges []string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	if inputType == cfg.LocalFilepath {
-		return readPrivilegesFromFile(validate)
-	}
 
-	return readPrivilegesFromEditor(defaultPrivileges, validate)
+	var privileges []string
+	if inputType == cfg.LocalFilepath {
+		privileges, err = readPrivilegesFromFile(validate)
+	} else {
+		privileges, err = readPrivilegesFromEditor(defaultPrivileges, validate)
+	}
+	if err != nil {
+		log.ErrorCLI("failed to read vCenter privileges", "error", err)
+
+		retry, err := prompts.ReadBool("Reconfigure privileges", true)
+		if err != nil {
+			return nil, err
+		}
+		if retry {
+			return readPrivileges(rulePrivileges)
+		}
+	}
+	return privileges, nil
 }
 
 func readPrivilegesFromEditor(defaultPrivileges string, validate func(string) error) ([]string, error) {
 	log.InfoCLI("Configure vCenter privileges")
 	time.Sleep(2 * time.Second)
+
 	joinedPrivileges, err := prompts.EditFileValidatedByLine(cfg.VcenterPrivilegePrompt, defaultPrivileges, "\n", validate, 1)
 	if err != nil {
 		return nil, err
 	}
 	privileges := strings.Split(joinedPrivileges, "\n")
+
 	return privileges, nil
 }
 
@@ -437,24 +454,14 @@ func readPrivilegesFromFile(validate func(string) error) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	privilegeBytes, err := os.ReadFile(privilegeFile) //#nosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to read privilege file: %w", err)
 	}
 	privileges := strings.Split(string(privilegeBytes), "\n")
-	for _, p := range privileges {
-		if err := validate(p); err != nil {
-			retry, err := prompts.ReadBool("Reconfigure privileges", true)
-			if err != nil {
-				return nil, err
-			}
-			if retry {
-				return readPrivilegesFromFile(validate)
-			}
-			return nil, err
-		}
-	}
-	return privileges, nil
+
+	return prompts.FilterLines(privileges, validate)
 }
 
 // nolint:dupl
