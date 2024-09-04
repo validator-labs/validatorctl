@@ -474,22 +474,27 @@ func UpdateValidatorCredentials(c *components.ValidatorConfig) error {
 
 // UpdateValidatorPluginCredentials updates validator plugin credentials
 func UpdateValidatorPluginCredentials(c *components.ValidatorConfig, tc *cfg.TaskConfig) error {
-	k8sClient, err := k8sClientFromConfig(c)
-	if err != nil {
-		return err
+	var err error
+	var kClient kubernetes.Interface
+
+	if !tc.Direct {
+		kClient, err = k8sClientFromConfig(c)
+		if err != nil {
+			return err
+		}
 	}
 	if c.AWSPlugin != nil && c.AWSPlugin.Enabled {
-		if err := readAwsCredentials(c.AWSPlugin, tc, k8sClient); err != nil {
+		if err := readAwsCredentials(c.AWSPlugin, tc, kClient); err != nil {
 			return fmt.Errorf("failed to update AWS credentials: %w", err)
 		}
 	}
 	if c.AzurePlugin != nil && c.AzurePlugin.Enabled {
-		if err := readAzureCredentials(c.AzurePlugin, tc, k8sClient); err != nil {
+		if err := readAzureCredentials(c.AzurePlugin, tc, kClient); err != nil {
 			return fmt.Errorf("failed to update Azure credentials: %w", err)
 		}
 	}
 	if c.MaasPlugin != nil && c.MaasPlugin.Enabled {
-		if err := readMaasCredentials(c.MaasPlugin, tc, k8sClient); err != nil {
+		if err := readMaasCredentials(c.MaasPlugin, tc, kClient); err != nil {
 			return fmt.Errorf("failed to update MAAS credentials: %w", err)
 		}
 	}
@@ -501,7 +506,7 @@ func UpdateValidatorPluginCredentials(c *components.ValidatorConfig, tc *cfg.Tas
 		}
 	}
 	if c.VspherePlugin != nil && c.VspherePlugin.Enabled {
-		if err := readVsphereCredentials(c.VspherePlugin, tc, k8sClient); err != nil {
+		if err := readVsphereCredentials(c.VspherePlugin, tc, kClient); err != nil {
 			return fmt.Errorf("failed to update vSphere credentials: %w", err)
 		}
 	}
