@@ -198,14 +198,6 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var err error
 	var saveConfig bool
 
-	/*
-		if tc.CRDPath != "" && tc.Direct {
-			// add function for unmarshalling crds
-
-			// a call to execute plugins
-		}
-	*/
-
 	if !tc.Reconfigure {
 		// Silent Mode
 		vc, err = components.NewValidatorFromConfig(tc)

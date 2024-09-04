@@ -30,7 +30,6 @@ type Config struct {
 type TaskConfig struct {
 	CliVersion       string
 	ConfigFile       string
-	CRDPath          string
 	Apply            bool
 	CreateConfigOnly bool
 	DeleteCluster    bool
