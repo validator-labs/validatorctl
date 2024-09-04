@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.4](https://github.com/validator-labs/validatorctl/compare/v0.1.3...v0.1.4) (2024-09-04)
+
+
+### Bug Fixes
+
+* filter vCenter local file privileges properly, skip KUBECONFIG check when updating passwords in direct mode ([#207](https://github.com/validator-labs/validatorctl/issues/207)) ([29f1db4](https://github.com/validator-labs/validatorctl/commit/29f1db4bf95193b26db9702d7d5bab4e29ec30ae))
+
+
+### Dependency Updates
+
+* **deps:** update module github.com/validator-labs/validator-plugin-oci to v0.3.3 ([#209](https://github.com/validator-labs/validatorctl/issues/209)) ([e553967](https://github.com/validator-labs/validatorctl/commit/e553967bb15da786e3404085d7c4b1277282c058))
+
 ## [0.1.3](https://github.com/validator-labs/validatorctl/compare/v0.1.2...v0.1.3) (2024-09-03)
 
 
