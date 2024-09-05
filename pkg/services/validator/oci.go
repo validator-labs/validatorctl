@@ -266,8 +266,7 @@ func configureOciRegistryRules(c *components.OCIPluginConfig, ruleNames, authSec
 }
 
 func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule, idx int, ruleNames, authSecretNames, sigSecretNames *[]string, kClient kubernetes.Interface, direct bool) error {
-	err := initRule(r, "OCI", "", ruleNames)
-	if err != nil {
+	if err := initRule(r, "OCI", "", ruleNames); err != nil {
 		return err
 	}
 
@@ -318,13 +317,11 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 	if shouldConfigureSigVerification {
 		if direct {
-			err := configureSigVerification(r)
-			if err != nil {
+			if err := configureSigVerification(r); err != nil {
 				return err
 			}
 		} else {
-			err := configureSigVerificationSecrets(c, r, kClient, sigSecretNames)
-			if err != nil {
+			if err := configureSigVerificationSecrets(c, r, kClient, sigSecretNames); err != nil {
 				return err
 			}
 		}
