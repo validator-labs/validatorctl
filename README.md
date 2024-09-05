@@ -62,7 +62,7 @@ make build
 - Uninstall the validator and all plugins with the `validator uninstall` command.
 - Directly invoke validation rules with the `validator rules check` command.
 
-Refer to the [subcommands](./docs/subcommands.md) page to learn more about each command. You can also issue the `validator help` command to learn more about the available commands.
+Refer to [Command Reference](https://validator-labs.github.io/docs/validatorctl/commands) on the documentation site to learn more about each command. You can also issue the `validator help` command to learn more about the available commands.
 
 ```sh
 ❯ validator help
