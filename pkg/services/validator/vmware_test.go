@@ -35,7 +35,7 @@ var vSphereDummyConfig = &components.ValidatorConfig{
 
 var (
 	tui               prompts.TUI
-	vSphereDriverFunc func(account *vsphere.CloudAccount) (vsphere.Driver, error)
+	vSphereDriverFunc func(account vsphere.Account) (vsphere.Driver, error)
 )
 
 func setup(returnVals []string) {
@@ -43,7 +43,7 @@ func setup(returnVals []string) {
 	prompts.Tui = &tuimocks.MockTUI{Values: returnVals}
 
 	vSphereDriverFunc = clouds.GetVSphereDriver
-	clouds.GetVSphereDriver = func(account *vsphere.CloudAccount) (vsphere.Driver, error) {
+	clouds.GetVSphereDriver = func(account vsphere.Account) (vsphere.Driver, error) {
 		return vsphere.MockVsphereDriver{}, nil
 	}
 }

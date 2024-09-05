@@ -8,8 +8,8 @@ import (
 
 	"github.com/validator-labs/validatorctl/cmd"
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
-	validator "github.com/validator-labs/validatorctl/tests/integration/_validator"
 	"github.com/validator-labs/validatorctl/tests/integration/common"
+	"github.com/validator-labs/validatorctl/tests/integration/validatorctl"
 	"github.com/validator-labs/validatorctl/tests/utils/test"
 )
 
@@ -25,7 +25,7 @@ func runSuite(testCtx *test.TestContext, t *testing.T) {
 	fmt.Println("Validator CLI Integration Test Suite")
 
 	err := test.Flow(testCtx).
-		Test(common.NewSingleFuncTest("validator-test", validator.Execute)).
+		Test(common.NewSingleFuncTest("validator-test", validatorctl.Execute)).
 		Summarize().TearDown().Audit()
 
 	if err != nil {

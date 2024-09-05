@@ -575,15 +575,15 @@ func (c *VspherePluginConfig) encrypt() error {
 	if c.Validator == nil {
 		return nil
 	}
-	if c.Validator.Auth.CloudAccount == nil {
+	if c.Validator.Auth.Account == nil {
 		return nil
 	}
 
-	password, err := crypto.EncryptB64([]byte(c.Validator.Auth.CloudAccount.Password))
+	password, err := crypto.EncryptB64([]byte(c.Validator.Auth.Account.Password))
 	if err != nil {
 		return errors.Wrap(err, "failed to encrypt password")
 	}
-	c.Validator.Auth.CloudAccount.Password = password
+	c.Validator.Auth.Account.Password = password
 
 	return nil
 }
@@ -592,15 +592,15 @@ func (c *VspherePluginConfig) decrypt() error {
 	if c.Validator == nil {
 		return nil
 	}
-	if c.Validator.Auth.CloudAccount == nil {
+	if c.Validator.Auth.Account == nil {
 		return nil
 	}
 
-	bytes, err := crypto.DecryptB64(c.Validator.Auth.CloudAccount.Password)
+	bytes, err := crypto.DecryptB64(c.Validator.Auth.Account.Password)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt password")
 	}
-	c.Validator.Auth.CloudAccount.Password = string(*bytes)
+	c.Validator.Auth.Account.Password = string(*bytes)
 
 	return nil
 }

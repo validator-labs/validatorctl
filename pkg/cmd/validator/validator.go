@@ -50,7 +50,6 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/services/validator"
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 	"github.com/validator-labs/validatorctl/pkg/utils/exec"
-	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	"github.com/validator-labs/validatorctl/pkg/utils/kube"
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
@@ -420,7 +419,7 @@ func printValidationResults(validationResults []unstructured.Unstructured) error
 		if err != nil {
 			return err
 		}
-		log.InfoCLI(vrStr)
+		log.InfoCLI("%s", vrStr)
 	}
 	return nil
 }
@@ -636,7 +635,7 @@ func executePlugins(c *cfg.Config, vc *components.ValidatorConfig) error {
 			Spec: *vc.VspherePlugin.Validator,
 		}
 		vr := vres.Build(v)
-		vrr := vsphereval.Validate(context.Background(), *vc.VspherePlugin.Validator, vc.VspherePlugin.Validator.Auth.CloudAccount, l)
+		vrr := vsphereval.Validate(context.Background(), *vc.VspherePlugin.Validator, l)
 		if err := vres.Finalize(vr, vrr, l); err != nil {
 			return err
 		}
@@ -902,7 +901,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	values = append(values, pluginValues...)
 	finalValues := string(values)
 	log.Debug("applying validator helm chart with values:")
-	log.Debug(finalValues)
+	log.Debug("%s", finalValues)
 
 	// install validator helm chart
 
@@ -917,7 +916,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 				if !strings.HasSuffix(strings.TrimSpace(stderr), "already exists") {
 					return errors.Wrap(err, stderr)
 				}
-				log.Debug(stderr)
+				log.Debug("%s", stderr)
 			}
 		}
 	}
@@ -1052,7 +1051,7 @@ func getHelmClient(vc *components.ValidatorConfig) (helm.Client, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get API config from kubeconfig")
 	}
-	helm.CommandPath = exec_utils.Helm
+	helm.CommandPath = exec.Helm
 	helmClient := helm.NewHelmClient(apiCfg)
 	return helmClient, nil
 }

@@ -19,8 +19,8 @@ import (
 var GetVSphereDriver = getVSphereDriver
 
 // ReadVsphereAccountProps prompts the user to configure vSphere account properties
-func ReadVsphereAccountProps(account *vsphere.CloudAccount) error {
-	vcenterServer := account.VcenterServer
+func ReadVsphereAccountProps(account *vsphere.Account) error {
+	vcenterServer := account.Host
 	username := account.Username
 	password := account.Password
 
@@ -32,7 +32,7 @@ func ReadVsphereAccountProps(account *vsphere.CloudAccount) error {
 		return err
 	}
 	vcenterServer = string_utils.MultiTrim(vcenterServer, cfg.HTTPSchemes, []string{"/"})
-	account.VcenterServer = vcenterServer
+	account.Host = vcenterServer
 
 	// Username
 	username, err = prompts.ReadTextRegex(
@@ -58,7 +58,7 @@ func ReadVsphereAccountProps(account *vsphere.CloudAccount) error {
 	account.Insecure = insecure
 
 	// Validate
-	if err := ValidateCloudAccountVsphere(account); err != nil {
+	if err := ValidateCloudAccountVsphere(*account); err != nil {
 		val, err := handleCloudAccountError(err)
 		if err != nil {
 			return err
@@ -73,12 +73,12 @@ func ReadVsphereAccountProps(account *vsphere.CloudAccount) error {
 	return nil
 }
 
-func getVSphereDriver(account *vsphere.CloudAccount) (vsphere.Driver, error) {
-	return vsphere.NewVSphereDriver(account.VcenterServer, account.Username, account.Password, "", logr.Logger{})
+func getVSphereDriver(account vsphere.Account) (vsphere.Driver, error) {
+	return vsphere.NewVSphereDriver(account, "", logr.Logger{})
 }
 
 // ValidateCloudAccountVsphere validates that the provided vSphere cloud account is valid
-func ValidateCloudAccountVsphere(account *vsphere.CloudAccount) error {
+func ValidateCloudAccountVsphere(account vsphere.Account) error {
 	driver, err := GetVSphereDriver(account)
 	if err != nil {
 		return err

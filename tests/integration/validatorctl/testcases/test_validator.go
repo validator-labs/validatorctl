@@ -1,4 +1,4 @@
-package validator
+package validatorctl
 
 import (
 	"bytes"
@@ -98,7 +98,7 @@ func (t *ValidatorTest) initVsphereDriver(ctx *test.TestContext) {
 	}
 	vsphereDriverFunc := clouds.GetVSphereDriver
 	ctx.Put("vsphereDriverFunc", vsphereDriverFunc)
-	clouds.GetVSphereDriver = func(account *vsphere.CloudAccount) (vsphere.Driver, error) {
+	clouds.GetVSphereDriver = func(account vsphere.Account) (vsphere.Driver, error) {
 		return vsphereDriverMock, nil
 	}
 }
@@ -148,12 +148,12 @@ func (t *ValidatorTest) testInstallInteractiveApply(ctx *test.TestContext) (tr *
 
 	// Plugin values
 	tuiSliceVals := make([][]string, 0)
-	tuiVals, tuiSliceVals = t.awsPluginValues(ctx, tuiVals, tuiSliceVals)
-	tuiVals, tuiSliceVals = t.azurePluginValues(ctx, tuiVals, tuiSliceVals)
-	tuiVals, tuiSliceVals = t.maasPluginValues(ctx, tuiVals, tuiSliceVals)
-	tuiVals, tuiSliceVals = t.networkPluginValues(ctx, tuiVals, tuiSliceVals)
-	tuiVals, tuiSliceVals = t.ociPluginValues(ctx, tuiVals, tuiSliceVals)
-	tuiVals = t.vspherePluginValues(ctx, tuiVals)
+	tuiVals, tuiSliceVals = t.awsPluginValues(tuiVals, tuiSliceVals)
+	tuiVals, tuiSliceVals = t.azurePluginValues(tuiVals, tuiSliceVals)
+	tuiVals, tuiSliceVals = t.maasPluginValues(tuiVals, tuiSliceVals)
+	tuiVals, tuiSliceVals = t.networkPluginValues(tuiVals, tuiSliceVals)
+	tuiVals, tuiSliceVals = t.ociPluginValues(tuiVals, tuiSliceVals)
+	tuiVals = t.vspherePluginValues(tuiVals)
 	tuiVals = t.finalizationValues(tuiVals)
 
 	prompts.Tui = &tuimocks.MockTUI{
@@ -231,7 +231,7 @@ func (t *ValidatorTest) awsPluginInstallValues(ctx *test.TestContext, vals []str
 	return vals
 }
 
-func (t *ValidatorTest) awsPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+func (t *ValidatorTest) awsPluginValues(vals []string, sliceVals [][]string) ([]string, [][]string) {
 	awsVals := []any{
 		"us-west-2",                     // default region
 		"y",                             // enable IAM role validation
@@ -307,7 +307,7 @@ func (t *ValidatorTest) azurePluginInstallValues(ctx *test.TestContext, vals []s
 	return vals
 }
 
-func (t *ValidatorTest) azurePluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+func (t *ValidatorTest) azurePluginValues(vals []string, sliceVals [][]string) ([]string, [][]string) {
 	azureVals := []any{
 		"y",                                    // enable RBAC validation
 		"rule-1",                               // rule name
@@ -341,7 +341,7 @@ func (t *ValidatorTest) networkPluginInstallValues(ctx *test.TestContext, vals [
 	return vals
 }
 
-func (t *ValidatorTest) networkPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+func (t *ValidatorTest) networkPluginValues(vals []string, sliceVals [][]string) ([]string, [][]string) {
 	networkVals := []any{
 		"y",                              // enable DNS validation
 		"resolve foo",                    // DNS rule name
@@ -398,7 +398,7 @@ func (t *ValidatorTest) ociPluginInstallValues(ctx *test.TestContext, vals []str
 	return vals
 }
 
-func (t *ValidatorTest) ociPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+func (t *ValidatorTest) ociPluginValues(vals []string, sliceVals [][]string) ([]string, [][]string) {
 	ociVals := []any{
 		"private quay registry",               // OCI rule name
 		"quay.io",                             // registry host
@@ -438,7 +438,7 @@ func (t *ValidatorTest) vspherePluginInstallValues(ctx *test.TestContext, vals [
 	return vals
 }
 
-func (t *ValidatorTest) vspherePluginValues(ctx *test.TestContext, vals []string) []string {
+func (t *ValidatorTest) vspherePluginValues(vals []string) []string {
 	vsphereVals := []string{
 		"DC0",                               // datacenter
 		"y",                                 // Enable NTP check
@@ -516,7 +516,7 @@ func (t *ValidatorTest) maasPluginInstallValues(ctx *test.TestContext, vals []st
 
 }
 
-func (t *ValidatorTest) maasPluginValues(ctx *test.TestContext, vals []string, sliceVals [][]string) ([]string, [][]string) {
+func (t *ValidatorTest) maasPluginValues(vals []string, sliceVals [][]string) ([]string, [][]string) {
 	maasVals := []any{
 		"y",                 // Enable Resource Availibility validation
 		"res-rule-1",        // Rule name
@@ -639,7 +639,7 @@ func (t *ValidatorTest) testInstallUpdatePasswords() (tr *test.TestResult) {
 		"install", "-f", t.filePath(cfg.ValidatorConfigFile), "-p",
 	})
 
-	clouds.GetVSphereDriver = func(account *vsphere.CloudAccount) (vsphere.Driver, error) {
+	clouds.GetVSphereDriver = func(account vsphere.Account) (vsphere.Driver, error) {
 		return vsphere.MockVsphereDriver{}, nil
 	}
 
@@ -718,7 +718,7 @@ func (t *ValidatorTest) TearDown(ctx *test.TestContext) {
 
 	// restore clouds.GetVSphereDriver
 	vsphereDriverFunc := ctx.Get("vsphereDriverFunc")
-	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account *vsphere.CloudAccount) (vsphere.Driver, error))
+	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account vsphere.Account) (vsphere.Driver, error))
 
 	// restore clouds.GetMaasClient
 	maasClientFunc := ctx.Get("maasClientFunc")
