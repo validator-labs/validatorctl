@@ -39,7 +39,7 @@ func KubectlCommand(params []string, kConfig string) (out, stderr string, err er
 		log.InfoCLI("\n==== Kubectl Command ==== Create Secret")
 	} else {
 		log.InfoCLI("\n==== Kubectl Command ====")
-		log.InfoCLI(cmd.String())
+		log.InfoCLI("%s", cmd.String())
 	}
 
 	out, stderr, err = exec_utils.Execute(true, cmd)

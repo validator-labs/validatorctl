@@ -451,7 +451,7 @@ func printValidationResults(validationResults []unstructured.Unstructured) error
 		if err != nil {
 			return err
 		}
-		log.InfoCLI(vrStr)
+		log.InfoCLI("%s", vrStr)
 	}
 	return nil
 }
@@ -947,7 +947,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 	values = append(values, pluginValues...)
 	finalValues := string(values)
 	log.Debug("applying validator helm chart with values:")
-	log.Debug(finalValues)
+	log.Debug("%s", finalValues)
 
 	// install validator helm chart
 
@@ -962,7 +962,7 @@ func applyValidator(c *cfg.Config, vc *components.ValidatorConfig) error {
 				if !strings.HasSuffix(strings.TrimSpace(stderr), "already exists") {
 					return errors.Wrap(err, stderr)
 				}
-				log.Debug(stderr)
+				log.Debug("%s", stderr)
 			}
 		}
 	}
