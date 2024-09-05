@@ -5,7 +5,7 @@ helmRelease:
   chart:
     name: validator
     repository: validator
-    version: v0.1.9
+    version: v0.1.10
   values: ""
 helmReleaseSecret:
   name: validator-helm-release-validator
@@ -173,7 +173,7 @@ networkPlugin:
     chart:
       name: validator-plugin-network
       repository: validator-plugin-network
-      version: v0.0.26
+      version: v0.1.0
     values: ""
   validator:
     dnsRules:
