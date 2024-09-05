@@ -34,9 +34,9 @@ import (
 	maasconst "github.com/validator-labs/validator-plugin-maas/pkg/constants"
 	maasval "github.com/validator-labs/validator-plugin-maas/pkg/validate"
 
-	//netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
-	//netconst "github.com/validator-labs/validator-plugin-network/pkg/constants"
-	//netval "github.com/validator-labs/validator-plugin-network/pkg/validate"
+	netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
+	netconst "github.com/validator-labs/validator-plugin-network/pkg/constants"
+	netval "github.com/validator-labs/validator-plugin-network/pkg/validate"
 	ociapi "github.com/validator-labs/validator-plugin-oci/api/v1alpha1"
 	ociauth "github.com/validator-labs/validator-plugin-oci/pkg/auth"
 	ociconst "github.com/validator-labs/validator-plugin-oci/pkg/constants"
@@ -621,32 +621,30 @@ func executePlugins(c *cfg.Config, pluginSpecs []plugins.PluginSpec, sc *compone
 			}
 			results = append(results, vr)
 
-			/*
-				case netconst.PluginCode:
-					s := ps.(*netapi.NetworkValidatorSpec)
+		case netconst.PluginCode:
+			s := ps.(*netapi.NetworkValidatorSpec)
 
-					v := &netapi.NetworkValidator{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "network-validator",
-							Namespace: "N/A",
-						},
-						Spec: *s,
-					}
-					vr := vres.Build(v)
-					vrr := netval.Validate(*s,
-						s.CACerts.RawCerts(),
-						vc.NetworkPlugin.HTTPFileAuthBytes(), // TODO: https://github.com/validator-labs/validator-plugin-network/issues/263
-						l,
-					)
-					if err := vres.Finalize(vr, vrr, l); err != nil {
-						return err
-					}
-					if vrOk := validationResponseOk(s.ResultCount(), vrr, l); !vrOk {
-						ok = false
-					}
-					results = append(results, vr)
+			v := &netapi.NetworkValidator{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "network-validator",
+					Namespace: "N/A",
+				},
+				Spec: *s,
+			}
+			vr := vres.Build(v)
+			vrr := netval.Validate(*s,
+				s.CACerts.RawCerts(),
+				s.HTTPFileAuthBytesDirect(),
+				l,
+			)
+			if err := vres.Finalize(vr, vrr, l); err != nil {
+				return err
+			}
+			if vrOk := validationResponseOk(s.ResultCount(), vrr, l); !vrOk {
+				ok = false
+			}
+			results = append(results, vr)
 
-			*/
 		case ociconst.PluginCode:
 			s := ps.(*ociapi.OciValidatorSpec)
 
@@ -690,7 +688,6 @@ func executePlugins(c *cfg.Config, pluginSpecs []plugins.PluginSpec, sc *compone
 				ok = false
 			}
 			results = append(results, vr)
-
 		}
 	}
 

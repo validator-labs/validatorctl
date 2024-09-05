@@ -17,11 +17,11 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.2
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.1.9
+	github.com/validator-labs/validator v0.1.10
 	github.com/validator-labs/validator-plugin-aws v0.1.7
 	github.com/validator-labs/validator-plugin-azure v0.0.20
 	github.com/validator-labs/validator-plugin-maas v0.0.12
-	github.com/validator-labs/validator-plugin-network v0.0.26
+	github.com/validator-labs/validator-plugin-network v0.1.0
 	github.com/validator-labs/validator-plugin-oci v0.3.3
 	github.com/validator-labs/validator-plugin-vsphere v0.0.34
 	github.com/vmware/govmomi v0.42.0

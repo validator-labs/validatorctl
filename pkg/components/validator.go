@@ -443,22 +443,6 @@ func (c *NetworkPluginConfig) AddDummyHTTPFileAuth() {
 	c.HTTPFileAuths = append(c.HTTPFileAuths, []string{"", ""})
 }
 
-// HTTPFileAuthBytes converts a slice of basic authentication details from
-// a [][]string to a [][][]byte. The former is required for YAML marshalling,
-// encryption, and decryption, while the latter is required by the plugin's
-// Validate method.
-// TODO: refactor Network plugin to use [][]string.
-func (c *NetworkPluginConfig) HTTPFileAuthBytes() [][][]byte {
-	auths := make([][][]byte, len(c.HTTPFileAuths))
-	for i, auth := range c.HTTPFileAuths {
-		auths[i] = [][]byte{
-			[]byte(auth[0]),
-			[]byte(auth[1]),
-		}
-	}
-	return auths
-}
-
 func (c *NetworkPluginConfig) encrypt() error {
 	if c.HTTPFileAuths == nil {
 		return nil
