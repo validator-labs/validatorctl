@@ -209,11 +209,16 @@ For more information about validator, see: https://github.com/validator-labs/val
 
 	flags := cmd.Flags()
 	flags.StringVarP(&tc.ConfigFile, "config-file", "f", "", "Validator configuration file.")
+	flags.StringVar(&tc.CRPath, "cr", "", "Path to a file or directory containing validator custom resource yaml documents.")
 	flags.BoolVarP(&tc.CreateConfigOnly, "config-only", "o", false, "Update configuration file only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&tc.UpdatePasswords, "update-passwords", "p", false, "Update passwords only. Do not proceed with checks. Default: false.")
 	flags.BoolVarP(&tc.Reconfigure, "reconfigure", "r", false, "Re-configure plugin rules prior to running checks. Default: false.")
 
 	cmd.MarkFlagsMutuallyExclusive("update-passwords", "reconfigure")
+	cmd.MarkFlagsMutuallyExclusive("config-file", "cr")
+	cmd.MarkFlagsMutuallyExclusive("config-only", "cr")
+	cmd.MarkFlagsMutuallyExclusive("update-passwords", "cr")
+	cmd.MarkFlagsMutuallyExclusive("reconfigure", "cr")
 
 	return cmd
 }

@@ -198,6 +198,20 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var err error
 	var saveConfig bool
 
+	if tc.CRPath != "" && tc.Direct {
+		pluginSpecs, err := readPluginSpecs(tc.CRPath)
+		if err != nil {
+			return err
+		}
+
+		if len(pluginSpecs) == 0 {
+			log.InfoCLI("No plugin rule CRs found in %s", tc.CRPath)
+			return nil
+		}
+
+		return executePlugins(c, pluginSpecs, nil)
+	}
+
 	if !tc.Reconfigure {
 		// Silent Mode
 		vc, err = components.NewValidatorFromConfig(tc)
@@ -249,7 +263,7 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	}
 
 	if tc.Direct {
-		return executePlugins(c, pluginSpecs(vc), vc.SinkConfig)
+		return executePlugins(c, toPluginSpecs(vc), vc.SinkConfig)
 	}
 
 	// upgrade the validator helm release so that plugin rule secrets
@@ -268,7 +282,17 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	return nil
 }
 
-func pluginSpecs(vc *components.ValidatorConfig) []plugins.PluginSpec {
+func readPluginSpecs(path string) ([]plugins.PluginSpec, error) {
+	log.InfoCLI("Reading plugin specs from %s", path)
+
+	// TODO:
+	// get a list of files to check. if its a directory the list is all the files in the dir, if its a file the list is the single file
+	// read all files in this list and return all the plugin specs in each of the files
+	// return the list of plugin specs
+	return []plugins.PluginSpec{}, nil
+}
+
+func toPluginSpecs(vc *components.ValidatorConfig) []plugins.PluginSpec {
 	pluginSpecs := make([]plugins.PluginSpec, 0)
 	if vc.AWSPlugin != nil && vc.AWSPlugin.Enabled {
 		pluginSpecs = append(pluginSpecs, vc.AWSPlugin.Validator)
