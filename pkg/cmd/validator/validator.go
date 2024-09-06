@@ -59,6 +59,7 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 	"github.com/validator-labs/validatorctl/pkg/utils/exec"
 	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
+	file_utils "github.com/validator-labs/validatorctl/pkg/utils/file"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	"github.com/validator-labs/validatorctl/pkg/utils/kube"
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
@@ -283,13 +284,38 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 }
 
 func readPluginSpecs(path string) ([]plugins.PluginSpec, error) {
-	log.InfoCLI("Reading plugin specs from %s", path)
+	fi, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
 
-	// TODO:
-	// get a list of files to check. if its a directory the list is all the files in the dir, if its a file the list is the single file
-	// read all files in this list and return all the plugin specs in each of the files
-	// return the list of plugin specs
-	return []plugins.PluginSpec{}, nil
+	files := make([]string, 0)
+	if !fi.IsDir() {
+		files = append(files, path)
+	} else {
+		files, err = file_utils.GetFilesInDir(path)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no files found in %s", path)
+	}
+
+	ps := make([]plugins.PluginSpec, 0)
+	for _, f := range files {
+		pSpecs := readPluginSpecsFromFile(f)
+		ps = append(ps, pSpecs...)
+	}
+
+	return ps, nil
+}
+
+func readPluginSpecsFromFile(path string) []plugins.PluginSpec {
+	// read the file and return the plugin specs
+	log.InfoCLI("Reading plugin specs from %s", path)
+	return []plugins.PluginSpec{}
 }
 
 func toPluginSpecs(vc *components.ValidatorConfig) []plugins.PluginSpec {
