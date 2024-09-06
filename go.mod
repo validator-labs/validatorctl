@@ -17,6 +17,7 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.2
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
+	github.com/stretchr/testify v1.9.0
 	github.com/validator-labs/validator v0.1.10
 	github.com/validator-labs/validator-plugin-aws v0.1.7
 	github.com/validator-labs/validator-plugin-azure v0.0.20
@@ -201,6 +202,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect

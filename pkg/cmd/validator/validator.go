@@ -33,7 +33,6 @@ import (
 	maasapi "github.com/validator-labs/validator-plugin-maas/api/v1alpha1"
 	maasconst "github.com/validator-labs/validator-plugin-maas/pkg/constants"
 	maasval "github.com/validator-labs/validator-plugin-maas/pkg/validate"
-
 	netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	netconst "github.com/validator-labs/validator-plugin-network/pkg/constants"
 	netval "github.com/validator-labs/validator-plugin-network/pkg/validate"
@@ -71,6 +70,11 @@ type ErrValidationFailed struct{}
 // Error returns the error message for ErrValidationFailed
 func (e ErrValidationFailed) Error() string {
 	return "one or more validation checks failed"
+}
+
+type basePluginSpec struct {
+	Kind string                 `yaml:"kind"`
+	Spec map[string]interface{} `yaml:"spec"`
 }
 
 // InitWorkspace initializes a workspace directory with subdirectories
@@ -305,17 +309,78 @@ func readPluginSpecs(path string) ([]plugins.PluginSpec, error) {
 
 	ps := make([]plugins.PluginSpec, 0)
 	for _, f := range files {
-		pSpecs := readPluginSpecsFromFile(f)
+		pSpecs, err := readPluginSpecsInFile(f)
+		if err != nil {
+			return nil, err
+		}
 		ps = append(ps, pSpecs...)
 	}
 
 	return ps, nil
 }
 
-func readPluginSpecsFromFile(path string) []plugins.PluginSpec {
-	// read the file and return the plugin specs
-	log.InfoCLI("Reading plugin specs from %s", path)
-	return []plugins.PluginSpec{}
+func readPluginSpecsInFile(file string) ([]plugins.PluginSpec, error) {
+	log.InfoCLI("Reading plugin specs from file: %s", file)
+
+	data, err := os.ReadFile(file) // #nosec
+	if err != nil {
+		return nil, err
+	}
+
+	ps := make([]plugins.PluginSpec, 0)
+	parts := bytes.Split(data, []byte("---"))
+	for _, p := range parts {
+		if len(p) == 0 {
+			continue
+		}
+
+		spec, err := unmarshalPluginSpec(p)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to unmarshal plugin spec")
+		}
+		ps = append(ps, spec)
+	}
+
+	return ps, nil
+}
+
+func unmarshalPluginSpec(data []byte) (plugins.PluginSpec, error) {
+	var bps basePluginSpec
+	if err := yaml.Unmarshal(data, &bps); err != nil {
+		return nil, err
+	}
+
+	specBytes, err := yaml.Marshal(bps.Spec)
+	if err != nil {
+		return nil, err
+	}
+
+	var spec plugins.PluginSpec
+	switch bps.Kind {
+	case cfg.ValidatorPluginAwsKind:
+		spec = &awsapi.AwsValidatorSpec{}
+	case cfg.ValidatorPluginAzureKind:
+		spec = &azureapi.AzureValidatorSpec{}
+	case cfg.ValidatorPluginMaasKind:
+		spec = &maasapi.MaasValidatorSpec{}
+	case cfg.ValidatorPluginNetworkKind:
+		spec = &netapi.NetworkValidatorSpec{}
+	case cfg.ValidatorPluginOciKind:
+		spec = &ociapi.OciValidatorSpec{}
+	case cfg.ValidatorPluginVsphereKind:
+		spec = &vsphereapi.VsphereValidatorSpec{}
+	default:
+		if bps.Kind == "" {
+			return nil, errors.New("plugin kind is not set")
+		}
+		return nil, fmt.Errorf("unknown plugin kind: %s", bps.Kind)
+	}
+
+	if err := yaml.Unmarshal(specBytes, spec); err != nil {
+		return nil, err
+	}
+
+	return spec, nil
 }
 
 func toPluginSpecs(vc *components.ValidatorConfig) []plugins.PluginSpec {
