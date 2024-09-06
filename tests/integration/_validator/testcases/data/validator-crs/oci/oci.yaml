@@ -1,0 +1,11 @@
+apiVersion: validation.spectrocloud.labs/v1alpha1
+kind: OciValidator
+metadata:
+  name: oci-validator-oci-rules
+spec:
+  ociRegistryRules:
+    - name: "public oci registry with default latest tag"
+      host: "registry.hub.docker.com"
+      validationType: "fast"
+      artifacts:
+        - ref: "ahmadibraspectrocloud/kubebuilder-cron"
