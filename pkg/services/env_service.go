@@ -258,7 +258,7 @@ func ensureDockerCACertDir(path string) error {
 		cmd := exec.Command("sudo", "rm", "-f", path) //#nosec G204
 		_, stderr, err := exec_utils.Execute(true, cmd)
 		if err != nil {
-			return errors.Wrapf(err, stderr)
+			return errors.Wrap(err, stderr)
 		}
 		return createDockerCACertDir(path)
 	}
@@ -269,7 +269,7 @@ func createDockerCACertDir(path string) error {
 	cmd := exec.Command("sudo", "mkdir", "-p", path) //#nosec G204
 	_, stderr, err := exec_utils.Execute(true, cmd)
 	if err != nil {
-		return errors.Wrapf(err, stderr)
+		return errors.Wrap(err, stderr)
 	}
 	log.InfoCLI("Created Docker OCI CA certificate directory: %s", path)
 	return nil

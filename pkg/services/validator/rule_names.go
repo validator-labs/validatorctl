@@ -15,7 +15,7 @@ func initRule(rule validationrule.Interface, ruleType, message string, ruleNames
 	if name != "" {
 		log.InfoCLI("\nReconfiguring %s rule: %s", ruleType, name)
 		if message != "" {
-			log.InfoCLI(message)
+			log.InfoCLI("%s", message)
 		}
 		*ruleNames = append(*ruleNames, name)
 

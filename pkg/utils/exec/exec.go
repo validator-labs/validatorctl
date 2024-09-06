@@ -84,7 +84,7 @@ type logWriter struct {
 }
 
 func (l *logWriter) Write(p []byte) (n int, err error) {
-	log.InfoCLI(string(p))
+	log.InfoCLI("%s", string(p))
 	return l.buffer.Write(p)
 }
 
