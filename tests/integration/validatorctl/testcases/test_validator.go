@@ -214,7 +214,7 @@ func (t *ValidatorTest) awsPluginInstallValues(ctx *test.TestContext, vals []str
 		"y",               // enable AWS plugin
 		"n",               // use implicit auth
 		"aws-creds",       // AWS secret name
-		"secretkey",       // AWS Secret Key ID
+		"accesskey",       // AWS Access Key ID
 		"secretaccesskey", // AWS Secret Access Key
 		"",                // AWS Session Token
 		"y",               // Configure STS

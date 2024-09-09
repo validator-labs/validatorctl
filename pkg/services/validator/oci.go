@@ -52,8 +52,8 @@ func readOciPluginRules(vc *components.ValidatorConfig, tc *cfg.TaskConfig, kCli
 	return nil
 }
 
-// configureAuth prompts the user to configure their OCI registry authentication details.
-func configureAuth(r *plug.OciRegistryRule) error {
+// configureAuthInline prompts the user to configure their OCI registry authentication details.
+func configureAuthInline(r *plug.OciRegistryRule) error {
 	r.Auth.SecretName = nil
 
 	authType, err := prompts.Select("Authentication type", []string{basicAuth, ecrAuth})
@@ -124,6 +124,19 @@ func configureAuthSecrets(c *components.OCIPluginConfig, r *plug.OciRegistryRule
 	return nil
 }
 
+// configureSigVerification prompts the user to configure their public keys for signature verification.
+func configureSigVerification(r *plug.OciRegistryRule) error {
+	r.SignatureVerification.SecretName = ""
+
+	pubKeys, err := configurePublicKeys()
+	if err != nil {
+		return err
+	}
+
+	r.SignatureVerification.PublicKeys = pubKeys
+	return nil
+}
+
 // configureSigVerificationSecrets prompts the user to configure secrets containing public keys for use in signature verification.
 func configureSigVerificationSecrets(c *components.OCIPluginConfig, r *plug.OciRegistryRule, kClient kubernetes.Interface, sigSecretNames *[]string) error {
 	allSecretNames := []string{cfg.OciCreateNewSigSecPrompt} // provide the option to create a new secret
@@ -175,28 +188,38 @@ func readPublicKeySecret(secret *components.PublicKeySecret) error {
 		log.InfoCLI("Reconfiguring secret: %s", secret.Name)
 	}
 
+	pubKeys, err := configurePublicKeys()
+	if err != nil {
+		return err
+	}
+
+	secret.Keys = pubKeys
+	return nil
+}
+
+// configurePublicKeys prompts the user to configure a list of public keys.
+func configurePublicKeys() ([]string, error) {
 	pubKeys := make([]string, 0)
 	for {
 		pubKeyPath, err := prompts.ReadFilePath("Public Key file", "", "Invalid public key path", false)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		pubKeyBytes, err := os.ReadFile(pubKeyPath) //#nosec
 		if err != nil {
-			return err
+			return nil, err
 		}
 		pubKeys = append(pubKeys, string(pubKeyBytes))
 
-		add, err := prompts.ReadBool("Add another public key to this secret", false)
+		add, err := prompts.ReadBool("Add another public key", false)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !add {
 			break
 		}
 	}
-	secret.Keys = pubKeys
-	return nil
+	return pubKeys, nil
 }
 
 func configureOciRegistryRules(c *components.OCIPluginConfig, ruleNames, authSecretNames, sigSecretNames *[]string, kClient kubernetes.Interface, direct bool) error {
@@ -243,8 +266,7 @@ func configureOciRegistryRules(c *components.OCIPluginConfig, ruleNames, authSec
 }
 
 func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule, idx int, ruleNames, authSecretNames, sigSecretNames *[]string, kClient kubernetes.Interface, direct bool) error {
-	err := initRule(r, "OCI", "", ruleNames)
-	if err != nil {
+	if err := initRule(r, "OCI", "", ruleNames); err != nil {
 		return err
 	}
 
@@ -261,13 +283,11 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 	if shouldConfigureAuth {
 		if direct {
-			err := configureAuth(r)
-			if err != nil {
+			if err := configureAuthInline(r); err != nil {
 				return err
 			}
 		} else {
-			err := configureAuthSecrets(c, r, kClient, authSecretNames)
-			if err != nil {
+			if err := configureAuthSecrets(c, r, kClient, authSecretNames); err != nil {
 				return err
 			}
 		}
@@ -291,20 +311,22 @@ func readOciRegistryRule(c *components.OCIPluginConfig, r *plug.OciRegistryRule,
 	}
 	r.ValidationType = plug.ValidationType(vType)
 
-	// TODO: Add support for signature verification without a secret for use in direct mode
-	if !direct {
-		shouldConfigureSigVerification, err := prompts.ReadBool("Configure signature verification", r.SignatureVerification.SecretName != "")
-		if err != nil {
-			return err
-		}
-		if shouldConfigureSigVerification {
-			err := configureSigVerificationSecrets(c, r, kClient, sigSecretNames)
-			if err != nil {
+	shouldConfigureSigVerification, err := prompts.ReadBool("Configure signature verification", r.SignatureVerification.SecretName != "")
+	if err != nil {
+		return err
+	}
+	if shouldConfigureSigVerification {
+		if direct {
+			if err := configureSigVerification(r); err != nil {
 				return err
 			}
 		} else {
-			r.SignatureVerification = plug.SignatureVerification{}
+			if err := configureSigVerificationSecrets(c, r, kClient, sigSecretNames); err != nil {
+				return err
+			}
 		}
+	} else {
+		r.SignatureVerification = plug.SignatureVerification{}
 	}
 
 	if c.CaCertPaths == nil {

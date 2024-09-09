@@ -550,8 +550,14 @@ func readHTTPFileRule(c *components.NetworkPluginConfig, tc *cfg.TaskConfig, r *
 		return err
 	}
 	if configureAuth {
-		if err := readHTTPFileRuleCredentials(c, tc, r, idx, kClient); err != nil {
-			return err
+		if tc.Direct {
+			if err := readHTTPFileRuleCredentialsInline(r); err != nil {
+				return err
+			}
+		} else {
+			if err := readHTTPFileRuleCredentialsSecret(c, r, idx, kClient); err != nil {
+				return err
+			}
 		}
 	} else {
 		c.AddDummyHTTPFileAuth()
@@ -568,13 +574,15 @@ func readHTTPFileRule(c *components.NetworkPluginConfig, tc *cfg.TaskConfig, r *
 	return nil
 }
 
-func readHTTPFileRuleCredentials(c *components.NetworkPluginConfig, tc *cfg.TaskConfig, r *network.HTTPFileRule, idx int, kClient kubernetes.Interface) error {
+// readHTTPFileRuleCredentialsSecret prompts the user to configure secrets containing their authentication details.
+func readHTTPFileRuleCredentialsSecret(c *components.NetworkPluginConfig, r *network.HTTPFileRule, idx int, kClient kubernetes.Interface) error {
 	var err error
 	var username, password string
 	createSecret := true
 
-	if r.AuthSecretRef == nil {
-		r.AuthSecretRef = &network.BasicAuthSecretReference{}
+	r.Auth.Basic = nil
+	if r.Auth.SecretRef == nil {
+		r.Auth.SecretRef = &network.BasicAuthSecretReference{}
 	}
 	if idx == -1 {
 		// preallocate space if appending a new rule
@@ -600,14 +608,12 @@ func readHTTPFileRuleCredentials(c *components.NetworkPluginConfig, tc *cfg.Task
 	}
 
 	if createSecret {
-		if !tc.Direct {
-			r.AuthSecretRef.Name, err = prompts.ReadK8sName("Secret name for basic authentication", r.AuthSecretRef.Name, false)
-			if err != nil {
-				return err
-			}
+		r.Auth.SecretRef.Name, err = prompts.ReadK8sName("Secret name for basic authentication", r.Auth.SecretRef.Name, false)
+		if err != nil {
+			return err
 		}
-		r.AuthSecretRef.UsernameKey = "username"
-		r.AuthSecretRef.PasswordKey = "password"
+		r.Auth.SecretRef.UsernameKey = "username"
+		r.Auth.SecretRef.PasswordKey = "password"
 
 		username, password, err = prompts.ReadBasicCreds("Username", "Password", username, password, false, false)
 		if err != nil {
@@ -615,11 +621,11 @@ func readHTTPFileRuleCredentials(c *components.NetworkPluginConfig, tc *cfg.Task
 		}
 		c.HTTPFileAuths[idx] = []string{username, password}
 	} else {
-		usernameKey, err := prompts.ReadText("Key for username in secret", r.AuthSecretRef.UsernameKey, false, -1)
+		usernameKey, err := prompts.ReadText("Key for username in secret", r.Auth.SecretRef.UsernameKey, false, -1)
 		if err != nil {
 			return err
 		}
-		passwordKey, err := prompts.ReadText("Key for password in secret", r.AuthSecretRef.PasswordKey, false, -1)
+		passwordKey, err := prompts.ReadText("Key for password in secret", r.Auth.SecretRef.PasswordKey, false, -1)
 		if err != nil {
 			return err
 		}
@@ -627,9 +633,25 @@ func readHTTPFileRuleCredentials(c *components.NetworkPluginConfig, tc *cfg.Task
 		if err != nil {
 			return err
 		}
-		r.AuthSecretRef.Name = secret.Name
-		r.AuthSecretRef.UsernameKey = usernameKey
-		r.AuthSecretRef.PasswordKey = passwordKey
+		r.Auth.SecretRef.Name = secret.Name
+		r.Auth.SecretRef.UsernameKey = usernameKey
+		r.Auth.SecretRef.PasswordKey = passwordKey
+	}
+
+	return nil
+}
+
+// readHTTPFileRuleCredentialsInline prompts the user to configure their authentication details.
+func readHTTPFileRuleCredentialsInline(r *network.HTTPFileRule) error {
+	r.Auth.SecretRef = nil
+	if r.Auth.Basic == nil {
+		r.Auth.Basic = &network.BasicAuth{}
+	}
+
+	var err error
+	r.Auth.Basic.Username, r.Auth.Basic.Password, err = prompts.ReadBasicCreds("Username", "Password", r.Auth.Basic.Username, r.Auth.Basic.Password, false, false)
+	if err != nil {
+		return err
 	}
 
 	return nil
