@@ -18,7 +18,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
-	github.com/validator-labs/validator v0.1.10
+	github.com/validator-labs/validator v0.1.11
 	github.com/validator-labs/validator-plugin-aws v0.1.7
 	github.com/validator-labs/validator-plugin-azure v0.0.20
 	github.com/validator-labs/validator-plugin-maas v0.0.12
@@ -26,7 +26,7 @@ require (
 	github.com/validator-labs/validator-plugin-oci v0.3.3
 	github.com/validator-labs/validator-plugin-vsphere v0.0.34
 	github.com/vmware/govmomi v0.42.0
-	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
+	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.31.0
@@ -262,7 +262,7 @@ require (
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240521193020-835d969ad83a // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
-	sigs.k8s.io/cluster-api v1.8.1 // indirect
+	sigs.k8s.io/cluster-api v1.8.2 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/release-utils v0.8.4 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
