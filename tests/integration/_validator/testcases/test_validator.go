@@ -621,7 +621,7 @@ func (t *ValidatorTest) testRulesCheckCustomResource() (tr *test.TestResult) {
 	t.log.Printf("Executing testRulesCheckCustomResource")
 
 	checkCmd, buffer := common.InitCmd([]string{
-		"rules", "check", "-l", "debug", "--cr", t.filePath("validator-crs"),
+		"rules", "check", "-l", "debug", "--custom-resources", t.filePath("validator-crs"),
 	})
 	return common.ExecCLI(checkCmd, buffer, t.log, true)
 }

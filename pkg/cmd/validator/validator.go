@@ -203,14 +203,14 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	var err error
 	var saveConfig bool
 
-	if tc.CRPath != "" && tc.Direct {
-		pluginSpecs, err := readPluginSpecs(tc.CRPath)
+	if tc.CustomResources != "" && tc.Direct {
+		pluginSpecs, err := readPluginSpecs(tc.CustomResources)
 		if err != nil {
 			return err
 		}
 
 		if len(pluginSpecs) == 0 {
-			log.InfoCLI("No plugin rule CRs found in %s", tc.CRPath)
+			log.InfoCLI("No plugin rule custom resources found in %s", tc.CustomResources)
 			return nil
 		}
 
