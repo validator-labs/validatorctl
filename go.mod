@@ -23,7 +23,7 @@ require (
 	github.com/validator-labs/validator-plugin-maas v0.0.12
 	github.com/validator-labs/validator-plugin-network v0.1.0
 	github.com/validator-labs/validator-plugin-oci v0.3.3
-	github.com/validator-labs/validator-plugin-vsphere v0.0.35-0.20240905211904-f9b63d85c047
+	github.com/validator-labs/validator-plugin-vsphere v0.0.35-0.20240905200537-de40ad51be12
 	github.com/vmware/govmomi v0.42.0
 	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e
 	gopkg.in/ini.v1 v1.67.0
