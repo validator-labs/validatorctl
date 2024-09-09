@@ -62,6 +62,9 @@ func (t *ValidatorTest) Execute(ctx *test.TestContext) (tr *test.TestResult) {
 	if result := t.testRulesCheck(); result.IsFailed() {
 		return result
 	}
+	if result := t.testRulesCheckCustomResource(); result.IsFailed() {
+		return result
+	}
 	if result := t.testDescribe(); result.IsFailed() {
 		return result
 	}
@@ -610,6 +613,15 @@ func (t *ValidatorTest) testRulesCheck() (tr *test.TestResult) {
 
 	checkCmd, buffer := common.InitCmd([]string{
 		"rules", "check", "-l", "debug", "-f", t.filePath(cfg.ValidatorConfigFile),
+	})
+	return common.ExecCLI(checkCmd, buffer, t.log, true)
+}
+
+func (t *ValidatorTest) testRulesCheckCustomResource() (tr *test.TestResult) {
+	t.log.Printf("Executing testRulesCheckCustomResource")
+
+	checkCmd, buffer := common.InitCmd([]string{
+		"rules", "check", "-l", "debug", "--custom-resources", t.filePath("validator-crs"),
 	})
 	return common.ExecCLI(checkCmd, buffer, t.log, true)
 }
