@@ -285,17 +285,13 @@ func loadPrivileges(privilegeFile string) (string, func(string) error, error) {
 	return strings.Join(privileges, "\n"), validate, nil
 }
 
-func readPrivileges(rulePrivileges []v1alpha1.Privilege) ([]v1alpha1.Privilege, error) {
+func readPrivileges(rulePrivileges []string) ([]string, error) {
 	defaultPrivileges, validate, err := loadPrivileges(cfg.ValidatorVspherePrivilegeFile)
 	if err != nil {
 		return nil, err
 	}
 	if len(rulePrivileges) > 0 {
-		sb := strings.Builder{}
-		for _, p := range rulePrivileges {
-			sb.WriteString(p.Name + "\n")
-		}
-		defaultPrivileges = sb.String()
+		defaultPrivileges = strings.Join(rulePrivileges, "\n")
 	}
 
 	log.InfoCLI(`
@@ -332,17 +328,7 @@ func readPrivileges(rulePrivileges []v1alpha1.Privilege) ([]v1alpha1.Privilege, 
 		}
 	}
 
-	// Disable propagation for all default privileges.
-	// If validating propagation is required, users will need to produce a custom config.
-	apiPrivileges := make([]v1alpha1.Privilege, len(privileges))
-	for i, p := range privileges {
-		apiPrivileges[i] = v1alpha1.Privilege{
-			Name:       p,
-			Propagated: false,
-		}
-	}
-
-	return apiPrivileges, nil
+	return privileges, nil
 }
 
 func readPrivilegesFromEditor(defaultPrivileges string, validate func(string) error) ([]string, error) {
@@ -488,6 +474,15 @@ func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig
 	if err != nil {
 		return err
 	}
+
+	log.InfoCLI(`
+	Is the permission that assigns privileges to the user for the selected entity expected to
+	have propagation enabled? If multiple permissions for group principals associated with the
+	user exist on the entity in question, propagation will be consider enabled if any of them
+	has propagation enabled. If a permission exists for the entity whose principal is the user,
+	the propagation value of that permission takes precedence.
+	`)
+	r.Propagated, err = prompts.ReadBool("Propagated", false)
 
 	return nil
 }
