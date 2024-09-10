@@ -10,7 +10,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 
+	"github.com/validator-labs/validator-plugin-vsphere/api/vcenter"
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
 )
@@ -19,7 +21,7 @@ import (
 var GetVSphereDriver = getVSphereDriver
 
 // ReadVsphereAccountProps prompts the user to configure vSphere account properties
-func ReadVsphereAccountProps(account *vsphere.Account) error {
+func ReadVsphereAccountProps(account *vcenter.Account) error {
 	vcenterServer := account.Host
 	username := account.Username
 	password := account.Password
@@ -73,12 +75,12 @@ func ReadVsphereAccountProps(account *vsphere.Account) error {
 	return nil
 }
 
-func getVSphereDriver(account vsphere.Account) (vsphere.Driver, error) {
-	return vsphere.NewVSphereDriver(account, "", logr.Logger{})
+func getVSphereDriver(account vcenter.Account) (vsphere.Driver, error) {
+	return vsphere.NewVCenterDriver(account, "", logr.Logger{})
 }
 
 // ValidateCloudAccountVsphere validates that the provided vSphere cloud account is valid
-func ValidateCloudAccountVsphere(account vsphere.Account) error {
+func ValidateCloudAccountVsphere(account vcenter.Account) error {
 	driver, err := GetVSphereDriver(account)
 	if err != nil {
 		return err
@@ -87,7 +89,7 @@ func ValidateCloudAccountVsphere(account vsphere.Account) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	isValid, err := driver.IsValidVSphereCredentials()
+	isValid, err := driver.ValidateCredentials()
 	if err != nil {
 		return err
 	}

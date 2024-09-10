@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	"github.com/validator-labs/validator-plugin-vsphere/api/vcenter"
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	"github.com/validator-labs/validator/api/v1alpha1"
 
@@ -35,7 +36,7 @@ var vSphereDummyConfig = &components.ValidatorConfig{
 
 var (
 	tui               prompts.TUI
-	vSphereDriverFunc func(account vsphere.Account) (vsphere.Driver, error)
+	vSphereDriverFunc func(account vcenter.Account) (vsphere.Driver, error)
 )
 
 func setup(returnVals []string) {
@@ -43,7 +44,7 @@ func setup(returnVals []string) {
 	prompts.Tui = &tuimocks.MockTUI{Values: returnVals}
 
 	vSphereDriverFunc = clouds.GetVSphereDriver
-	clouds.GetVSphereDriver = func(account vsphere.Account) (vsphere.Driver, error) {
+	clouds.GetVSphereDriver = func(account vcenter.Account) (vsphere.Driver, error) {
 		return vsphere.MockVsphereDriver{}, nil
 	}
 }

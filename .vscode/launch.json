@@ -11,7 +11,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/validator.go",
             "args": [
-                "check", "-d", "-f", "/Users/tylergillson/.validator/validator-20240804075702/validator.yaml"
+                "rules", "check", "-f", "/root/.validator/validator-20240909195239/validator.yaml"
             ],
             "env": {
                 "CLI_VERSION": "0.0.4-dev",

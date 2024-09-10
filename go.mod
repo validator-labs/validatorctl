@@ -17,13 +17,13 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.2
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/validator-labs/validator v0.1.10
+	github.com/validator-labs/validator v0.1.11
 	github.com/validator-labs/validator-plugin-aws v0.1.7
 	github.com/validator-labs/validator-plugin-azure v0.0.20
 	github.com/validator-labs/validator-plugin-maas v0.0.12
 	github.com/validator-labs/validator-plugin-network v0.1.0
 	github.com/validator-labs/validator-plugin-oci v0.3.3
-	github.com/validator-labs/validator-plugin-vsphere v0.0.35-0.20240905200537-de40ad51be12
+	github.com/validator-labs/validator-plugin-vsphere v0.0.35-0.20240910004903-7542b3a92c3b
 	github.com/vmware/govmomi v0.42.0
 	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e
 	gopkg.in/ini.v1 v1.67.0
@@ -260,10 +260,11 @@ require (
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240521193020-835d969ad83a // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
-	sigs.k8s.io/cluster-api v1.8.1 // indirect
+	sigs.k8s.io/cluster-api v1.8.2 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/release-utils v0.8.4 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
 // replace github.com/validator-labs/validator => ../validator
+// replace github.com/validator-labs/validator-plugin-vsphere => ../validator-plugin-vsphere

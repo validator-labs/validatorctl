@@ -43,15 +43,8 @@ const (
 	ValidatorPluginOciTemplate     = "validator-rules-oci.tmpl"
 	ValidatorPluginVsphereTemplate = "validator-rules-vsphere.tmpl"
 
-	ValidatorVsphereEntityDatacenter     = "Datacenter"
-	ValidatorVsphereEntityCluster        = "Cluster"
-	ValidatorVsphereEntityFolder         = "Folder"
-	ValidatorVsphereEntityResourcePool   = "Resource Pool"
-	ValidatorVsphereEntityHost           = "ESXi Host"
-	ValidatorVsphereEntityVirtualMachine = "Virtual Machine"
-	ValidatorVsphereEntityVirtualApp     = "Virtual App"
-	ValidatorVsphereVersionConstraint    = ">= 6.0, < 9.0"
-	ValidatorVspherePrivilegeFile        = "vsphere-privileges-7.x.yaml"
+	ValidatorVsphereVersionConstraint = ">= 6.0, < 9.0"
+	ValidatorVspherePrivilegeFile     = "vsphere-privileges-7.x.yaml"
 
 	AWSPolicyDocumentPrompt   = "# Provide the AWS policy document for IAM validation rule. The policy document should be in JSON format. Type :wq to save and exit (if using vi).\n"
 	AzurePermissionSetPrompt  = "# Provide the Azure permission set for IAM validation rule. The permission set should be in JSON format. Type :wq to save and exit (if using vi).\n"
@@ -157,29 +150,5 @@ var (
 		"AzureCloud",
 		"AzureUSGovernment",
 		"AzureChinaCloud",
-	}
-
-	ValidatorPluginVsphereEntities = []string{
-		ValidatorVsphereEntityCluster,
-		ValidatorVsphereEntityDatacenter,
-		ValidatorVsphereEntityHost,
-		ValidatorVsphereEntityFolder,
-		ValidatorVsphereEntityResourcePool,
-		ValidatorVsphereEntityVirtualApp,
-		ValidatorVsphereEntityVirtualMachine,
-	}
-	ValidatorPluginVsphereEntityMap = map[string]string{
-		ValidatorVsphereEntityCluster:        "cluster",
-		ValidatorVsphereEntityDatacenter:     "datacenter",
-		ValidatorVsphereEntityHost:           "host",
-		ValidatorVsphereEntityFolder:         "folder",
-		ValidatorVsphereEntityResourcePool:   "resourcepool",
-		ValidatorVsphereEntityVirtualApp:     "vapp",
-		ValidatorVsphereEntityVirtualMachine: "vm",
-	}
-	ValidatorPluginVsphereDeploymentDestination = []string{
-		ValidatorVsphereEntityCluster,
-		ValidatorVsphereEntityHost,
-		ValidatorVsphereEntityResourcePool,
 	}
 )

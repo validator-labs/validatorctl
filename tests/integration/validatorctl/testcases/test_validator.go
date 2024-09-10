@@ -8,11 +8,13 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	maasclient "github.com/canonical/gomaasclient/client"
 	"github.com/spectrocloud-labs/prompts-tui/prompts"
 	tuimocks "github.com/spectrocloud-labs/prompts-tui/prompts/mocks"
 
-	maasclient "github.com/canonical/gomaasclient/client"
+	"github.com/validator-labs/validator-plugin-vsphere/api/vcenter"
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
+
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	"github.com/validator-labs/validatorctl/pkg/services/clouds"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
@@ -79,7 +81,7 @@ func (t *ValidatorTest) initVsphereDriver(ctx *test.TestContext) {
 		Datacenters: []string{"DC0"},
 		Clusters:    []string{"C0", "C1", "C2", "C3", "C4"},
 		VMFolders:   []string{"spectro-templates", "test"},
-		HostSystems: map[string][]vsphere.HostSystem{
+		HostSystems: map[string][]vcenter.HostSystem{
 			"DC0_C0": {
 				{
 					Name:      "DC0_C0_H0",
@@ -98,7 +100,7 @@ func (t *ValidatorTest) initVsphereDriver(ctx *test.TestContext) {
 	}
 	vsphereDriverFunc := clouds.GetVSphereDriver
 	ctx.Put("vsphereDriverFunc", vsphereDriverFunc)
-	clouds.GetVSphereDriver = func(account vsphere.Account) (vsphere.Driver, error) {
+	clouds.GetVSphereDriver = func(account vcenter.Account) (vsphere.Driver, error) {
 		return vsphereDriverMock, nil
 	}
 }
@@ -639,7 +641,7 @@ func (t *ValidatorTest) testInstallUpdatePasswords() (tr *test.TestResult) {
 		"install", "-f", t.filePath(cfg.ValidatorConfigFile), "-p",
 	})
 
-	clouds.GetVSphereDriver = func(account vsphere.Account) (vsphere.Driver, error) {
+	clouds.GetVSphereDriver = func(account vcenter.Account) (vsphere.Driver, error) {
 		return vsphere.MockVsphereDriver{}, nil
 	}
 
@@ -718,7 +720,7 @@ func (t *ValidatorTest) TearDown(ctx *test.TestContext) {
 
 	// restore clouds.GetVSphereDriver
 	vsphereDriverFunc := ctx.Get("vsphereDriverFunc")
-	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account vsphere.Account) (vsphere.Driver, error))
+	clouds.GetVSphereDriver = vsphereDriverFunc.(func(account vcenter.Account) (vsphere.Driver, error))
 
 	// restore clouds.GetMaasClient
 	maasClientFunc := ctx.Get("maasClientFunc")
