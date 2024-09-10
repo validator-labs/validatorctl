@@ -483,6 +483,9 @@ func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig
 	the propagation value of that permission takes precedence.
 	`)
 	r.Propagated, err = prompts.ReadBool("Propagated", false)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
