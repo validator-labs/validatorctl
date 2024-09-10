@@ -480,7 +480,7 @@ func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig
 	Privileges are granted to users via permissions, which are scoped to either a user or a group
 	principal. Provide a list of group principals to consider during validation. Group principals
 	should be of the format, DOMAIN\group-name. It is recommended to provide a group principal for
-	each group that the vCenter user is a member of. The users' own principal is included by default.
+	each group that the vCenter user is a member of. The user's own principal is included by default.
 	`)
 	r.GroupPrincipals, err = prompts.ReadTextSlice(
 		"Group Principals", strings.Join(r.GroupPrincipals, "\n"), "", "", true,
