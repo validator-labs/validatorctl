@@ -470,6 +470,9 @@ func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig
 	if err != nil {
 		return err
 	}
+	if !r.Propagation.Enabled {
+		return nil
+	}
 
 	log.InfoCLI(`
 	Provide a list of group principals to consider during validation. Group principals
