@@ -27,7 +27,8 @@
                 "DISABLE_KIND_CLUSTER_CHECK": "true",
                 "KUBECONFIG": "/Users/tylergillson/Downloads/vdev.kubeconfig",
                 "CLI_VERSION": "0.0.4-dev",
-                "HELM_PRESERVE_FILES": "true"
+                "HELM_PRESERVE_FILES": "true",
+                "IS_TEST": "true"
             }
         }
     ]

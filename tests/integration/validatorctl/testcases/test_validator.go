@@ -158,7 +158,7 @@ func (t *ValidatorTest) testInstallInteractiveApply(ctx *test.TestContext) (tr *
 	tuiVals, tuiSliceVals = t.maasPluginValues(tuiVals, tuiSliceVals)
 	tuiVals, tuiSliceVals = t.networkPluginValues(tuiVals, tuiSliceVals)
 	tuiVals, tuiSliceVals = t.ociPluginValues(tuiVals, tuiSliceVals)
-	tuiVals = t.vspherePluginValues(tuiVals)
+	tuiVals, tuiSliceVals = t.vspherePluginValues(tuiVals, tuiSliceVals)
 	tuiVals = t.finalizationValues(tuiVals)
 
 	prompts.Tui = &tuimocks.MockTUI{
@@ -443,8 +443,8 @@ func (t *ValidatorTest) vspherePluginInstallValues(ctx *test.TestContext, vals [
 	return vals
 }
 
-func (t *ValidatorTest) vspherePluginValues(vals []string) []string {
-	vsphereVals := []string{
+func (t *ValidatorTest) vspherePluginValues(vals []string, sliceVals [][]string) ([]string, [][]string) {
+	vsphereVals := []any{
 		"DC0",                               // datacenter
 		"y",                                 // Enable NTP check
 		"ntpd",                              // NTP rule name
@@ -455,18 +455,15 @@ func (t *ValidatorTest) vspherePluginValues(vals []string) []string {
 		"DC0_C0_H1",                         // host2
 		"n",                                 // add more hosts
 		"n",                                 // add more validation rules
-		"y",                                 // Enable role privileges validation
-		"user1@vsphere.local",               // user to check role privileges against
-		"Local Filepath",                    // vCenter privileges Source
-		t.filePath("vCenterPrivileges.txt"), // privileges File
-		"n",                                 // add another role privilege rule
-		"y",                                 // Enable entity privilege validation
-		"entity rule 1",                     // entity privilege rule name
-		"user2@vsphere.local",               // user to check entity privileges against
+		"y",                                 // Enable privilege validation
+		"entity rule 1",                     // privilege rule name
 		"Folder",                            // entity type
 		"spectro-templates",                 // folder name
 		"Local Filepath",                    // vCenter privileges Source
 		t.filePath("vCenterPrivileges.txt"), // privileges File
+		"y",                                 // enable propagation
+		[]string{""},                        // group principals
+		"y",                                 // propagated
 		"n",                                 // add more entity privilege rules
 		"y",                                 // Enable compute resource validation
 		"resource requirement rule 1",       // resource requirement rule name
@@ -497,8 +494,7 @@ func (t *ValidatorTest) vspherePluginValues(vals []string) []string {
 		"k8s-zone",                          // tag
 		"n",                                 // add another tag rule
 	}
-	vals = append(vals, vsphereVals...)
-	return vals
+	return interleave(vals, sliceVals, vsphereVals)
 }
 
 func (t *ValidatorTest) maasPluginInstallValues(ctx *test.TestContext, vals []string) []string {
