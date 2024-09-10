@@ -1,12 +1,16 @@
 package validator
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	netapi "github.com/validator-labs/validator-plugin-network/api/v1alpha1"
 	vapi "github.com/validator-labs/validator/api/v1alpha1"
+	"github.com/validator-labs/validator/pkg/plugins"
 )
 
 func TestBuildValidationResultString(t *testing.T) {
@@ -109,6 +113,73 @@ Failures
 
 			if vrStr != tc.expectedVrStr {
 				t.Errorf("\nexpected vrStr:\n%s\nactual vrStr:\n%s", tc.expectedVrStr, vrStr)
+			}
+		})
+	}
+}
+
+func TestUnmarshalPluginSpec(t *testing.T) {
+	tests := []struct {
+		name         string
+		input        []byte
+		expectedSpec plugins.PluginSpec
+		expectedErr  error
+	}{
+		{
+			name: "Valid NetworkValidator spec",
+			input: []byte(
+				`apiVersion: validation.spectrocloud.labs/v1alpha1
+kind: NetworkValidator
+metadata:
+  name: network-validator-combined-network-rules
+spec:
+  dnsRules:
+  - name: Resolve Google
+    host: google.com
+`),
+			expectedSpec: &netapi.NetworkValidatorSpec{
+				DNSRules: []netapi.DNSRule{
+					{RuleName: "Resolve Google", Host: "google.com"},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:         "Unknown plugin kind",
+			input:        []byte(`kind: SomeRandomKind`),
+			expectedSpec: nil,
+			expectedErr:  errors.New("unknown plugin kind"),
+		},
+		{
+			name: "Kind not set",
+			input: []byte(
+				`spec:
+  dnsRules:
+  - name: Resolve Google
+    host: google.com
+`),
+			expectedSpec: nil,
+			expectedErr:  errors.New("plugin kind is not set"),
+		},
+		{
+			name:         "Invalid YAML format",
+			input:        []byte("hello"),
+			expectedSpec: nil,
+			expectedErr:  errors.New("cannot unmarshal"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			spec, err := unmarshalPluginSpec(tt.input)
+
+			// If an error is expected
+			if tt.expectedErr != nil {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErr.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedSpec, spec)
 			}
 		})
 	}

@@ -1,0 +1,20 @@
+apiVersion: validation.spectrocloud.labs/v1alpha1
+kind: OciValidator
+metadata:
+  name: oci-validator-combined-oci-rules
+spec:
+  ociRegistryRules:
+    - name: "public oci registry with tag"
+      host: "docker.io"
+      validationType: "none"
+      artifacts:
+        - ref: "library/redis:7.2.4"
+---
+apiVersion: validation.spectrocloud.labs/v1alpha1
+kind: NetworkValidator
+metadata:
+  name: network-validator-combined-network-rules
+spec:
+  dnsRules:
+  - name: Resolve Google
+    host: google.com

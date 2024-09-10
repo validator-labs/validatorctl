@@ -36,6 +36,13 @@ const (
 	ValidatorPluginOci     = "validator-plugin-oci"
 	ValidatorPluginVsphere = "validator-plugin-vsphere"
 
+	ValidatorPluginAwsKind     = "AwsValidator"
+	ValidatorPluginAzureKind   = "AzureValidator"
+	ValidatorPluginMaasKind    = "MaasValidator"
+	ValidatorPluginNetworkKind = "NetworkValidator"
+	ValidatorPluginOciKind     = "OciValidator"
+	ValidatorPluginVsphereKind = "VsphereValidator"
+
 	ValidatorPluginAwsTemplate     = "validator-rules-aws.tmpl"
 	ValidatorPluginAzureTemplate   = "validator-rules-azure.tmpl"
 	ValidatorPluginMaasTemplate    = "validator-rules-maas.tmpl"
