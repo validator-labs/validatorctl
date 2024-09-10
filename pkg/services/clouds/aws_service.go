@@ -16,6 +16,7 @@ import (
 	vpawsapi "github.com/validator-labs/validator-plugin-aws/api/v1alpha1"
 	"github.com/validator-labs/validator-plugin-aws/pkg/aws"
 	"github.com/validator-labs/validatorctl/pkg/components"
+	log "github.com/validator-labs/validatorctl/pkg/logging"
 )
 
 const (
@@ -42,7 +43,14 @@ func ReadAwsProfile(c *components.AWSPluginConfig) (bool, error) {
 	filepath := buildAwsFilePath(awsCredsFilename)
 	profiles, err := loadAwsCredsProfiles(filepath)
 	if err != nil || len(profiles) == 0 {
+		if err != nil {
+			log.Debug("failed to load AWS credential profiles: %v", err)
+		}
 		return true, nil
+	}
+	if os.Getenv("IS_TEST") == "true" {
+		// TUI values for integration tests assume no credentials file exists, so exit early
+		return false, nil
 	}
 
 	profileNames := maps.Keys(profiles)
@@ -90,6 +98,13 @@ func ReadAwsSTSProfile(c *components.AWSPluginConfig) error {
 	filepath := buildAwsFilePath(awsConfigFilename)
 	profiles, err := loadAwsSTSProfiles(filepath)
 	if err != nil || len(profiles) == 0 {
+		if err != nil {
+			log.Debug("failed to load AWS STS profiles: %v", err)
+		}
+		return nil
+	}
+	if os.Getenv("IS_TEST") == "true" {
+		// TUI values for integration tests assume no config file exists, so exit early
 		return nil
 	}
 

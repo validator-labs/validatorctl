@@ -662,13 +662,11 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 	var err error
 
 	if tc.Direct {
-		err = readDirectAwsCredentials(c)
-		if err != nil {
+		if err = readDirectAwsCredentials(c); err != nil {
 			return err
 		}
 	} else {
-		err = readInstallAwsCredentials(c, k8sClient)
-		if err != nil {
+		if err := readInstallAwsCredentials(c, k8sClient); err != nil {
 			return err
 		}
 	}
@@ -678,8 +676,7 @@ func readAwsCredentials(c *components.AWSPluginConfig, tc *cfg.TaskConfig, k8sCl
 		return err
 	}
 	if useSTS {
-		err = readSTS(c)
-		if err != nil {
+		if err := readSTS(c); err != nil {
 			return err
 		}
 	}
@@ -753,11 +750,9 @@ func readInstallAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernet
 		if err != nil {
 			return err
 		}
-		err = readAwsCredsHelper(c)
-		if err != nil {
+		if err := readAwsCredsHelper(c); err != nil {
 			return err
 		}
-
 	} else {
 		secret, err := services.ReadSecret(k8sClient, cfg.Validator, false, cfg.ValidatorPluginAwsKeys)
 		if err != nil {
@@ -773,22 +768,17 @@ func readInstallAwsCredentials(c *components.AWSPluginConfig, k8sClient kubernet
 }
 
 func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
-	err := readAwsCredsHelper(c)
-	if err != nil {
+	if err := readAwsCredsHelper(c); err != nil {
 		return err
 	}
-
-	err = os.Setenv("AWS_ACCESS_KEY_ID", c.AccessKeyID)
-	if err != nil {
+	if err := os.Setenv("AWS_ACCESS_KEY_ID", c.AccessKeyID); err != nil {
 		return fmt.Errorf("failed to set AWS_ACCESS_KEY_ID: %w", err)
 	}
-	err = os.Setenv("AWS_SECRET_ACCESS_KEY", c.SecretAccessKey)
-	if err != nil {
+	if err := os.Setenv("AWS_SECRET_ACCESS_KEY", c.SecretAccessKey); err != nil {
 		return fmt.Errorf("failed to set AWS_SECRET_ACCESS_KEY: %w", err)
 	}
 	if c.SessionToken != "" {
-		err = os.Setenv("AWS_SESSION_TOKEN", c.SessionToken)
-		if err != nil {
+		if err := os.Setenv("AWS_SESSION_TOKEN", c.SessionToken); err != nil {
 			return fmt.Errorf("failed to set AWS_SESSION_TOKEN: %w", err)
 		}
 	}
@@ -796,16 +786,13 @@ func readDirectAwsCredentials(c *components.AWSPluginConfig) error {
 }
 
 func readAwsCredsHelper(c *components.AWSPluginConfig) error {
-	var err error
-	validate, err := clouds.ReadAwsProfile(c)
+	tryKeychain, err := clouds.ReadAwsProfile(c)
 	if err != nil {
 		return err
 	}
-
-	if validate {
-		err = clouds.ValidateAwsCreds(c)
-		if err == nil {
-			// auth keychain is configured, skip prompting for credentials
+	if tryKeychain {
+		if err := clouds.ValidateAwsCreds(c); err == nil {
+			// default auth keychain is configured, skip prompting for credentials
 			return nil
 		}
 	}
@@ -819,6 +806,7 @@ func readAwsCredsHelper(c *components.AWSPluginConfig) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
