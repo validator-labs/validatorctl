@@ -202,7 +202,7 @@ pluginSecrets:
     {{- end }}
     username: {{ .VspherePlugin.Validator.Auth.Account.Username | quote }}
     password: {{ .VspherePlugin.Validator.Auth.Account.Password | quote }}
-    vcenterServer: {{ .VspherePlugin.Validator.Auth.Account.VcenterServer | quote }}
+    vcenterServer: {{ .VspherePlugin.Validator.Auth.Account.Host | quote }}
     insecureSkipVerify: {{ .VspherePlugin.Validator.Auth.Account.Insecure | quote }}
   {{- else }}
   vSphere: {}

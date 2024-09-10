@@ -463,13 +463,21 @@ func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig
 	}
 
 	log.InfoCLI(`
-	Privileges are granted to users via permissions, which are scoped to either a user or a group
-	principal. Provide a list of group principals to consider during validation. Group principals
+	Propagation validation identifies the permission(s) that grant privileges to the user
+	with respect to the rule's entity and verifies the value of their propagation flag.
+	`)
+	r.Propagation.Enabled, err = prompts.ReadBool("Enable propagation validation", false)
+	if err != nil {
+		return err
+	}
+
+	log.InfoCLI(`
+	Provide a list of group principals to consider during validation. Group principals
 	should be of the format, DOMAIN\group-name. It is recommended to provide a group principal for
 	each group that the vCenter user is a member of. The user's own principal is included by default.
 	`)
-	r.GroupPrincipals, err = prompts.ReadTextSlice(
-		"Group Principals", strings.Join(r.GroupPrincipals, "\n"), "", "", true,
+	r.Propagation.GroupPrincipals, err = prompts.ReadTextSlice(
+		"Group Principals", strings.Join(r.Propagation.GroupPrincipals, "\n"), "", "", true,
 	)
 	if err != nil {
 		return err
@@ -482,7 +490,7 @@ func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig
 	has propagation enabled. If a permission exists for the entity whose principal is the user,
 	the propagation value of that permission takes precedence.
 	`)
-	r.Propagated, err = prompts.ReadBool("Propagated", false)
+	r.Propagation.Propagated, err = prompts.ReadBool("Propagated", false)
 	if err != nil {
 		return err
 	}
