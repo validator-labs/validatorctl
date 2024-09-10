@@ -26,7 +26,11 @@ var vSphereDummyConfig = &components.ValidatorConfig{
 		Release: &v1alpha1.HelmRelease{
 			Chart: v1alpha1.HelmChart{},
 		},
-		Validator: &vsphereapi.VsphereValidatorSpec{},
+		Validator: &vsphereapi.VsphereValidatorSpec{
+			Auth: vsphereapi.VsphereAuth{
+				Account: &vcenter.Account{},
+			},
+		},
 	},
 	Release: &v1alpha1.HelmRelease{
 		Chart: v1alpha1.HelmChart{},
@@ -69,8 +73,7 @@ func Test_readVspherePlugin(t *testing.T) {
 			returnVals: []string{
 				"DC0", // datacenter
 				"n",   // enable NTP validation
-				"n",   // enable role privilege validation
-				"n",   // enable entity privilege validation
+				"n",   // enable privilege validation
 				"n",   // enable resource requirement validation
 				"n",   // enable tag validation
 			},
