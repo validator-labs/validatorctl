@@ -232,7 +232,7 @@ vspherePlugin:
     chart:
       name: validator-plugin-vsphere
       repository: validator-plugin-vsphere
-      version: v0.0.34
+      version: v0.1.0
     values: ""
   validator:
     auth:

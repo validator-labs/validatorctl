@@ -7,7 +7,7 @@ function latestRelease {
 
 function updateVersions {
   envsubst < hack/versions.tmpl > pkg/config/versions.go
-  envsubst < hack/validator.tmpl > tests/integration/validator/testcases/data/validator.yaml
+  envsubst < hack/validator.tmpl > tests/integration/validatorctl/testcases/data/validator.yaml
   echo "Updated versions.go & test data with latest validator versions."
 }
 
