@@ -159,7 +159,7 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		if !configProvided {
 			tc.Reconfigure = true
 		}
-		if err := ConfigureOrCheckCommand(c, tc); err != nil {
+		if err := ConfigureCommand(c, tc); err != nil {
 			return err
 		}
 	}
@@ -178,7 +178,7 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		if !configProvided {
 			tc.Reconfigure = true
 		}
-		if err := ConfigureOrCheckCommand(c, tc); err != nil {
+		if err := ConfigureCommand(c, tc); err != nil {
 			return err
 		}
 	}
@@ -195,80 +195,18 @@ func InstallValidatorCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 	return nil
 }
 
-// ConfigureOrCheckCommand configures and applies/executes validator plugin rules
-// nolint:dupl
-func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
-	var vc *components.ValidatorConfig
-	var err error
-	var saveConfig bool
-
-	if tc.CustomResources != "" && tc.Direct {
-		pluginSpecs, err := readPluginSpecs(tc.CustomResources)
-		if err != nil {
-			return err
-		}
-
-		if len(pluginSpecs) == 0 {
-			log.InfoCLI("No plugin rule custom resources found in %s", tc.CustomResources)
-			return nil
-		}
-
-		return executePlugins(c, pluginSpecs, nil)
-	}
-
-	if !tc.Reconfigure {
-		// Silent Mode
-		vc, err = components.NewValidatorFromConfig(tc)
-		if err != nil {
-			return errors.Wrap(err, "failed to load validator configuration file")
-		}
-		if tc.UpdatePasswords {
-			log.Header("Updating plugin credentials in validator configuration file")
-			if err := validator.UpdateValidatorPluginCredentials(vc, tc); err != nil {
-				return err
-			}
-			saveConfig = true
-		}
-	} else {
-		// Interactive mode
-		if tc.Direct && tc.ConfigFile == "" {
-			vc = components.NewValidatorConfig()
-			tc.ConfigFile = filepath.Join(c.RunLoc, cfg.ValidatorConfigFile)
-		} else {
-			vc, err = components.NewValidatorFromConfig(tc)
-			if err != nil {
-				return errors.Wrap(err, "failed to load validator configuration file")
-			}
-		}
-		if err := validator.ReadValidatorPluginConfig(c, tc, vc); err != nil {
-			return errors.Wrap(err, "failed to configure validator plugin(s)")
-		}
-		saveConfig = true
-	}
-
-	// save / print validator config file
-	if saveConfig {
-		if err := components.SaveValidatorConfig(vc, tc); err != nil {
-			return err
-		}
-	} else {
-		log.InfoCLI("validator configuration file: %s", tc.ConfigFile)
+// ConfigureCommand configures and applies validator plugin rules
+func ConfigureCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
+	vc, err := configureValidatorConfig(c, tc)
+	if err != nil {
+		return err
 	}
 
 	if tc.CreateConfigOnly || tc.UpdatePasswords {
 		return nil
 	}
 
-	ok, invalidPlugins := vc.EnabledPluginsHaveRules()
-	if !ok {
-		log.FatalCLI("invalid validator configuration", "error",
-			fmt.Sprintf("the following plugins are enabled, but have no rules configured: %v", invalidPlugins),
-		)
-	}
-
-	if tc.Direct {
-		return executePlugins(c, toPluginSpecs(vc), vc.SinkConfig)
-	}
+	ensurePluginsHaveRules(vc)
 
 	// upgrade the validator helm release so that plugin rule secrets
 	// are created, e.g., OCI registry secrets, Network basic auth secrets, etc.
@@ -284,6 +222,94 @@ func ConfigureOrCheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		return err
 	}
 	return nil
+}
+
+// CheckCommand configures and executes validator plugin rules
+func CheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
+	if tc.CustomResources != "" {
+		pluginSpecs, err := readPluginSpecs(tc.CustomResources)
+		if err != nil {
+			return err
+		}
+
+		if len(pluginSpecs) == 0 {
+			log.InfoCLI("No plugin rule custom resources found in %s", tc.CustomResources)
+			return nil
+		}
+
+		return executePlugins(c, pluginSpecs, nil)
+	}
+
+	vc, err := configureValidatorConfig(c, tc)
+	if err != nil {
+		return err
+	}
+
+	if tc.CreateConfigOnly || tc.UpdatePasswords {
+		return nil
+	}
+
+	ensurePluginsHaveRules(vc)
+
+	return executePlugins(c, toPluginSpecs(vc), vc.SinkConfig)
+}
+
+func configureValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig) (*components.ValidatorConfig, error) {
+	var vc *components.ValidatorConfig
+	var err error
+	var saveConfig bool
+
+	if !tc.Reconfigure {
+		// Silent Mode
+		vc, err = components.NewValidatorFromConfig(tc)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to load validator configuration file")
+		}
+		if tc.UpdatePasswords {
+			log.Header("Updating plugin credentials in validator configuration file")
+			if err := validator.UpdateValidatorPluginCredentials(vc, tc); err != nil {
+				return nil, err
+			}
+			saveConfig = true
+		}
+	} else {
+		// Interactive mode
+		if tc.Direct && tc.ConfigFile == "" {
+			vc = components.NewValidatorConfig()
+			tc.ConfigFile = filepath.Join(c.RunLoc, cfg.ValidatorConfigFile)
+		} else {
+			vc, err = components.NewValidatorFromConfig(tc)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to load validator configuration file")
+			}
+		}
+		if err := validator.ReadValidatorPluginConfig(c, tc, vc); err != nil {
+			return nil, errors.Wrap(err, "failed to configure validator plugin(s)")
+		}
+		saveConfig = true
+	}
+
+	// save / print validator config file
+	if saveConfig {
+		if err := components.SaveValidatorConfig(vc, tc); err != nil {
+			return nil, err
+		}
+	} else {
+		log.InfoCLI("validator configuration file: %s", tc.ConfigFile)
+	}
+
+	return vc, nil
+}
+
+// ensurePluginsHaveRules checks if enabled plugins have rules configured.
+// If no rules are configured for an enabled plugin, the function exits with an error.
+func ensurePluginsHaveRules(vc *components.ValidatorConfig) {
+	ok, invalidPlugins := vc.EnabledPluginsHaveRules()
+	if !ok {
+		log.FatalCLI("invalid validator configuration", "error",
+			fmt.Sprintf("the following plugins are enabled, but have no rules configured: %v", invalidPlugins),
+		)
+	}
 }
 
 func readPluginSpecs(path string) ([]plugins.PluginSpec, error) {
