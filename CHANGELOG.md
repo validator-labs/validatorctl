@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.2.0](https://github.com/validator-labs/validatorctl/compare/v0.1.4...v0.2.0) (2024-09-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove role privilege rules ([#217](https://github.com/validator-labs/validatorctl/issues/217))
+
+### Features
+
+* add --custom-resources flag to validator rules check as an alternate to -f ([#218](https://github.com/validator-labs/validatorctl/issues/218)) ([4aa14b6](https://github.com/validator-labs/validatorctl/commit/4aa14b69eb9bfb305605a8758f1441db396bb333))
+
+
+### Bug Fixes
+
+* add missing Host.Config.Storage privilege & document ([#212](https://github.com/validator-labs/validatorctl/issues/212)) ([c7408a6](https://github.com/validator-labs/validatorctl/commit/c7408a6254238c174deb005f4ac98c1ec2f25c99))
+
+
+### Docs
+
+* remove subcommand docs from repo ([#205](https://github.com/validator-labs/validatorctl/issues/205)) ([57ca6cb](https://github.com/validator-labs/validatorctl/commit/57ca6cbf145ae6bd946293699dd160f249a14161))
+
+
+### Dependency Updates
+
+* **deps:** update golang.org/x/exp digest to e7e105d ([#214](https://github.com/validator-labs/validatorctl/issues/214)) ([c4ac163](https://github.com/validator-labs/validatorctl/commit/c4ac1634094d6cc56af36f7f981dceb3fb4357e0))
+
+
+### Refactoring
+
+* remove role privilege rules ([#217](https://github.com/validator-labs/validatorctl/issues/217)) ([b0976db](https://github.com/validator-labs/validatorctl/commit/b0976db7a9a98f98ed7fde3bc8e91664cf922669))
+* update `executePlugins` function to operate on a slice of `PluginSpec`'s ([#206](https://github.com/validator-labs/validatorctl/issues/206)) ([97875f3](https://github.com/validator-labs/validatorctl/commit/97875f3843832e05123596a36cd42decf1ff0155))
+
 ## [0.1.4](https://github.com/validator-labs/validatorctl/compare/v0.1.3...v0.1.4) (2024-09-04)
 
 
