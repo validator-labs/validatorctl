@@ -138,7 +138,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 			if err := c.Save(""); err != nil {
 				return err
 			}
-			if err := validator.ConfigureOrCheckCommand(c, tc); err != nil {
+			if err := validator.ConfigureCommand(c, tc); err != nil {
 				return fmt.Errorf("failed to configure and apply validator rules: %w", err)
 			}
 			return nil
@@ -197,7 +197,7 @@ For more information about validator, see: https://github.com/validator-labs/val
 			if err := c.Save(""); err != nil {
 				return err
 			}
-			if err := validator.ConfigureOrCheckCommand(c, tc); err != nil {
+			if err := validator.CheckCommand(c, tc); err != nil {
 				if errors.Is(err, validator.ErrValidationFailed{}) {
 					cmd.SilenceUsage = true
 				}
