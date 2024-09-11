@@ -246,7 +246,7 @@ vspherePlugin:
     privilegeValidationRules:
     - name: 'Read folder: spectro-templates'
       clusterName: ""
-      entityType: Folder
+      entityType: folder
       entityName: spectro-templates
       privileges:
       - Folder.Create
@@ -256,10 +256,9 @@ vspherePlugin:
         - ""
         propagated: true
     tagValidationRules:
-    - name: 'Cluster: k8s-zone (ensure that the selected cluster has a ''k8s-zone''
-        tag)'
+    - name: 'Cluster: k8s-zone (ensure that the selected cluster has a ''k8s-zone'' tag)'
       clusterName: C0
-      entityType: Cluster
+      entityType: cluster
       entityName: C0
       tag: k8s-zone
     computeResourceRules:

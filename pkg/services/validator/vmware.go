@@ -446,11 +446,10 @@ func readEntityPrivileges(ctx context.Context, c *components.VspherePluginConfig
 
 	log.InfoCLI(`Privilege validation rule will be applied for username %s`, c.Validator.Auth.Account.Username)
 
-	entityLabel, err := prompts.Select("Entity Type", entity.Labels)
+	r.EntityType, err = prompts.Select("Entity Type", entity.Labels)
 	if err != nil {
 		return err
 	}
-	r.EntityType = entity.Map[entityLabel]
 
 	r.EntityName, r.ClusterName, err = getEntityAndClusterInfo(ctx, r.EntityType, driver, c.Validator.Datacenter)
 	if err != nil {
@@ -558,11 +557,10 @@ func readResourceRequirementRule(ctx context.Context, c *components.VspherePlugi
 	}
 
 	if origName == "" {
-		entityLabel, err := prompts.Select("Scope", entity.ComputeResourceScopes)
+		r.Scope, err = prompts.Select("Scope", entity.ComputeResourceScopes)
 		if err != nil {
 			return err
 		}
-		r.Scope = entity.Map[entityLabel]
 	}
 
 	r.EntityName, r.ClusterName, err = getEntityAndClusterInfo(ctx, r.Scope, driver, c.Validator.Datacenter)
@@ -707,11 +705,10 @@ func readVsphereTagRule(ctx context.Context, c *components.VspherePluginConfig, 
 	}
 
 	if origName == "" {
-		entityLabel, err := prompts.Select("Entity Type", tags.SupportedEntities)
+		r.EntityType, err = prompts.Select("Entity Type", tags.SupportedEntities)
 		if err != nil {
 			return err
 		}
-		r.EntityType = entity.Map[entityLabel]
 	}
 
 	r.EntityName, r.ClusterName, err = getEntityAndClusterInfo(ctx, r.EntityType, driver, c.Validator.Datacenter)
@@ -763,8 +760,8 @@ func getClusterName(ctx context.Context, datacenter string, driver vsphere.Drive
 	return clusterName, nil
 }
 
-func getEntityAndClusterInfo(ctx context.Context, entityType entity.Entity, driver vsphere.Driver, datacenter string) (entityName, clusterName string, err error) {
-	switch entityType {
+func getEntityAndClusterInfo(ctx context.Context, entityType string, driver vsphere.Driver, datacenter string) (entityName, clusterName string, err error) {
+	switch e := entity.Map[entityType]; e {
 	case entity.Cluster:
 		entityName, err = getClusterName(ctx, datacenter, driver)
 		if err != nil {
@@ -794,7 +791,7 @@ func getEntityAndClusterInfo(ctx context.Context, entityType entity.Entity, driv
 	case entity.VirtualMachine:
 		return handleVMEntity(ctx, driver, datacenter)
 	default:
-		return "", "", fmt.Errorf("invalid entity type: %s", entityType.String())
+		return "", "", fmt.Errorf("invalid entity type: %s", entityType)
 	}
 }
 

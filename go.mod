@@ -24,8 +24,8 @@ require (
 	github.com/validator-labs/validator-plugin-maas v0.0.12
 	github.com/validator-labs/validator-plugin-network v0.1.0
 	github.com/validator-labs/validator-plugin-oci v0.3.3
-	github.com/validator-labs/validator-plugin-vsphere v0.1.0
-	github.com/vmware/govmomi v0.42.0
+	github.com/validator-labs/validator-plugin-vsphere v0.1.2
+	github.com/vmware/govmomi v0.43.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -262,7 +262,7 @@ require (
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240521193020-835d969ad83a // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
-	sigs.k8s.io/cluster-api v1.8.2 // indirect
+	sigs.k8s.io/cluster-api v1.8.3 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/release-utils v0.8.4 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect

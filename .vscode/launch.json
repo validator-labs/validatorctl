@@ -24,11 +24,12 @@
             "mode": "test",
             "program": "${workspaceFolder}/tests/integration/suite_test.go",
             "env": {
+                "AWS_PROFILE": "", // if set, will impact auth keychain resolution for AWS & OCI plugins
+                "CLI_VERSION": "0.1.4-dev",
                 "DISABLE_KIND_CLUSTER_CHECK": "true",
-                "KUBECONFIG": "/Users/tylergillson/Downloads/vdev.kubeconfig",
-                "CLI_VERSION": "0.0.4-dev",
                 "HELM_PRESERVE_FILES": "true",
-                "IS_TEST": "true"
+                "IS_TEST": "true",
+                "KUBECONFIG": "",
             }
         }
     ]
