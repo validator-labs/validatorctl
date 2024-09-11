@@ -57,8 +57,7 @@ import (
 	"github.com/validator-labs/validatorctl/pkg/services/validator"
 	"github.com/validator-labs/validatorctl/pkg/utils/embed"
 	"github.com/validator-labs/validatorctl/pkg/utils/exec"
-	exec_utils "github.com/validator-labs/validatorctl/pkg/utils/exec"
-	file_utils "github.com/validator-labs/validatorctl/pkg/utils/file"
+	"github.com/validator-labs/validatorctl/pkg/utils/file"
 	"github.com/validator-labs/validatorctl/pkg/utils/kind"
 	"github.com/validator-labs/validatorctl/pkg/utils/kube"
 	string_utils "github.com/validator-labs/validatorctl/pkg/utils/string"
@@ -297,7 +296,7 @@ func readPluginSpecs(path string) ([]plugins.PluginSpec, error) {
 	if !fi.IsDir() {
 		files = append(files, path)
 	} else {
-		files, err = file_utils.GetFilesInDir(path)
+		files, err = file.GetFilesInDir(path)
 		if err != nil {
 			return nil, err
 		}
@@ -795,7 +794,7 @@ func executePlugins(c *cfg.Config, pluginSpecs []plugins.PluginSpec, sc *compone
 				Spec: *s,
 			}
 			vr := vres.Build(v)
-			vrr := vsphereval.Validate(context.Background(), *s, s.Auth.CloudAccount, l)
+			vrr := vsphereval.Validate(context.Background(), *s, l)
 			if err := vres.Finalize(vr, vrr, l); err != nil {
 				return err
 			}
@@ -1212,7 +1211,7 @@ func getHelmClient(vc *components.ValidatorConfig) (helm.Client, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get API config from kubeconfig")
 	}
-	helm.CommandPath = exec_utils.Helm
+	helm.CommandPath = exec.Helm
 	helmClient := helm.NewHelmClient(apiCfg)
 	return helmClient, nil
 }

@@ -10,8 +10,8 @@ import (
 const testDir = "tests"
 
 func ValidatorTestCasesPath() string {
-	// note: '_validator' was used here, rather than 'validator', due to: https://github.com/helm/helm/issues/7862
-	return fmt.Sprintf("%s/%s", HomePath(testDir), "tests/integration/_validator/testcases")
+	// note: 'validatorctl' was used here, rather than 'validator', due to: https://github.com/helm/helm/issues/7862
+	return fmt.Sprintf("%s/%s", HomePath(testDir), "tests/integration/validatorctl/testcases")
 }
 
 func HomePath(dir string) string {

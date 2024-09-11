@@ -1,10 +1,10 @@
-package validator
+package validatorctl
 
 import (
 	"log"
 
-	validator "github.com/validator-labs/validatorctl/tests/integration/_validator/testcases"
 	"github.com/validator-labs/validatorctl/tests/integration/common"
+	validator "github.com/validator-labs/validatorctl/tests/integration/validatorctl/testcases"
 	"github.com/validator-labs/validatorctl/tests/utils/test"
 )
 

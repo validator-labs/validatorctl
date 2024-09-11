@@ -200,10 +200,10 @@ pluginSecrets:
     {{- if .VspherePlugin.Validator.Auth.SecretName }}
     secretName: {{ .VspherePlugin.Validator.Auth.SecretName }}
     {{- end }}
-    username: {{ .VspherePlugin.Validator.Auth.CloudAccount.Username | quote }}
-    password: {{ .VspherePlugin.Validator.Auth.CloudAccount.Password | quote }}
-    vcenterServer: {{ .VspherePlugin.Validator.Auth.CloudAccount.VcenterServer | quote }}
-    insecureSkipVerify: {{ .VspherePlugin.Validator.Auth.CloudAccount.Insecure | quote }} 
+    username: {{ .VspherePlugin.Validator.Auth.Account.Username | quote }}
+    password: {{ .VspherePlugin.Validator.Auth.Account.Password | quote }}
+    vcenterServer: {{ .VspherePlugin.Validator.Auth.Account.Host | quote }}
+    insecureSkipVerify: {{ .VspherePlugin.Validator.Auth.Account.Insecure | quote }}
   {{- else }}
   vSphere: {}
   {{- end }}

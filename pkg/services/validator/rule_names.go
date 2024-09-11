@@ -11,7 +11,7 @@ import (
 func initRule(rule validationrule.Interface, ruleType, message string, ruleNames *[]string) error {
 	name := rule.Name()
 
-	// If it already has a name, we are reconfiguring it. Tell the user and then move on.
+	// If it already has a name, we are reconfiguring it.
 	if name != "" {
 		log.InfoCLI("\nReconfiguring %s rule: %s", ruleType, name)
 		if message != "" {

@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	vsphereapi "github.com/validator-labs/validator-plugin-vsphere/api/v1alpha1"
+	"github.com/validator-labs/validator-plugin-vsphere/api/vcenter"
 	"github.com/validator-labs/validator-plugin-vsphere/pkg/vsphere"
 	"github.com/validator-labs/validator/api/v1alpha1"
 
@@ -25,7 +26,11 @@ var vSphereDummyConfig = &components.ValidatorConfig{
 		Release: &v1alpha1.HelmRelease{
 			Chart: v1alpha1.HelmChart{},
 		},
-		Validator: &vsphereapi.VsphereValidatorSpec{},
+		Validator: &vsphereapi.VsphereValidatorSpec{
+			Auth: vsphereapi.VsphereAuth{
+				Account: &vcenter.Account{},
+			},
+		},
 	},
 	Release: &v1alpha1.HelmRelease{
 		Chart: v1alpha1.HelmChart{},
@@ -35,7 +40,7 @@ var vSphereDummyConfig = &components.ValidatorConfig{
 
 var (
 	tui               prompts.TUI
-	vSphereDriverFunc func(account *vsphere.CloudAccount) (vsphere.Driver, error)
+	vSphereDriverFunc func(account vcenter.Account) (vsphere.Driver, error)
 )
 
 func setup(returnVals []string) {
@@ -43,7 +48,7 @@ func setup(returnVals []string) {
 	prompts.Tui = &tuimocks.MockTUI{Values: returnVals}
 
 	vSphereDriverFunc = clouds.GetVSphereDriver
-	clouds.GetVSphereDriver = func(account *vsphere.CloudAccount) (vsphere.Driver, error) {
+	clouds.GetVSphereDriver = func(account vcenter.Account) (vsphere.Driver, error) {
 		return vsphere.MockVsphereDriver{}, nil
 	}
 }
@@ -68,8 +73,7 @@ func Test_readVspherePlugin(t *testing.T) {
 			returnVals: []string{
 				"DC0", // datacenter
 				"n",   // enable NTP validation
-				"n",   // enable role privilege validation
-				"n",   // enable entity privilege validation
+				"n",   // enable privilege validation
 				"n",   // enable resource requirement validation
 				"n",   // enable tag validation
 			},

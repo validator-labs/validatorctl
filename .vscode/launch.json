@@ -11,7 +11,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/validator.go",
             "args": [
-                "check", "-d", "-f", "/Users/tylergillson/.validator/validator-20240804075702/validator.yaml"
+                "rules", "check", "-f", "/root/.validator/validator-20240909195239/validator.yaml"
             ],
             "env": {
                 "CLI_VERSION": "0.0.4-dev",
@@ -24,10 +24,12 @@
             "mode": "test",
             "program": "${workspaceFolder}/tests/integration/suite_test.go",
             "env": {
+                "AWS_PROFILE": "", // if set, will impact auth keychain resolution for AWS & OCI plugins
+                "CLI_VERSION": "0.1.4-dev",
                 "DISABLE_KIND_CLUSTER_CHECK": "true",
-                "KUBECONFIG": "/Users/tylergillson/Downloads/vdev.kubeconfig",
-                "CLI_VERSION": "0.0.4-dev",
-                "HELM_PRESERVE_FILES": "true"
+                "HELM_PRESERVE_FILES": "true",
+                "IS_TEST": "true",
+                "KUBECONFIG": "",
             }
         }
     ]
