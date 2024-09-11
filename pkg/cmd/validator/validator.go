@@ -206,12 +206,7 @@ func ConfigureCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		return nil
 	}
 
-	ok, invalidPlugins := vc.EnabledPluginsHaveRules()
-	if !ok {
-		log.FatalCLI("invalid validator configuration", "error",
-			fmt.Sprintf("the following plugins are enabled, but have no rules configured: %v", invalidPlugins),
-		)
-	}
+	ensurePluginsHaveRules(vc)
 
 	// upgrade the validator helm release so that plugin rule secrets
 	// are created, e.g., OCI registry secrets, Network basic auth secrets, etc.
@@ -254,12 +249,7 @@ func CheckCommand(c *cfg.Config, tc *cfg.TaskConfig) error {
 		return nil
 	}
 
-	ok, invalidPlugins := vc.EnabledPluginsHaveRules()
-	if !ok {
-		log.FatalCLI("invalid validator configuration", "error",
-			fmt.Sprintf("the following plugins are enabled, but have no rules configured: %v", invalidPlugins),
-		)
-	}
+	ensurePluginsHaveRules(vc)
 
 	return executePlugins(c, toPluginSpecs(vc), vc.SinkConfig)
 }
@@ -309,6 +299,17 @@ func configureValidatorConfig(c *cfg.Config, tc *cfg.TaskConfig) (*components.Va
 	}
 
 	return vc, nil
+}
+
+// ensurePluginsHaveRules checks if enabled plugins have rules configured.
+// If no rules are configured for an enabled plugin, the function exits with an error.
+func ensurePluginsHaveRules(vc *components.ValidatorConfig) {
+	ok, invalidPlugins := vc.EnabledPluginsHaveRules()
+	if !ok {
+		log.FatalCLI("invalid validator configuration", "error",
+			fmt.Sprintf("the following plugins are enabled, but have no rules configured: %v", invalidPlugins),
+		)
+	}
 }
 
 func readPluginSpecs(path string) ([]plugins.PluginSpec, error) {
