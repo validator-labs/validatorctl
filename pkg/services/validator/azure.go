@@ -312,10 +312,8 @@ func readRBACRulePermissionSets(r *plug.RBACRule) error {
 			permissionSetBytes = []byte(permissionSetFile)
 		}
 
-		var permissionSets []plug.PermissionSet
-		errUnmarshal := json.Unmarshal(permissionSetBytes, &permissionSets)
-		if errUnmarshal != nil {
-			log.ErrorCLI("Failed to unmarshal the provided permission sets", "err", errUnmarshal)
+		if err := json.Unmarshal(permissionSetBytes, &r.Permissions); err != nil {
+			log.ErrorCLI("Failed to unmarshal the provided permission sets", "err", err)
 			retry, err := prompts.ReadBool("Reconfigure permission sets", true)
 			if err != nil {
 				return err
@@ -323,10 +321,9 @@ func readRBACRulePermissionSets(r *plug.RBACRule) error {
 			if retry {
 				continue
 			}
-			return fmt.Errorf("failed to unmarshal permission sets: %w", errUnmarshal)
+			return fmt.Errorf("failed to unmarshal permission sets: %w", err)
 		}
 
-		r.Permissions = permissionSets
 		return nil
 	}
 }
@@ -529,10 +526,8 @@ func readQuotaRuleResourceSets(r *plug.QuotaRule) error {
 			resourceSetBytes = []byte(resourceSetFile)
 		}
 
-		var resourceSets []plug.ResourceSet
-		errUnmarshal := json.Unmarshal(resourceSetBytes, &resourceSets)
-		if errUnmarshal != nil {
-			log.ErrorCLI("Failed to unmarshal the provided resource sets", "err", errUnmarshal)
+		if err := json.Unmarshal(resourceSetBytes, &r.ResourceSets); err != nil {
+			log.ErrorCLI("Failed to unmarshal the provided resource sets", "err", err)
 			retry, err := prompts.ReadBool("Reconfigure resource sets", true)
 			if err != nil {
 				return err
@@ -540,10 +535,9 @@ func readQuotaRuleResourceSets(r *plug.QuotaRule) error {
 			if retry {
 				continue
 			}
-			return fmt.Errorf("failed to unmarshal resource sets: %w", errUnmarshal)
+			return fmt.Errorf("failed to unmarshal resource sets: %w", err)
 		}
 
-		r.ResourceSets = resourceSets
 		return nil
 	}
 }
