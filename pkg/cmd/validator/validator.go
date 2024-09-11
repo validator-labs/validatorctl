@@ -873,6 +873,9 @@ func validationResponseOk(expected int, vr types.ValidationResponse, log logr.Lo
 	var hasRuleError, hasResultCountError, hasValidationError bool
 
 	for _, err := range vr.ValidationRuleErrors {
+		if err == nil {
+			continue
+		}
 		log.V(0).Info("validation rule failed: unexpected error",
 			"error", err,
 		)
