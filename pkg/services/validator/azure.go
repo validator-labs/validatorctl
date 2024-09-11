@@ -72,6 +72,9 @@ func readAzurePluginRules(vc *components.ValidatorConfig, _ *cfg.TaskConfig, _ k
 	if err := configureCommunityGalleryImageRules(c, &ruleNames); err != nil {
 		return err
 	}
+	if err := configureQuotaRules(c, &ruleNames); err != nil {
+		return err
+	}
 
 	if c.Validator.ResultCount() == 0 {
 		return errNoRulesEnabled
@@ -247,6 +250,7 @@ func configureRBACRules(c *components.AzurePluginConfig, ruleNames *[]string) er
 }
 
 // readRBACRule begins the process of reconfiguring or beginning a new RBAC rule.
+// nolint:dupl
 func readRBACRule(c *components.AzurePluginConfig, r *plug.RBACRule, idx int, ruleNames *[]string) error {
 	if r == nil {
 		r = &plug.RBACRule{}
@@ -277,8 +281,9 @@ func readRBACRule(c *components.AzurePluginConfig, r *plug.RBACRule, idx int, ru
 
 // readRBACRulePermissionSets begins the process of beginning a new list of permission sets. Users
 // can provide input via file or prompts.
+// nolint:dupl
 func readRBACRulePermissionSets(r *plug.RBACRule) error {
-	log.InfoCLI("Note: You must configure at least one permission set for rule.")
+	log.InfoCLI("Note: You must configure at least one permission set for the rule.")
 	log.InfoCLI("If you're updating an existing RBAC rule, its permission sets will be replaced.")
 
 	inputType, err := prompts.Select("Add permission sets via", cfg.FileInputs)
@@ -307,10 +312,8 @@ func readRBACRulePermissionSets(r *plug.RBACRule) error {
 			permissionSetBytes = []byte(permissionSetFile)
 		}
 
-		var permissionSets []plug.PermissionSet
-		errUnmarshal := json.Unmarshal(permissionSetBytes, &permissionSets)
-		if errUnmarshal != nil {
-			log.ErrorCLI("Failed to unmarshal the provided permission sets", "err", errUnmarshal)
+		if err := json.Unmarshal(permissionSetBytes, &r.Permissions); err != nil {
+			log.ErrorCLI("Failed to unmarshal the provided permission sets", "err", err)
 			retry, err := prompts.ReadBool("Reconfigure permission sets", true)
 			if err != nil {
 				return err
@@ -318,16 +321,16 @@ func readRBACRulePermissionSets(r *plug.RBACRule) error {
 			if retry {
 				continue
 			}
-			return fmt.Errorf("failed to unmarshal permission sets: %w", errUnmarshal)
+			return fmt.Errorf("failed to unmarshal permission sets: %w", err)
 		}
 
-		r.Permissions = permissionSets
 		return nil
 	}
 }
 
 // configureCommunityGalleryImageRules sets up zero or more Community Gallery Image rules based on
 // pre-existing files or user input.
+// nolint:dupl
 func configureCommunityGalleryImageRules(c *components.AzurePluginConfig, ruleNames *[]string) error {
 	log.InfoCLI(`
 	Community gallery image validation rules ensure that images are publicly available via community galleries.
@@ -339,6 +342,7 @@ func configureCommunityGalleryImageRules(c *components.AzurePluginConfig, ruleNa
 	}
 	if !validateCommunityGalleryImage {
 		c.Validator.CommunityGalleryImageRules = nil
+		return nil
 	}
 	for i, r := range c.Validator.CommunityGalleryImageRules {
 		r := r
@@ -375,6 +379,7 @@ func configureCommunityGalleryImageRules(c *components.AzurePluginConfig, ruleNa
 
 // readCommunityGalleryImageRule begins the process of reconfiguring or beginning a new Community
 // Gallery Image rule.
+// nolint:dupl
 func readCommunityGalleryImageRule(c *components.AzurePluginConfig, r *plug.CommunityGalleryImageRule, idx int, ruleNames *[]string) error {
 	if r == nil {
 		r = &plug.CommunityGalleryImageRule{}
@@ -414,6 +419,127 @@ func readCommunityGalleryImageRule(c *components.AzurePluginConfig, r *plug.Comm
 		c.Validator.CommunityGalleryImageRules[idx] = *r
 	}
 	return nil
+}
+
+// configureQuotaRules sets up zero or more quota rules based on pre-existing files or user input.
+// nolint:dupl
+func configureQuotaRules(c *components.AzurePluginConfig, ruleNames *[]string) error {
+	log.InfoCLI(`
+	Quota validation rules ensure that quota limits are set high enough to account for current usage plus a buffer.
+	`)
+
+	validateQuotas, err := prompts.ReadBool("Enable quota validation", true)
+	if err != nil {
+		return err
+	}
+	if !validateQuotas {
+		c.Validator.RBACRules = nil
+		return nil
+	}
+	for i, r := range c.Validator.QuotaRules {
+		r := r
+		if err := readQuotaRule(c, &r, i, ruleNames); err != nil {
+			return err
+		}
+	}
+	addRules := true
+	if len(c.Validator.QuotaRules) == 0 {
+		c.Validator.QuotaRules = make([]plug.QuotaRule, 0)
+	} else {
+		addRules, err = prompts.ReadBool("Add another quota rule", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !addRules {
+		return nil
+	}
+	for {
+		if err := readQuotaRule(c, nil, -1, ruleNames); err != nil {
+			return err
+		}
+		add, err := prompts.ReadBool("Add additional quota rule", false)
+		if err != nil {
+			return err
+		}
+		if !add {
+			break
+		}
+	}
+	return nil
+}
+
+// func readQuotaRule begins the process of reconfiguring or beginning a new quota rule.
+// nolint:dupl
+func readQuotaRule(c *components.AzurePluginConfig, r *plug.QuotaRule, idx int, ruleNames *[]string) error {
+	if r == nil {
+		r = &plug.QuotaRule{}
+	}
+
+	err := initRule(r, "quota", "", ruleNames)
+	if err != nil {
+		return err
+	}
+
+	if err := readQuotaRuleResourceSets(r); err != nil {
+		return err
+	}
+
+	if idx == -1 {
+		c.Validator.QuotaRules = append(c.Validator.QuotaRules, *r)
+	} else {
+		c.Validator.QuotaRules[idx] = *r
+	}
+	return nil
+}
+
+// readQuotaRuleResourceSets begins the process of setting the resource sets of the rule. Users can
+// provide input via file or prompts.
+// nolint:dupl
+func readQuotaRuleResourceSets(r *plug.QuotaRule) error {
+	log.InfoCLI("Note: You must configure at least one resource set for the rule.")
+	log.InfoCLI("If you're updating an existing quota rule, its resource sets will be replaced.")
+
+	inputType, err := prompts.Select("Add resource sets via", cfg.FileInputs)
+	if err != nil {
+		return err
+	}
+
+	for {
+		var resourceSetBytes []byte
+		if inputType == cfg.LocalFilepath {
+			resourceSetFile, err := prompts.ReadFilePath("Resource sets file path", "", "Invalid file path", false)
+			if err != nil {
+				return err
+			}
+			resourceSetBytes, err = os.ReadFile(resourceSetFile) //#nosec
+			if err != nil {
+				return fmt.Errorf("failed to read resource sets file: %w", err)
+			}
+		} else {
+			log.InfoCLI("Configure resource sets")
+			time.Sleep(2 * time.Second)
+			resourceSetFile, err := prompts.EditFileValidatedByFullContent(cfg.AzurePermissionSetPrompt, "", prompts.ValidateJSON, 1)
+			if err != nil {
+				return fmt.Errorf("failed to configure resource sets: %w", err)
+			}
+			resourceSetBytes = []byte(resourceSetFile)
+		}
+
+		if err := json.Unmarshal(resourceSetBytes, &r.ResourceSets); err != nil {
+			log.ErrorCLI("Failed to unmarshal the provided resource sets", "err", err)
+			retry, err := prompts.ReadBool("Reconfigure resource sets", true)
+			if err != nil {
+				return err
+			}
+			if retry {
+				continue
+			}
+			return fmt.Errorf("failed to unmarshal resource sets: %w", err)
+		}
+
+		return nil
+	}
 }
 
 const (
