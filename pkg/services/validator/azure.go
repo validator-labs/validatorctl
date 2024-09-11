@@ -283,7 +283,7 @@ func readRBACRule(c *components.AzurePluginConfig, r *plug.RBACRule, idx int, ru
 // can provide input via file or prompts.
 // nolint:dupl
 func readRBACRulePermissionSets(r *plug.RBACRule) error {
-	log.InfoCLI("Note: You must configure at least one permission set for rule.")
+	log.InfoCLI("Note: You must configure at least one permission set for the rule.")
 	log.InfoCLI("If you're updating an existing RBAC rule, its permission sets will be replaced.")
 
 	inputType, err := prompts.Select("Add permission sets via", cfg.FileInputs)
@@ -500,7 +500,7 @@ func readQuotaRule(c *components.AzurePluginConfig, r *plug.QuotaRule, idx int, 
 // provide input via file or prompts.
 // nolint:dupl
 func readQuotaRuleResourceSets(r *plug.QuotaRule) error {
-	log.InfoCLI("Note: You must configure at least one resource set for rule.")
+	log.InfoCLI("Note: You must configure at least one resource set for the rule.")
 	log.InfoCLI("If you're updating an existing quota rule, its resource sets will be replaced.")
 
 	inputType, err := prompts.Select("Add resource sets via", cfg.FileInputs)
