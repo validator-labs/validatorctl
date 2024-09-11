@@ -1,0 +1,11 @@
+[
+    {
+      "scope": "/subscriptions/5f6df17d-dc8f-45e0-ba9f-0d5601c70df8/providers/Microsoft.Compute/locations/westus",
+      "resources": [
+        {
+          "name": "availabilitySets",
+          "buffer": 1000
+        }
+      ]
+    }
+  ]

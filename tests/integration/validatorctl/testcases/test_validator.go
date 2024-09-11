@@ -318,10 +318,9 @@ func (t *ValidatorTest) azurePluginValues(vals []string, sliceVals [][]string) (
 		"rule-1",                               // rule name
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // security principal
 		"Local Filepath",                       // Add permission sets via
-		t.filePath("azurePermissionSets.json"), // Permission sets file
-		"n",                                    // add RBAC rule
+		t.filePath("azureRbacPermissionSets.json"), // Permission sets file
+		"n", // add RBAC rule
 
-		// new
 		"y",                                    // enable community gallery image validation
 		"rule-2",                               // rule name
 		"westus",                               // location
@@ -329,6 +328,12 @@ func (t *ValidatorTest) azurePluginValues(vals []string, sliceVals [][]string) (
 		[]string{"a"},                          // images
 		"d551b7b1-78ae-43df-9d61-4935c843a454", // subscription
 		"n",                                    // add community gallery image rule
+
+		"y",              // enable quota validation
+		"rule-3",         // rule name
+		"Local Filepath", // Add resource sets via
+		t.filePath("azureQuotaResourceSets.json"), // Resource sets file
+		"n", // add quota rule
 	}
 	return interleave(vals, sliceVals, azureVals)
 }
