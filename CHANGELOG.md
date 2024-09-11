@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.1](https://github.com/validator-labs/validatorctl/compare/v0.2.0...v0.2.1) (2024-09-11)
+
+
+### Features
+
+* support for Azure quota rule ([#224](https://github.com/validator-labs/validatorctl/issues/224)) ([8e61091](https://github.com/validator-labs/validatorctl/commit/8e610917cf6ed0b550e930dc77b44693312af46f))
+
+
+### Bug Fixes
+
+* ignore nil errors in validationResponseOk ([#227](https://github.com/validator-labs/validatorctl/issues/227)) ([26544e2](https://github.com/validator-labs/validatorctl/commit/26544e204454d44fd0aa787a394d974f2d5d54f3))
+
+
+### Refactoring
+
+* split ConfigureOrCheckCommand into multiple functions ([#222](https://github.com/validator-labs/validatorctl/issues/222)) ([466413a](https://github.com/validator-labs/validatorctl/commit/466413a161f7ecd17d7301bc990ab6bc03c7f459))
+
 ## [0.2.0](https://github.com/validator-labs/validatorctl/compare/v0.1.4...v0.2.0) (2024-09-11)
 
 
