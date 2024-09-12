@@ -24,14 +24,14 @@ require (
 	github.com/validator-labs/validator-plugin-maas v0.0.12
 	github.com/validator-labs/validator-plugin-network v0.1.0
 	github.com/validator-labs/validator-plugin-oci v0.3.3
-	github.com/validator-labs/validator-plugin-vsphere v0.1.2
+	github.com/validator-labs/validator-plugin-vsphere v0.1.3
 	github.com/vmware/govmomi v0.43.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.31.0
-	k8s.io/apimachinery v0.31.0
-	k8s.io/client-go v0.31.0
+	k8s.io/api v0.31.1
+	k8s.io/apimachinery v0.31.1
+	k8s.io/client-go v0.31.1
 	k8s.io/helm v2.17.0+incompatible
 	sigs.k8s.io/controller-runtime v0.19.0
 	sigs.k8s.io/yaml v1.4.0
