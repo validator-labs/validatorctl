@@ -18,13 +18,13 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
-	github.com/validator-labs/validator v0.1.11
+	github.com/validator-labs/validator v0.1.12
 	github.com/validator-labs/validator-plugin-aws v0.1.7
 	github.com/validator-labs/validator-plugin-azure v0.0.21
 	github.com/validator-labs/validator-plugin-maas v0.0.12
 	github.com/validator-labs/validator-plugin-network v0.1.0
 	github.com/validator-labs/validator-plugin-oci v0.3.3
-	github.com/validator-labs/validator-plugin-vsphere v0.1.3
+	github.com/validator-labs/validator-plugin-vsphere v0.1.4
 	github.com/vmware/govmomi v0.43.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	gopkg.in/ini.v1 v1.67.0
