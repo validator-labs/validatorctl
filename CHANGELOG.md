@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.2](https://github.com/validator-labs/validatorctl/compare/v0.2.1...v0.2.2) (2024-10-04)
+
+
+### Other
+
+* bump validator and vsphere plugin version ([#231](https://github.com/validator-labs/validatorctl/issues/231)) ([cc2dbc4](https://github.com/validator-labs/validatorctl/commit/cc2dbc40f83603ab0f8f3266ca94dec620f15c6e))
+
+
+### Dependency Updates
+
+* **deps:** update kubernetes packages to v0.31.1 ([#228](https://github.com/validator-labs/validatorctl/issues/228)) ([75c8526](https://github.com/validator-labs/validatorctl/commit/75c8526566f6554729cea16a0cb3b8df2e535cb0))
+* **deps:** update module github.com/validator-labs/validator-plugin-vsphere to v0.1.3 ([#221](https://github.com/validator-labs/validatorctl/issues/221)) ([6cbe2b1](https://github.com/validator-labs/validatorctl/commit/6cbe2b1ec989a55ab910bb232d9b98bd3be5980e))
+
 ## [0.2.1](https://github.com/validator-labs/validatorctl/compare/v0.2.0...v0.2.1) (2024-09-11)
 
 
