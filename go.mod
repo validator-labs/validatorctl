@@ -18,7 +18,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
-	github.com/validator-labs/validator v0.1.11
+	github.com/validator-labs/validator v0.1.12
 	github.com/validator-labs/validator-plugin-aws v0.1.7
 	github.com/validator-labs/validator-plugin-azure v0.0.21
 	github.com/validator-labs/validator-plugin-maas v0.0.12
