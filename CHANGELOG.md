@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.3](https://github.com/validator-labs/validatorctl/compare/v0.2.2...v0.2.3) (2024-10-19)
+
+
+### Other
+
+* make reviewable ([#241](https://github.com/validator-labs/validatorctl/issues/241)) ([9f778ba](https://github.com/validator-labs/validatorctl/commit/9f778baaf552aa0bb4be8841f1cd784ab4453576))
+
+
+### Dependency Updates
+
+* **deps:** update actions/checkout digest to eef6144 ([#236](https://github.com/validator-labs/validatorctl/issues/236)) ([da46421](https://github.com/validator-labs/validatorctl/commit/da46421c2b203a3504b238d3067af9ed8e455341))
+* **deps:** update anchore/sbom-action action to v0.17.4 ([#240](https://github.com/validator-labs/validatorctl/issues/240)) ([347cb47](https://github.com/validator-labs/validatorctl/commit/347cb478f9e2f7f27d3d5de4e7e6a2f24b755d4b))
+* **deps:** update golang.org/x/exp digest to 225e2ab ([#234](https://github.com/validator-labs/validatorctl/issues/234)) ([b34f23c](https://github.com/validator-labs/validatorctl/commit/b34f23c0ec10fde491ae69e589d7c7331585f117))
+* **deps:** update golang.org/x/exp digest to f66d83c ([#239](https://github.com/validator-labs/validatorctl/issues/239)) ([21f6d92](https://github.com/validator-labs/validatorctl/commit/21f6d927d908e7f0d293cc538b5c3fe0134ab318))
+* **deps:** update module github.com/vmware/govmomi to v0.44.0 ([#237](https://github.com/validator-labs/validatorctl/issues/237)) ([bb122f3](https://github.com/validator-labs/validatorctl/commit/bb122f3f0ca189c7664e9ec7407fc5a3e9c65b24))
+* **deps:** update module github.com/vmware/govmomi to v0.44.1 ([#238](https://github.com/validator-labs/validatorctl/issues/238)) ([64b877d](https://github.com/validator-labs/validatorctl/commit/64b877dc18b6550d2bf21fae3bcce8b88ffaa2d7))
+
 ## [0.2.2](https://github.com/validator-labs/validatorctl/compare/v0.2.1...v0.2.2) (2024-10-04)
 
 
