@@ -19,11 +19,24 @@ A CLI tool for the validator ecosystem.
 - [Contributing](#contributing)
 - [License](#license)
 
-## Prerequisites
+## Prerequisites by use case
 
-The `validatorctl` relies on a few binaries that you'll need to ensure you have installed:
+The `validatorctl` binary serves multiple purposes, therefore the system requirements vary based on how you intend to use it. See requirements by use case below.
 
-- Docker v24.0.6+
+### Direct rule evaluation
+
+None! Just install the `validatorctl` binary and get started with `validatorctl rules check`.
+
+### Installing validator on an existing kubernetes cluster
+
+- Helm v3.14.0+
+- Kubectl v1.24.10+
+
+### Installing validator into an ephemeral kind cluster
+
+If you execute `validator install` without a `KUBECONFIG` set you'll be given the option to create and use a local kind cluster. Additional prerequisites are required in that case.
+
+- Docker v24.0.6+ / Podman v5+
 - Helm v3.14.0+
 - Kind v0.20.0+
 - Kubectl v1.24.10+
