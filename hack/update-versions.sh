@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 function latestRelease {
   release=$(gh release list --repo $1 -L 1 | head -n 2 | awk '{ print $1; }')
   echo ${release:1}
