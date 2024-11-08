@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.2.3](https://github.com/validator-labs/validatorctl/compare/v0.2.2...v0.2.3) (2024-11-08)
+
+
+### Bug Fixes
+
+* slack values generated with incorrect casing ([#253](https://github.com/validator-labs/validatorctl/issues/253)) ([e9a78d8](https://github.com/validator-labs/validatorctl/commit/e9a78d899e4860e8c95688c935c0e094bccb220f))
+
+
+### Other
+
+* make reviewable ([#241](https://github.com/validator-labs/validatorctl/issues/241)) ([9f778ba](https://github.com/validator-labs/validatorctl/commit/9f778baaf552aa0bb4be8841f1cd784ab4453576))
+* make reviewable ([#248](https://github.com/validator-labs/validatorctl/issues/248)) ([0c1c5f8](https://github.com/validator-labs/validatorctl/commit/0c1c5f8d636adbd44b7d969b250a457d25cdb834))
+* update build gsm ([02a4824](https://github.com/validator-labs/validatorctl/commit/02a48249fe224e56716744b75f17d92c7eba90eb))
+* Update README.md ([8cae0a3](https://github.com/validator-labs/validatorctl/commit/8cae0a30a0b74404228cc8fdefe3df196b80e5a9))
+* Update renovate.json ([#251](https://github.com/validator-labs/validatorctl/issues/251)) ([0401105](https://github.com/validator-labs/validatorctl/commit/040110522b1b3da1d9983fbcd07c964b21648ebd))
+
+
+### Dependency Updates
+
+* **deps:** update actions/checkout digest to 11bd719 ([#245](https://github.com/validator-labs/validatorctl/issues/245)) ([de9e4b1](https://github.com/validator-labs/validatorctl/commit/de9e4b1f85257a9fea41ecba2ad8ce811ee7a96b))
+* **deps:** update actions/checkout digest to eef6144 ([#236](https://github.com/validator-labs/validatorctl/issues/236)) ([da46421](https://github.com/validator-labs/validatorctl/commit/da46421c2b203a3504b238d3067af9ed8e455341))
+* **deps:** update actions/setup-go digest to 41dfa10 ([#246](https://github.com/validator-labs/validatorctl/issues/246)) ([e609b92](https://github.com/validator-labs/validatorctl/commit/e609b92d7adb2989ea768443f381aba70fc8d5d4))
+* **deps:** update all non-major dependencies ([#252](https://github.com/validator-labs/validatorctl/issues/252)) ([8c3dce6](https://github.com/validator-labs/validatorctl/commit/8c3dce6f5a73b4dfe02f353225254e348aed8ffd))
+* **deps:** update anchore/sbom-action action to v0.17.4 ([#240](https://github.com/validator-labs/validatorctl/issues/240)) ([347cb47](https://github.com/validator-labs/validatorctl/commit/347cb478f9e2f7f27d3d5de4e7e6a2f24b755d4b))
+* **deps:** update anchore/sbom-action action to v0.17.6 ([#242](https://github.com/validator-labs/validatorctl/issues/242)) ([5819cf0](https://github.com/validator-labs/validatorctl/commit/5819cf0a7d7c74d20e2dcd41182d9b3a8b151743))
+* **deps:** update golang.org/x/exp digest to 225e2ab ([#234](https://github.com/validator-labs/validatorctl/issues/234)) ([b34f23c](https://github.com/validator-labs/validatorctl/commit/b34f23c0ec10fde491ae69e589d7c7331585f117))
+* **deps:** update golang.org/x/exp digest to f66d83c ([#239](https://github.com/validator-labs/validatorctl/issues/239)) ([21f6d92](https://github.com/validator-labs/validatorctl/commit/21f6d927d908e7f0d293cc538b5c3fe0134ab318))
+* **deps:** update kubernetes packages to v0.31.2 ([#244](https://github.com/validator-labs/validatorctl/issues/244)) ([ff77688](https://github.com/validator-labs/validatorctl/commit/ff77688c7118650482e05993aaae359506dfbd4a))
+* **deps:** update module github.com/fsnotify/fsnotify to v1.8.0 ([#249](https://github.com/validator-labs/validatorctl/issues/249)) ([83f1eed](https://github.com/validator-labs/validatorctl/commit/83f1eedb2c6333038c7bcea36daa4a4caee43310))
+* **deps:** update module github.com/vmware/govmomi to v0.44.0 ([#237](https://github.com/validator-labs/validatorctl/issues/237)) ([bb122f3](https://github.com/validator-labs/validatorctl/commit/bb122f3f0ca189c7664e9ec7407fc5a3e9c65b24))
+* **deps:** update module github.com/vmware/govmomi to v0.44.1 ([#238](https://github.com/validator-labs/validatorctl/issues/238)) ([64b877d](https://github.com/validator-labs/validatorctl/commit/64b877dc18b6550d2bf21fae3bcce8b88ffaa2d7))
+* **deps:** update module github.com/vmware/govmomi to v0.45.1 ([#243](https://github.com/validator-labs/validatorctl/issues/243)) ([d5341a5](https://github.com/validator-labs/validatorctl/commit/d5341a5f99a2c0d94afb23b236ad1d3ffc270956))
+* **deps:** update module sigs.k8s.io/controller-runtime to v0.19.1 ([#247](https://github.com/validator-labs/validatorctl/issues/247)) ([d8c689f](https://github.com/validator-labs/validatorctl/commit/d8c689f362bd2a09bed1022dde16d0721ef4cfc7))
+* **deps:** update softprops/action-gh-release digest to e7a8f85 ([#250](https://github.com/validator-labs/validatorctl/issues/250)) ([31eab3f](https://github.com/validator-labs/validatorctl/commit/31eab3f06867ecb4451e650c438373d3af033a64))
+
 ## [0.2.2](https://github.com/validator-labs/validatorctl/compare/v0.2.1...v0.2.2) (2024-10-04)
 
 
