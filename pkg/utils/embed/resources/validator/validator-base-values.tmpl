@@ -97,7 +97,7 @@ sink:
   {{- if eq .SinkConfig.Type "slack" }}
   type: slack
   apiToken: {{ index .SinkConfig.Values "apiToken" }}
-  channelID: {{ index .SinkConfig.Values "channelID" }}
+  channelId: {{ index .SinkConfig.Values "channelID" }}
   {{- end }}
 {{- else }}
 sink: {}
