@@ -114,7 +114,7 @@ func (t *ValidatorTest) testInstallInteractive(ctx *test.TestContext) (tr *test.
 	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "-l", "debug"})
 
 	// Base values
-	tuiVals := t.validatorValues(ctx)
+	tuiVals := t.validatorValues(ctx, "Alertmanager")
 
 	// Install values
 	tuiVals = t.awsPluginInstallValues(ctx, tuiVals)
@@ -140,7 +140,7 @@ func (t *ValidatorTest) testInstallInteractiveApply(ctx *test.TestContext) (tr *
 	interactiveCmd, buffer := common.InitCmd([]string{"install", "-o", "--apply", "-l", "debug"})
 
 	// Base values
-	tuiVals := t.validatorValues(ctx)
+	tuiVals := t.validatorValues(ctx, "Slack")
 
 	// Install values
 	tuiVals = t.awsPluginInstallValues(ctx, tuiVals)
@@ -169,7 +169,7 @@ func (t *ValidatorTest) testInstallInteractiveApply(ctx *test.TestContext) (tr *
 	return common.ExecCLI(interactiveCmd, buffer, t.log, false)
 }
 
-func (t *ValidatorTest) validatorValues(ctx *test.TestContext) []string {
+func (t *ValidatorTest) validatorValues(ctx *test.TestContext, sinkType string) []string {
 	vals := []string{
 		// Kind
 		"y", // provision & use kind cluster
@@ -192,13 +192,25 @@ func (t *ValidatorTest) validatorValues(ctx *test.TestContext) []string {
 		"n",                       // configure basic auth
 
 		// Sink
-		"y",                            // Configure a sink
-		"Alertmanager",                 // Sink type
-		"sink-secret",                  // Sink secret name
-		"https://alertmanager.io:9093", // Alertmanager endpoint
-		"y",                            // Alertmanager insecureSkipVerify
-		"foo",                          // Alertmanager username
-		"bar",                          // Alertmanager password
+		"y", // Configure a sink
+	}
+	switch sinkType {
+	case "Alertmanager":
+		vals = append(vals, []string{
+			"Alertmanager",                 // Sink type
+			"sink-secret",                  // Sink secret name
+			"https://alertmanager.io:9093", // Alertmanager endpoint
+			"y",                            // Alertmanager insecureSkipVerify
+			"foo",                          // Alertmanager username
+			"bar",                          // Alertmanager password
+		}...)
+	case "Slack":
+		vals = append(vals, []string{
+			"Slack",             // Sink type
+			"sink-secret",       // Sink secret name
+			"xoxb-xxx",          // Slack bot token
+			"slack-channel-xyz", // Slack channel id
+		}...)
 	}
 	if string_utils.IsDevVersion(ctx.Get("version")) {
 		vals = append(vals, cfg.ValidatorChartVersions[cfg.Validator]) // validator helm chart version

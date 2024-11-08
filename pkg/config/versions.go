@@ -4,7 +4,7 @@ package config
 var ValidatorChartVersions = map[string]string{
 	Validator:              "v0.1.12",
 	ValidatorPluginAws:     "v0.1.7",
-	ValidatorPluginAzure:   "v0.0.21",
+	ValidatorPluginAzure:   "v0.0.22",
 	ValidatorPluginMaas:    "v0.0.12",
 	ValidatorPluginNetwork: "v0.1.0",
 	ValidatorPluginOci:     "v0.3.3",
