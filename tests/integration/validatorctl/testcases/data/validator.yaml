@@ -59,7 +59,7 @@ awsPlugin:
     chart:
       name: validator-plugin-aws
       repository: validator-plugin-aws
-      version: v0.1.7
+      version: v0.1.8
     values: ""
   accessKeyId: a0XCQd+Emx7/bwAaTyY13ipTRychb4MiQw==
   secretAccessKey: IrGIW8FPVuOxVDRWQUdTa22SDf1MQ2PBw0kdngVq+w==
