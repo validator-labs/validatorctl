@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.4](https://github.com/validator-labs/validatorctl/compare/v0.2.3...v0.2.4) (2024-11-20)
+
+
+### Other
+
+* update plugin versions ([#262](https://github.com/validator-labs/validatorctl/issues/262)) ([a125bd9](https://github.com/validator-labs/validatorctl/commit/a125bd93f866ad26277053ddc922fe82270859ec))
+* update renovate.json ([838b4f5](https://github.com/validator-labs/validatorctl/commit/838b4f5164a294c1cc12785c32f4dd50d8d01f56))
+
+
+### Dependency Updates
+
+* **deps:** update build digest to 3463b98 ([#257](https://github.com/validator-labs/validatorctl/issues/257)) ([69476c8](https://github.com/validator-labs/validatorctl/commit/69476c8f1792a86df5a51bff613a2a9dc0bbbc94))
+* **deps:** update build digest to 3840c9d ([#258](https://github.com/validator-labs/validatorctl/issues/258)) ([d389fe1](https://github.com/validator-labs/validatorctl/commit/d389fe1055072efc61ef6f9642451b3311b8dc14))
+* **deps:** update build digest to 713df39 ([#260](https://github.com/validator-labs/validatorctl/issues/260)) ([c8ce4b0](https://github.com/validator-labs/validatorctl/commit/c8ce4b03610faf3f7d272b7129551cd21d696469))
+* **deps:** update golang.org/x/exp digest to 2d47ceb ([#254](https://github.com/validator-labs/validatorctl/issues/254)) ([a5757e5](https://github.com/validator-labs/validatorctl/commit/a5757e5047a1eb9e065d75a4cf09c806764954c5))
+* **deps:** update module github.com/validator-labs/validator-plugin-aws to v0.1.8 ([#261](https://github.com/validator-labs/validatorctl/issues/261)) ([813c253](https://github.com/validator-labs/validatorctl/commit/813c253386127cb78e311bcefa4125aaf4ed9e8c))
+* **deps:** update module github.com/vmware/govmomi to v0.46.1 ([#256](https://github.com/validator-labs/validatorctl/issues/256)) ([ba4fa7c](https://github.com/validator-labs/validatorctl/commit/ba4fa7cfbe52f0f4a80232963d3af9f196d1536f))
+* **deps:** update module github.com/vmware/govmomi to v0.46.2 ([#259](https://github.com/validator-labs/validatorctl/issues/259)) ([601c430](https://github.com/validator-labs/validatorctl/commit/601c430ca71879389fe55a7845f9e0b615083745))
+
 ## [0.2.3](https://github.com/validator-labs/validatorctl/compare/v0.2.2...v0.2.3) (2024-11-08)
 
 
