@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.5](https://github.com/validator-labs/validatorctl/compare/v0.2.4...v0.2.5) (2024-11-24)
+
+
+### Bug Fixes
+
+* param name of util function (for linter) ([#270](https://github.com/validator-labs/validatorctl/issues/270)) ([b840e3b](https://github.com/validator-labs/validatorctl/commit/b840e3b9def9114a3371c1a57e179a0779a5f746))
+
+
+### Dependency Updates
+
+* **deps:** update all non-major dependencies ([#266](https://github.com/validator-labs/validatorctl/issues/266)) ([43b9fbc](https://github.com/validator-labs/validatorctl/commit/43b9fbc8e84e45018e4cb45bef26ff32bc5359aa))
+* **deps:** update all non-major dependencies ([#269](https://github.com/validator-labs/validatorctl/issues/269)) ([0e6b008](https://github.com/validator-labs/validatorctl/commit/0e6b0087b7d77c2b53150852eb7f17f102b56d3e))
+* **deps:** update all non-major dependencies to v0.31.3 ([#264](https://github.com/validator-labs/validatorctl/issues/264)) ([7557f89](https://github.com/validator-labs/validatorctl/commit/7557f894eb51a40208c615980d0582b290686be1))
+* **deps:** update build digest to 5ffe724 ([#263](https://github.com/validator-labs/validatorctl/issues/263)) ([112c405](https://github.com/validator-labs/validatorctl/commit/112c405716165e7977d33ecd8a395f27079c9094))
+* **deps:** update build digest to dd09b58 ([#267](https://github.com/validator-labs/validatorctl/issues/267)) ([57f34c7](https://github.com/validator-labs/validatorctl/commit/57f34c793615013d4fc256d82bdd55d73e4a6605))
+
 ## [0.2.4](https://github.com/validator-labs/validatorctl/compare/v0.2.3...v0.2.4) (2024-11-20)
 
 
