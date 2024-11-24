@@ -28,8 +28,8 @@ func MultiTrim(str string, prefixes, suffixes []string) string {
 
 // RandStr generates a random string of a given length, which is the first
 // N chars of a UUID of the form: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx, per RFC4122.
-func RandStr(len int) string {
-	return uuid.NewString()[:len]
+func RandStr(strLen int) string {
+	return uuid.NewString()[:strLen]
 }
 
 // IsDevVersion checks if a given CLI version is a development version.
