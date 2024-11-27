@@ -186,8 +186,8 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.24 h1:N1zsICrQglfzaBnrfM
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.24/go.mod h1:dCn9HbJ8+K31i8IQ8EWmWj0EiIk0+vKiHNMxTTYveAg=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 h1:VaRN3TlFdd6KxX1x3ILT5ynH6HvKgqdiXoTxAF4HQcQ=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1/go.mod h1:FbtygfRFze9usAadmnGJNc8KsP346kEe+y2/oyhGAGc=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.193.0 h1:RhSoBFT5/8tTmIseJUXM6INTXTQDF8+0oyxWBnozIms=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.193.0/go.mod h1:mzj8EEjIHSN2oZRXiw1Dd+uB4HZTl7hC8nBzX9IZMWw=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.194.0 h1:56YXcRmryw9wiTrvdVeJEUwBCoN/+o33R52PA7CCi08=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.194.0/go.mod h1:mzj8EEjIHSN2oZRXiw1Dd+uB4HZTl7hC8nBzX9IZMWw=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.32.2 h1:2RjzMZp/8PXJUMqiKkDSp7RVj6inF5DpVel35THjV+I=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.32.2/go.mod h1:kdk+WJbHcGVbIlRQfSrKyuKkbWDdD8I9NScyS5vZ8eQ=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.4 h1:VjvjAxO4Hu/vRz7aNoMtnxi+WBRdyZPDAjBZjrIwQVo=
@@ -708,8 +708,8 @@ github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7J
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
 github.com/onsi/gomega v1.19.0/go.mod h1:LY+I3pBVzYsTBU1AnDwOSxaYi9WoWiqgwooUqq9yPro=
-github.com/onsi/gomega v1.35.1 h1:Cwbd75ZBPxFSuZ6T+rN/WCb/gOc6YgFBXLlZLhC7Ds4=
-github.com/onsi/gomega v1.35.1/go.mod h1:PvZbdDc8J6XJEpDK4HCuRBm8a6Fzp9/DmhC9C7yFlog=
+github.com/onsi/gomega v1.36.0 h1:Pb12RlruUtj4XUuPUqeEWc6j5DkVVVA49Uf6YLfC95Y=
+github.com/onsi/gomega v1.36.0/go.mod h1:PvZbdDc8J6XJEpDK4HCuRBm8a6Fzp9/DmhC9C7yFlog=
 github.com/open-policy-agent/opa v0.67.0 h1:FOdsO9yNhfmrh+72oVK7ImWmzruG+VSpfbr5IBqEWVs=
 github.com/open-policy-agent/opa v0.67.0/go.mod h1:aqKlHc8E2VAAylYE9x09zJYr/fYzGX+JKne89UGqFzk=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
@@ -878,10 +878,10 @@ github.com/transparency-dev/merkle v0.0.2 h1:Q9nBoQcZcgPamMkGn7ghV8XiTZ/kRxn1yCG
 github.com/transparency-dev/merkle v0.0.2/go.mod h1:pqSy+OXefQ1EDUVmAJ8MUhHB9TXGuzVAT58PqBoHz1A=
 github.com/validator-labs/validator v0.1.13 h1:i43kdGLBEjIOAu+qfxk9+blgwSNImDD8PQeqiIqti8w=
 github.com/validator-labs/validator v0.1.13/go.mod h1:8OSWquQ4M7P4XqrqCBop9LL7tpoVSIVz4szJI275h1U=
-github.com/validator-labs/validator-plugin-aws v0.1.9 h1:m0wtV/HfQq1hitfn/WNPnnlSBCt/tcxrhU3EB/8ijY8=
-github.com/validator-labs/validator-plugin-aws v0.1.9/go.mod h1:KEmyUe9AWCC+yIqkxCPr3io9zaKvFxeZr7QK8ju19q0=
-github.com/validator-labs/validator-plugin-azure v0.0.23 h1:yKGzRphCQIWUr5BBP8xMct97V5xMuQ/Rou/H2vJZQg4=
-github.com/validator-labs/validator-plugin-azure v0.0.23/go.mod h1:2bvjzDSSknB3LBoL1eUqqN9GReXfXF4HFtH6+KTw3Cc=
+github.com/validator-labs/validator-plugin-aws v0.1.10 h1:0l9uJ1rNnPUsBD8aZkz6ZtK/sSMPLbMI742i6YjucTo=
+github.com/validator-labs/validator-plugin-aws v0.1.10/go.mod h1:LiXZObHHXxlkB4lFgkZi5xp084+LozTcqCtuaNlS5F4=
+github.com/validator-labs/validator-plugin-azure v0.0.24 h1:mWUocGr5BRX8fBWjDfKrkzuxtH95LL9rCc0LoH8X27k=
+github.com/validator-labs/validator-plugin-azure v0.0.24/go.mod h1:q/WpXM5bez6ay57ro70WCb+5Gnr6tlr8AVCkooE1wIo=
 github.com/validator-labs/validator-plugin-maas v0.0.12 h1:MO6F/uDNryrSV2x6prV+Hp4DFKE6ml8XSicNMmRhSrA=
 github.com/validator-labs/validator-plugin-maas v0.0.12/go.mod h1:pbwTdZQNlfhoWF4pTucZxoKOflM35pJR3HuIBKNELbE=
 github.com/validator-labs/validator-plugin-network v0.1.0 h1:Z/2b/5lMRxssRWHAUHPJi6bfmsTzfJpi+tpXEgrOVJ0=
