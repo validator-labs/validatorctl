@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.6](https://github.com/validator-labs/validatorctl/compare/v0.2.5...v0.2.6) (2024-11-28)
+
+
+### Dependency Updates
+
+* **deps:** update build digest to d0ef938 ([#271](https://github.com/validator-labs/validatorctl/issues/271)) ([d0b6ed4](https://github.com/validator-labs/validatorctl/commit/d0b6ed4a51f881fbd7ab90bdc045f08a3df41c8d))
+* **deps:** update module github.com/pterm/pterm to v0.12.80 ([#272](https://github.com/validator-labs/validatorctl/issues/272)) ([0bd4732](https://github.com/validator-labs/validatorctl/commit/0bd4732699bf9e26916cbc2a082392ac136b4ac1))
+* upgrade to latest AWS and Azure plugins ([#274](https://github.com/validator-labs/validatorctl/issues/274)) ([93722aa](https://github.com/validator-labs/validatorctl/commit/93722aa6e7548a1cba5f93654c2c4bbd7b4f9765))
+
 ## [0.2.5](https://github.com/validator-labs/validatorctl/compare/v0.2.4...v0.2.5) (2024-11-24)
 
 
