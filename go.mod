@@ -18,7 +18,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	github.com/validator-labs/validator v0.1.13
+	github.com/validator-labs/validator v0.1.14
 	github.com/validator-labs/validator-plugin-aws v0.1.10
 	github.com/validator-labs/validator-plugin-azure v0.0.24
 	github.com/validator-labs/validator-plugin-maas v0.0.12
@@ -33,7 +33,7 @@ require (
 	k8s.io/apimachinery v0.31.3
 	k8s.io/client-go v0.31.3
 	k8s.io/helm v2.17.0+incompatible
-	sigs.k8s.io/controller-runtime v0.19.2
+	sigs.k8s.io/controller-runtime v0.19.3
 	sigs.k8s.io/yaml v1.4.0
 )
 
