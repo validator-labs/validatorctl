@@ -5,7 +5,7 @@ helmRelease:
   chart:
     name: validator
     repository: validator
-    version: v0.1.13
+    version: v0.1.15
   values: ""
 helmReleaseSecret:
   name: validator-helm-release-validator
@@ -59,7 +59,7 @@ awsPlugin:
     chart:
       name: validator-plugin-aws
       repository: validator-plugin-aws
-      version: v0.1.10
+      version: v0.1.11
     values: ""
   accessKeyId: a0XCQd+Emx7/bwAaTyY13ipTRychb4MiQw==
   secretAccessKey: IrGIW8FPVuOxVDRWQUdTa22SDf1MQ2PBw0kdngVq+w==
@@ -173,7 +173,7 @@ networkPlugin:
     chart:
       name: validator-plugin-network
       repository: validator-plugin-network
-      version: v0.1.0
+      version: v0.1.1
     values: ""
   validator:
     dnsRules:
@@ -201,7 +201,7 @@ ociPlugin:
     chart:
       name: validator-plugin-oci
       repository: validator-plugin-oci
-      version: v0.3.3
+      version: v0.3.4
     values: ""
   secrets:
   - name: oci-creds
@@ -232,7 +232,7 @@ vspherePlugin:
     chart:
       name: validator-plugin-vsphere
       repository: validator-plugin-vsphere
-      version: v0.1.4
+      version: v0.1.5
     values: ""
   validator:
     auth:
@@ -289,7 +289,7 @@ azurePlugin:
     chart:
       name: validator-plugin-azure
       repository: validator-plugin-azure
-      version: v0.0.24
+      version: v0.0.25
       insecureSkipVerify: true
     values: ""
   tenantId: d551b7b1-78ae-43df-9d61-4935c843a454
@@ -556,7 +556,7 @@ maasPlugin:
     chart:
       name: validator-plugin-maas
       repository: validator-plugin-maas
-      version: v0.0.12
+      version: v0.0.13
     values: ""
   validator:
     internalDNSRules:
