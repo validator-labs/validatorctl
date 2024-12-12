@@ -886,8 +886,8 @@ github.com/validator-labs/validator-plugin-vsphere v0.1.5 h1:C5YBds53yG6oyGDhu0j
 github.com/validator-labs/validator-plugin-vsphere v0.1.5/go.mod h1:msFUh62aUtMy9FKpgl/0fD5V4mrQxTJYeCfdZiq2cbw=
 github.com/vbatts/tar-split v0.11.5 h1:3bHCTIheBm1qFTcgh9oPu+nNBtX+XJIupG/vacinCts=
 github.com/vbatts/tar-split v0.11.5/go.mod h1:yZbwRsSeGjusneWgA781EKej9HF8vme8okylkAeNKLk=
-github.com/vmware/govmomi v0.46.2 h1:gZTIcKSr4sVcDB803FUv0r4lhOgE5Y5WQCNW75dPlls=
-github.com/vmware/govmomi v0.46.2/go.mod h1:uoLVU9zlXC4p4GmLVG+ZJmBC0Gn3Q7mytOJvi39OhxA=
+github.com/vmware/govmomi v0.46.3 h1:zBn42Rl0WZBFhGao8Dy0MFRkbE4YNPqOu0OBd+ww6VM=
+github.com/vmware/govmomi v0.46.3/go.mod h1:uoLVU9zlXC4p4GmLVG+ZJmBC0Gn3Q7mytOJvi39OhxA=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/xanzy/go-gitlab v0.109.0 h1:RcRme5w8VpLXTSTTMZdVoQWY37qTJWg+gwdQl4aAttE=
