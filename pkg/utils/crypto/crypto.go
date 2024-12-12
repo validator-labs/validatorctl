@@ -36,6 +36,7 @@ func DecryptB64(cipherstringB64 string) (*[]byte, error) {
 	iv := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]
 
+	// #nosec G407
 	stream := cipher.NewCFBDecrypter(block, iv)
 	stream.XORKeyStream(ciphertext, ciphertext)
 
@@ -61,6 +62,7 @@ func EncryptB64(plainbytes []byte) (string, error) {
 		return "", err
 	}
 
+	// #nosec G407
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plainbytes)
 
