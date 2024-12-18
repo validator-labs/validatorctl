@@ -5,7 +5,7 @@ helmRelease:
   chart:
     name: validator
     repository: validator
-    version: v0.1.15
+    version: v0.1.16
   values: ""
 helmReleaseSecret:
   name: validator-helm-release-validator
@@ -38,10 +38,10 @@ sinkConfig:
   type: alertmanager
   values:
     caCert: ""
-    endpoint: jpumctAu1P2XrbMtcBmSlZPTtSk1/mOMt2Njxf/HH5bZc/cBkdrPDLnh9hs=
-    insecureSkipVerify: 1F49dw3qWQrlk5KqKBgJfQPcbGc=
-    password: DbrMXgDDv3RUAI4aUDhawf+Wtw==
-    username: OmVfeZPe1Va+S2K6BuaURChRQg==
+    endpoint: aHR0cHM6Ly9hbGVydG1hbmFnZXIuaW86OTA5Mwo=
+    insecureSkipVerify: dHJ1ZQo=
+    password: ZmFrZXBhc3N3b3JkCg==
+    username: ZmFrZXVzZXJuYW1lCg==
 proxyConfig:
   enabled: false
   env:
@@ -59,10 +59,10 @@ awsPlugin:
     chart:
       name: validator-plugin-aws
       repository: validator-plugin-aws
-      version: v0.1.11
+      version: v0.1.12
     values: ""
-  accessKeyId: a0XCQd+Emx7/bwAaTyY13ipTRychb4MiQw==
-  secretAccessKey: IrGIW8FPVuOxVDRWQUdTa22SDf1MQ2PBw0kdngVq+w==
+  accessKeyId: QUtJQUlPU0ZPRE5ON0VYQU1QTEUK
+  secretAccessKey: d0phbHJYVXRuRkVNSS9LN01ERU5HL2JQeFJmaUNZRVhBTVBMRUtFWQo=
   validator:
     auth:
       implicit: false
@@ -167,134 +167,18 @@ awsPlugin:
       resourceType: subnet
       arns:
       - baz
-networkPlugin:
-  enabled: true
-  helmRelease:
-    chart:
-      name: validator-plugin-network
-      repository: validator-plugin-network
-      version: v0.1.1
-    values: ""
-  validator:
-    dnsRules:
-    - name: resolve foo
-      host: foo
-    icmpRules:
-    - name: ping foo
-      host: foo
-    ipRangeRules:
-    - name: check ips
-      startIp: 10.10.10.10
-      length: 1
-    mtuRules:
-    - name: check mtu
-      host: foo
-      mtu: 1500
-    tcpConnRules:
-    - name: check tcp
-      host: foo
-      ports:
-      - 80
-ociPlugin:
-  enabled: true
-  helmRelease:
-    chart:
-      name: validator-plugin-oci
-      repository: validator-plugin-oci
-      version: v0.3.4
-    values: ""
-  secrets:
-  - name: oci-creds
-    username: user1
-    password: VE74qaSN2qFqBJifybU/Dy/lceRliQGC
-    caCertFile: ""
-    exists: false
-  publicKeySecrets:
-  - name: cosign-pubkeys
-    keys:
-    - |
-      -----BEGIN PUBLIC KEY-----
-      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKPuCo9AmJCpqGWhefjbhkFcr1GA3
-      iNa765seE3jYC3MGUe5h52393Dhy7B5bXGsg6EfPpNYamlAEWjxCpHF3Lg==
-      -----END PUBLIC KEY-----
-  caCertPaths:
-    0: ""
-  validator:
-    ociRegistryRules:
-    - name: public ecr registry
-      host: public.ecr.aws
-      validationType: none
-      artifacts:
-      - ref: u5n5j0b4/oci-test-public
-vspherePlugin:
-  enabled: true
-  helmRelease:
-    chart:
-      name: validator-plugin-vsphere
-      repository: validator-plugin-vsphere
-      version: v0.1.5
-    values: ""
-  validator:
-    auth:
-      secretName: vsphere-creds
-      account:
-        insecure: true
-        password: vn0cCP3U08iqDUwwCgBFWBbfekA+4TTe
-        username: bob@vsphere.com
-        host: fake.vsphere.com
-    datacenter: DC0
-    privilegeValidationRules:
-    - name: 'Read folder: spectro-templates'
-      clusterName: ""
-      entityType: folder
-      entityName: spectro-templates
-      privileges:
-      - Folder.Create
-      propagation:
-        enabled: true
-        groupPrincipals:
-        - ""
-        propagated: true
-    tagValidationRules:
-    - name: 'Cluster: k8s-zone (ensure that the selected cluster has a ''k8s-zone'' tag)'
-      clusterName: C0
-      entityType: cluster
-      entityName: C0
-      tag: k8s-zone
-    computeResourceRules:
-    - name: resource requirement rule 1
-      clusterName: C0
-      scope: cluster
-      entityName: C0
-      nodepoolResourceRequirements:
-      - name: master-pool
-        numberOfNodes: 1
-        cpu: 2GHz
-        memory: 4Gi
-        diskSpace: 10Gi
-      - name: worker-pool
-        numberOfNodes: 3
-        cpu: 3GHz
-        memory: 8Gi
-        diskSpace: 20Gi
-    ntpValidationRules:
-    - name: ntpd
-      clusterName: C0
-      hosts:
-      - DC0_C0_H0
-      - DC0_C0_H1
 azurePlugin:
   enabled: true
   helmRelease:
     chart:
       name: validator-plugin-azure
       repository: validator-plugin-azure
-      version: v0.0.25
+      version: v0.0.26
       insecureSkipVerify: true
     values: ""
   tenantId: d551b7b1-78ae-43df-9d61-4935c843a454
   clientId: d551b7b1-78ae-43df-9d61-4935c843a454
-  clientSecret: qC9aFbiDg/O2Ef31aqEBrbYXb/I+t+qXA4swfguuEBRRAQ==
+  clientSecret: ZTEyNjdjM2YtNTQ4MS00ZGE5LWI4NTItOTIyZmJmMGEK
   validator:
     rbacRules:
     - name: rule-1
@@ -587,4 +471,120 @@ maasPlugin:
     auth:
       secretName: maas-creds
       tokenKey: MAAS_API_KEY
-      apiToken: "jG81nj7n8feUpHaIU/gFH2tLaqcnSshrpCiziFt+0JZ7OA=="
+      apiToken: ZmFrZTptYWFzOnRva2VuCg==
+networkPlugin:
+  enabled: true
+  helmRelease:
+    chart:
+      name: validator-plugin-network
+      repository: validator-plugin-network
+      version: v0.1.2
+    values: ""
+  validator:
+    dnsRules:
+    - name: resolve foo
+      host: foo
+    icmpRules:
+    - name: ping foo
+      host: foo
+    ipRangeRules:
+    - name: check ips
+      startIp: 10.10.10.10
+      length: 1
+    mtuRules:
+    - name: check mtu
+      host: foo
+      mtu: 1500
+    tcpConnRules:
+    - name: check tcp
+      host: foo
+      ports:
+      - 80
+ociPlugin:
+  enabled: true
+  helmRelease:
+    chart:
+      name: validator-plugin-oci
+      repository: validator-plugin-oci
+      version: v0.3.5
+    values: ""
+  secrets:
+  - name: oci-creds
+    username: user1
+    password: ZmFrZXBhc3N3b3JkMTIzCg==
+    caCertFile: ""
+    exists: false
+  publicKeySecrets:
+  - name: cosign-pubkeys
+    keys:
+    - |
+      -----BEGIN PUBLIC KEY-----
+      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKPuCo9AmJCpqGWhefjbhkFcr1GA3
+      iNa765seE3jYC3MGUe5h52393Dhy7B5bXGsg6EfPpNYamlAEWjxCpHF3Lg==
+      -----END PUBLIC KEY-----
+  caCertPaths:
+    0: ""
+  validator:
+    ociRegistryRules:
+    - name: public ecr registry
+      host: public.ecr.aws
+      validationType: none
+      artifacts:
+      - ref: u5n5j0b4/oci-test-public
+vspherePlugin:
+  enabled: true
+  helmRelease:
+    chart:
+      name: validator-plugin-vsphere
+      repository: validator-plugin-vsphere
+      version: v0.1.6
+    values: ""
+  validator:
+    auth:
+      secretName: vsphere-creds
+      account:
+        insecure: true
+        password: ZmFrZXBhc3N3b3JkCg==
+        username: bob@vsphere.com
+        host: fake.vsphere.com
+    datacenter: DC0
+    privilegeValidationRules:
+    - name: 'Read folder: spectro-templates'
+      clusterName: ""
+      entityType: folder
+      entityName: spectro-templates
+      privileges:
+      - Folder.Create
+      propagation:
+        enabled: true
+        groupPrincipals:
+        - ""
+        propagated: true
+    tagValidationRules:
+    - name: 'Cluster: k8s-zone (ensure that the selected cluster has a ''k8s-zone'' tag)'
+      clusterName: C0
+      entityType: cluster
+      entityName: C0
+      tag: k8s-zone
+    computeResourceRules:
+    - name: resource requirement rule 1
+      clusterName: C0
+      scope: cluster
+      entityName: C0
+      nodepoolResourceRequirements:
+      - name: master-pool
+        numberOfNodes: 1
+        cpu: 2GHz
+        memory: 4Gi
+        diskSpace: 10Gi
+      - name: worker-pool
+        numberOfNodes: 3
+        cpu: 3GHz
+        memory: 8Gi
+        diskSpace: 20Gi
+    ntpValidationRules:
+    - name: ntpd
+      clusterName: C0
+      hosts:
+      - DC0_C0_H0
+      - DC0_C0_H1
