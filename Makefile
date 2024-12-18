@@ -2,7 +2,7 @@ include build/makelib/common.mk
 
 # CLI version
 VERSION_SUFFIX ?= -dev
-VERSION ?= 0.2.6${VERSION_SUFFIX} # x-release-please-version
+VERSION ?= 0.2.7${VERSION_SUFFIX} # x-release-please-version
 
 ##@ Build Targets
 
