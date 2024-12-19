@@ -14,11 +14,11 @@ require (
 	github.com/pterm/pterm v0.12.80
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spectrocloud-labs/embeddedfs v0.1.0
-	github.com/spectrocloud-labs/prompts-tui v0.1.2
+	github.com/spectrocloud-labs/prompts-tui v0.1.3
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	github.com/validator-labs/validator v0.1.15
+	github.com/validator-labs/validator v0.1.16
 	github.com/validator-labs/validator-plugin-aws v0.1.12
 	github.com/validator-labs/validator-plugin-azure v0.0.26
 	github.com/validator-labs/validator-plugin-maas v0.0.13
