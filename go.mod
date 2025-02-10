@@ -1,6 +1,6 @@
 module github.com/validator-labs/validatorctl
 
-go 1.23.3
+go 1.23.6
 
 require (
 	emperror.dev/errors v0.8.1
