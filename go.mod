@@ -5,7 +5,7 @@ go 1.23.6
 require (
 	emperror.dev/errors v0.8.1
 	github.com/L30Bola/aws-policy v0.0.0-20230126045340-5e6118545ac1
-	github.com/canonical/gomaasclient v0.7.0
+	github.com/canonical/gomaasclient v0.8.0
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
@@ -14,26 +14,26 @@ require (
 	github.com/pterm/pterm v0.12.80
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spectrocloud-labs/embeddedfs v0.1.0
-	github.com/spectrocloud-labs/prompts-tui v0.1.2
-	github.com/spf13/cobra v1.8.1
+	github.com/spectrocloud-labs/prompts-tui v0.2.0
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	github.com/validator-labs/validator v0.1.15
+	github.com/validator-labs/validator v0.1.16
 	github.com/validator-labs/validator-plugin-aws v0.1.12
 	github.com/validator-labs/validator-plugin-azure v0.0.26
 	github.com/validator-labs/validator-plugin-maas v0.0.13
 	github.com/validator-labs/validator-plugin-network v0.1.2
 	github.com/validator-labs/validator-plugin-oci v0.3.5
 	github.com/validator-labs/validator-plugin-vsphere v0.1.6
-	github.com/vmware/govmomi v0.46.3
+	github.com/vmware/govmomi v0.48.1
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.32.0
-	k8s.io/apimachinery v0.32.0
-	k8s.io/client-go v0.32.0
+	k8s.io/api v0.32.2
+	k8s.io/apimachinery v0.32.2
+	k8s.io/client-go v0.32.2
 	k8s.io/helm v2.17.0+incompatible
-	sigs.k8s.io/controller-runtime v0.19.3
+	sigs.k8s.io/controller-runtime v0.20.2
 	sigs.k8s.io/yaml v1.4.0
 )
 
