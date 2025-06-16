@@ -2,6 +2,7 @@
 package components
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 
@@ -18,7 +19,6 @@ import (
 
 	cfg "github.com/validator-labs/validatorctl/pkg/config"
 	log "github.com/validator-labs/validatorctl/pkg/logging"
-	"github.com/validator-labs/validatorctl/pkg/utils/crypto"
 )
 
 // ValidatorConfig represents the validator configuration.
@@ -133,44 +133,44 @@ func (c *ValidatorConfig) EnabledPluginsHaveRules() (bool, []string) {
 }
 
 // nolint:dupl
-func (c *ValidatorConfig) decrypt() error {
+func (c *ValidatorConfig) decode() error {
 	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt release secret configuration")
+		if err := c.ReleaseSecret.decode(); err != nil {
+			return errors.Wrap(err, "failed to decode release secret configuration")
 		}
 	}
-	if err := c.SinkConfig.decrypt(); err != nil {
-		return errors.Wrap(err, "failed to decrypt Sink configuration")
+	if err := c.SinkConfig.decode(); err != nil {
+		return errors.Wrap(err, "failed to decode Sink configuration")
 	}
 
 	if c.AWSPlugin != nil {
-		if err := c.AWSPlugin.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt AWS plugin configuration")
+		if err := c.AWSPlugin.decode(); err != nil {
+			return errors.Wrap(err, "failed to decode AWS plugin configuration")
 		}
 	}
 	if c.AzurePlugin != nil {
-		if err := c.AzurePlugin.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt Azure plugin configuration")
+		if err := c.AzurePlugin.decode(); err != nil {
+			return errors.Wrap(err, "failed to decode Azure plugin configuration")
 		}
 	}
 	if c.MaasPlugin != nil {
-		if err := c.MaasPlugin.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt MAAS plugin configuration")
+		if err := c.MaasPlugin.decode(); err != nil {
+			return errors.Wrap(err, "failed to decode MAAS plugin configuration")
 		}
 	}
 	if c.NetworkPlugin != nil {
-		if err := c.NetworkPlugin.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt Network plugin configuration")
+		if err := c.NetworkPlugin.decode(); err != nil {
+			return errors.Wrap(err, "failed to decode Network plugin configuration")
 		}
 	}
 	if c.OCIPlugin != nil {
-		if err := c.OCIPlugin.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt OCI plugin configuration")
+		if err := c.OCIPlugin.decode(); err != nil {
+			return errors.Wrap(err, "failed to decode OCI plugin configuration")
 		}
 	}
 	if c.VspherePlugin != nil {
-		if err := c.VspherePlugin.decrypt(); err != nil {
-			return errors.Wrap(err, "failed to decrypt vSphere plugin configuration")
+		if err := c.VspherePlugin.decode(); err != nil {
+			return errors.Wrap(err, "failed to decode vSphere plugin configuration")
 		}
 	}
 
@@ -178,45 +178,29 @@ func (c *ValidatorConfig) decrypt() error {
 }
 
 // nolint:dupl
-func (c *ValidatorConfig) encrypt() error {
+func (c *ValidatorConfig) encode() error {
 	if c.ReleaseSecret != nil {
-		if err := c.ReleaseSecret.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt release secret configuration")
-		}
+		c.ReleaseSecret.encode()
 	}
-	if err := c.SinkConfig.encrypt(); err != nil {
-		return errors.Wrap(err, "failed to encrypt Sink configuration")
-	}
+	c.SinkConfig.encode()
 
 	if c.AWSPlugin != nil {
-		if err := c.AWSPlugin.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt AWS plugin configuration")
-		}
+		c.AWSPlugin.encode()
 	}
 	if c.AzurePlugin != nil {
-		if err := c.AzurePlugin.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt Azure plugin configuration")
-		}
+		c.AzurePlugin.encode()
 	}
 	if c.MaasPlugin != nil {
-		if err := c.MaasPlugin.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt MAAS plugin configuration")
-		}
+		c.MaasPlugin.encode()
 	}
 	if c.NetworkPlugin != nil {
-		if err := c.NetworkPlugin.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt Network plugin configuration")
-		}
+		c.NetworkPlugin.encode()
 	}
 	if c.OCIPlugin != nil {
-		if err := c.OCIPlugin.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt OCI plugin configuration")
-		}
+		c.OCIPlugin.encode()
 	}
 	if c.VspherePlugin != nil {
-		if err := c.VspherePlugin.encrypt(); err != nil {
-			return errors.Wrap(err, "failed to encrypt vSphere plugin configuration")
-		}
+		c.VspherePlugin.encode()
 	}
 
 	return nil
@@ -273,24 +257,20 @@ type SinkConfig struct {
 	Values       map[string]string `yaml:"values"`
 }
 
-func (c *SinkConfig) encrypt() error {
+func (c *SinkConfig) encode() {
 	if c.Values == nil {
-		return nil
+		return
 	}
 	for k, v := range c.Values {
 		if v == "" {
 			continue
 		}
-		value, err := crypto.EncryptB64([]byte(v))
-		if err != nil {
-			return errors.Wrapf(err, "failed to encrypt SinkConfig key %s", k)
-		}
+		value := base64.StdEncoding.EncodeToString([]byte(v))
 		c.Values[k] = value
 	}
-	return nil
 }
 
-func (c *SinkConfig) decrypt() error {
+func (c *SinkConfig) decode() error {
 	if c.Values == nil {
 		return nil
 	}
@@ -298,11 +278,11 @@ func (c *SinkConfig) decrypt() error {
 		if c.Values[k] == "" {
 			continue
 		}
-		bytes, err := crypto.DecryptB64(c.Values[k])
+		bytes, err := base64.StdEncoding.DecodeString(c.Values[k])
 		if err != nil {
-			return errors.Wrapf(err, "failed to decrypt SinkConfig key %s", k)
+			return errors.Wrapf(err, "failed to decode SinkConfig key %s", k)
 		}
-		c.Values[k] = string(*bytes)
+		c.Values[k] = string(bytes)
 	}
 	return nil
 }
@@ -318,46 +298,35 @@ type AWSPluginConfig struct {
 	Validator          *aws.AwsValidatorSpec  `yaml:"validator"`
 }
 
-func (c *AWSPluginConfig) encrypt() error {
-	accessKey, err := crypto.EncryptB64([]byte(c.AccessKeyID))
-	if err != nil {
-		return errors.Wrap(err, "failed to encrypt access key id")
-	}
+func (c *AWSPluginConfig) encode() {
+	accessKey := base64.StdEncoding.EncodeToString([]byte(c.AccessKeyID))
 	c.AccessKeyID = accessKey
 
-	secretKey, err := crypto.EncryptB64([]byte(c.SecretAccessKey))
-	if err != nil {
-		return errors.Wrap(err, "failed to encrypt secret access key")
-	}
+	secretKey := base64.StdEncoding.EncodeToString([]byte(c.SecretAccessKey))
 	c.SecretAccessKey = secretKey
 
-	sessionToken, err := crypto.EncryptB64([]byte(c.SessionToken))
-	if err != nil {
-		return errors.Wrap(err, "failed to encrypt session token")
-	}
+	sessionToken := base64.StdEncoding.EncodeToString([]byte(c.SessionToken))
 	c.SessionToken = sessionToken
-
-	return nil
 }
 
-func (c *AWSPluginConfig) decrypt() error {
-	bytes, err := crypto.DecryptB64(c.AccessKeyID)
+func (c *AWSPluginConfig) decode() error {
+	bytes, err := base64.StdEncoding.DecodeString(c.AccessKeyID)
 	if err != nil {
-		return errors.Wrap(err, "failed to decrypt access key id")
+		return errors.Wrap(err, "failed to decode access key id")
 	}
-	c.AccessKeyID = string(*bytes)
+	c.AccessKeyID = string(bytes)
 
-	bytes, err = crypto.DecryptB64(c.SecretAccessKey)
+	bytes, err = base64.StdEncoding.DecodeString(c.SecretAccessKey)
 	if err != nil {
-		return errors.Wrap(err, "failed to decrypt secret access key")
+		return errors.Wrap(err, "failed to decode secret access key")
 	}
-	c.SecretAccessKey = string(*bytes)
+	c.SecretAccessKey = string(bytes)
 
-	bytes, err = crypto.DecryptB64(c.SessionToken)
+	bytes, err = base64.StdEncoding.DecodeString(c.SessionToken)
 	if err != nil {
-		return errors.Wrap(err, "failed to decrypt session token")
+		return errors.Wrap(err, "failed to decode session token")
 	}
-	c.SessionToken = string(*bytes)
+	c.SessionToken = string(bytes)
 
 	return nil
 }
@@ -374,22 +343,17 @@ type AzurePluginConfig struct {
 	Validator          *azure.AzureValidatorSpec `yaml:"validator"`
 }
 
-func (c *AzurePluginConfig) encrypt() error {
-	clientSecret, err := crypto.EncryptB64([]byte(c.ClientSecret))
-	if err != nil {
-		return errors.Wrap(err, "failed to encrypt Azure Client Secret")
-	}
+func (c *AzurePluginConfig) encode() {
+	clientSecret := base64.StdEncoding.EncodeToString([]byte(c.ClientSecret))
 	c.ClientSecret = clientSecret
-
-	return nil
 }
 
-func (c *AzurePluginConfig) decrypt() error {
-	bytes, err := crypto.DecryptB64(c.ClientSecret)
+func (c *AzurePluginConfig) decode() error {
+	bytes, err := base64.StdEncoding.DecodeString(c.ClientSecret)
 	if err != nil {
-		return errors.Wrap(err, "failed to decrypt Azure Client Secret")
+		return errors.Wrap(err, "failed to decode Client Secret")
 	}
-	c.ClientSecret = string(*bytes)
+	c.ClientSecret = string(bytes)
 
 	return nil
 }
@@ -401,30 +365,25 @@ type MaasPluginConfig struct {
 	Validator *maas.MaasValidatorSpec `yaml:"validator"`
 }
 
-func (c *MaasPluginConfig) encrypt() error {
+func (c *MaasPluginConfig) encode() {
 	if c.Validator == nil {
-		return nil
+		return
 	}
 
-	token, err := crypto.EncryptB64([]byte(c.Validator.Auth.APIToken))
-	if err != nil {
-		return errors.Wrap(err, "failed to encrypt token")
-	}
+	token := base64.StdEncoding.EncodeToString([]byte(c.Validator.Auth.APIToken))
 	c.Validator.Auth.APIToken = token
-
-	return nil
 }
 
-func (c *MaasPluginConfig) decrypt() error {
+func (c *MaasPluginConfig) decode() error {
 	if c.Validator == nil {
 		return nil
 	}
 
-	bytes, err := crypto.DecryptB64(c.Validator.Auth.APIToken)
+	bytes, err := base64.StdEncoding.DecodeString(c.Validator.Auth.APIToken)
 	if err != nil {
-		return errors.Wrap(err, "failed to decrypt token")
+		return errors.Wrap(err, "failed to decode token")
 	}
-	c.Validator.Auth.APIToken = string(*bytes)
+	c.Validator.Auth.APIToken = string(bytes)
 
 	return nil
 }
@@ -443,33 +402,28 @@ func (c *NetworkPluginConfig) AddDummyHTTPFileAuth() {
 	c.HTTPFileAuths = append(c.HTTPFileAuths, []string{"", ""})
 }
 
-func (c *NetworkPluginConfig) encrypt() error {
+func (c *NetworkPluginConfig) encode() {
 	if c.HTTPFileAuths == nil {
-		return nil
+		return
 	}
 
 	for i, auth := range c.HTTPFileAuths {
-		password, err := crypto.EncryptB64([]byte(auth[1]))
-		if err != nil {
-			return fmt.Errorf("failed to encrypt password': %w", err)
-		}
+		password := base64.StdEncoding.EncodeToString([]byte(auth[1]))
 		c.HTTPFileAuths[i][1] = password
 	}
-
-	return nil
 }
 
-func (c *NetworkPluginConfig) decrypt() error {
+func (c *NetworkPluginConfig) decode() error {
 	if c.HTTPFileAuths == nil {
 		return nil
 	}
 
 	for i, auth := range c.HTTPFileAuths {
-		bytes, err := crypto.DecryptB64(auth[1])
+		bytes, err := base64.StdEncoding.DecodeString(auth[1])
 		if err != nil {
-			return fmt.Errorf("failed to decrypt password: %w", err)
+			return fmt.Errorf("failed to decode password: %w", err)
 		}
-		c.HTTPFileAuths[i][1] = string(*bytes)
+		c.HTTPFileAuths[i][1] = string(bytes)
 	}
 
 	return nil
@@ -485,21 +439,18 @@ type OCIPluginConfig struct {
 	Validator        *oci.OciValidatorSpec  `yaml:"validator"`
 }
 
-func (c *OCIPluginConfig) encrypt() error {
+func (c *OCIPluginConfig) encode() {
 	for _, s := range c.Secrets {
 		if s != nil {
-			if err := s.encrypt(); err != nil {
-				return err
-			}
+			s.encode()
 		}
 	}
-	return nil
 }
 
-func (c *OCIPluginConfig) decrypt() error {
+func (c *OCIPluginConfig) decode() error {
 	for _, s := range c.Secrets {
 		if s != nil {
-			if err := s.decrypt(); err != nil {
+			if err := s.decode(); err != nil {
 				return err
 			}
 		}
@@ -514,24 +465,19 @@ type VspherePluginConfig struct {
 	Validator *vsphereapi.VsphereValidatorSpec `yaml:"validator"`
 }
 
-func (c *VspherePluginConfig) encrypt() error {
+func (c *VspherePluginConfig) encode() {
 	if c.Validator == nil {
-		return nil
+		return
 	}
 	if c.Validator.Auth.Account == nil {
-		return nil
+		return
 	}
 
-	password, err := crypto.EncryptB64([]byte(c.Validator.Auth.Account.Password))
-	if err != nil {
-		return errors.Wrap(err, "failed to encrypt password")
-	}
+	password := base64.StdEncoding.EncodeToString([]byte(c.Validator.Auth.Account.Password))
 	c.Validator.Auth.Account.Password = password
-
-	return nil
 }
 
-func (c *VspherePluginConfig) decrypt() error {
+func (c *VspherePluginConfig) decode() error {
 	if c.Validator == nil {
 		return nil
 	}
@@ -539,11 +485,11 @@ func (c *VspherePluginConfig) decrypt() error {
 		return nil
 	}
 
-	bytes, err := crypto.DecryptB64(c.Validator.Auth.Account.Password)
+	bytes, err := base64.StdEncoding.DecodeString(c.Validator.Auth.Account.Password)
 	if err != nil {
-		return errors.Wrap(err, "failed to decrypt password")
+		return errors.Wrap(err, "failed to decode password")
 	}
-	c.Validator.Auth.Account.Password = string(*bytes)
+	c.Validator.Auth.Account.Password = string(bytes)
 
 	return nil
 }
@@ -568,34 +514,28 @@ func (s *Secret) ShouldCreate() bool {
 	return !s.Exists && (s.BasicAuth.Configured() || len(s.Data) > 0 || s.CaCertFile != "")
 }
 
-func (s *Secret) encrypt() error {
+func (s *Secret) encode() {
 	if s.BasicAuth != nil {
-		if err := s.BasicAuth.encrypt(); err != nil {
-			return err
-		}
+		s.BasicAuth.encode()
 	}
 	for k, v := range s.Data {
-		v, err := crypto.EncryptB64([]byte(v))
-		if err != nil {
-			return fmt.Errorf("failed to encrypt value for secret key '%s': %w", k, err)
-		}
+		v := base64.StdEncoding.EncodeToString([]byte(v))
 		s.Data[k] = v
 	}
-	return nil
 }
 
-func (s *Secret) decrypt() error {
+func (s *Secret) decode() error {
 	if s.BasicAuth != nil {
-		if err := s.BasicAuth.decrypt(); err != nil {
+		if err := s.BasicAuth.decode(); err != nil {
 			return err
 		}
 	}
 	for k := range s.Data {
-		bytes, err := crypto.DecryptB64(s.Data[k])
+		bytes, err := base64.StdEncoding.DecodeString(s.Data[k])
 		if err != nil {
-			return fmt.Errorf("failed to decrypt value for secret key '%s': %w", k, err)
+			return fmt.Errorf("failed to decode value for secret key '%s': %w", k, err)
 		}
-		s.Data[k] = string(*bytes)
+		s.Data[k] = string(bytes)
 	}
 	return nil
 }
@@ -611,22 +551,17 @@ func (ba *BasicAuth) Configured() bool {
 	return ba != nil && ba.Username != "" && ba.Password != ""
 }
 
-func (ba *BasicAuth) encrypt() error {
-	password, err := crypto.EncryptB64([]byte(ba.Password))
-	if err != nil {
-		return fmt.Errorf("failed to encrypt password': %w", err)
-	}
+func (ba *BasicAuth) encode() {
+	password := base64.StdEncoding.EncodeToString([]byte(ba.Password))
 	ba.Password = password
-
-	return nil
 }
 
-func (ba *BasicAuth) decrypt() error {
-	bytes, err := crypto.DecryptB64(ba.Password)
+func (ba *BasicAuth) decode() error {
+	bytes, err := base64.StdEncoding.DecodeString(ba.Password)
 	if err != nil {
-		return fmt.Errorf("failed to decrypt password: %w", err)
+		return fmt.Errorf("failed to decode password: %w", err)
 	}
-	ba.Password = string(*bytes)
+	ba.Password = string(bytes)
 
 	return nil
 }
@@ -637,7 +572,7 @@ func NewValidatorFromConfig(tc *cfg.TaskConfig) (*ValidatorConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := c.decrypt(); err != nil {
+	if err := c.decode(); err != nil {
 		return nil, err
 	}
 	return c, nil
@@ -658,14 +593,14 @@ func LoadValidatorConfig(tc *cfg.TaskConfig) (*ValidatorConfig, error) {
 
 // SaveValidatorConfig saves a validator configuration file to disk
 func SaveValidatorConfig(c *ValidatorConfig, tc *cfg.TaskConfig) error {
-	if err := c.encrypt(); err != nil {
+	if err := c.encode(); err != nil {
 		return err
 	}
 	b, err := yaml.Marshal(c)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal validator config")
 	}
-	if err := c.decrypt(); err != nil {
+	if err := c.decode(); err != nil {
 		return err
 	}
 	if err = os.WriteFile(tc.ConfigFile, b, 0600); err != nil {

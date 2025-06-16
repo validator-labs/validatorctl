@@ -6,3 +6,17 @@ e7156f3be822e9da88949cd9405e8eedde836e5f:tests/integration/validatorctl/testcase
 481cdf910c0bc555363ae4278b2f57a66a72ed6b:tests/integration/validatorctl/testcases/data/validator.yaml:generic-api-key:51
 hack/validator.tmpl:generic-api-key:538
 hack/validator.tmpl:generic-api-key:865
+782da8c6a4b17be3a4522fcd6944c922faa6683a:tests/integration/validatorctl/testcases/data/validator.yaml:generic-api-key:43
+782da8c6a4b17be3a4522fcd6944c922faa6683a:tests/integration/validatorctl/testcases/data/validator.yaml:generic-api-key:64
+782da8c6a4b17be3a4522fcd6944c922faa6683a:tests/integration/validatorctl/testcases/data/validator.yaml:generic-api-key:65
+782da8c6a4b17be3a4522fcd6944c922faa6683a:tests/integration/validatorctl/testcases/data/validator.yaml:generic-api-key:181
+782da8c6a4b17be3a4522fcd6944c922faa6683a:tests/integration/validatorctl/testcases/data/validator.yaml:generic-api-key:474
+782da8c6a4b17be3a4522fcd6944c922faa6683a:tests/integration/validatorctl/testcases/data/validator.yaml:generic-api-key:514
+782da8c6a4b17be3a4522fcd6944c922faa6683a:tests/integration/validatorctl/testcases/data/validator.yaml:generic-api-key:547
+782da8c6a4b17be3a4522fcd6944c922faa6683a:hack/validator.tmpl:generic-api-key:43
+782da8c6a4b17be3a4522fcd6944c922faa6683a:hack/validator.tmpl:generic-api-key:64
+782da8c6a4b17be3a4522fcd6944c922faa6683a:hack/validator.tmpl:generic-api-key:65
+782da8c6a4b17be3a4522fcd6944c922faa6683a:hack/validator.tmpl:generic-api-key:181
+782da8c6a4b17be3a4522fcd6944c922faa6683a:hack/validator.tmpl:generic-api-key:474
+782da8c6a4b17be3a4522fcd6944c922faa6683a:hack/validator.tmpl:generic-api-key:514
+782da8c6a4b17be3a4522fcd6944c922faa6683a:hack/validator.tmpl:generic-api-key:547
