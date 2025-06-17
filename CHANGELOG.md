@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.2.7](https://github.com/validator-labs/validatorctl/compare/v0.2.6...v0.2.7) (2025-06-17)
+
+
+### Features
+
+* replace encryption with b64 encoding ([#289](https://github.com/validator-labs/validatorctl/issues/289)) ([ccaf318](https://github.com/validator-labs/validatorctl/commit/ccaf318bc7b3f7661202870229ada0fed9469cca))
+
+
+### Other
+
+* bump to go1.23.6 ([#294](https://github.com/validator-labs/validatorctl/issues/294)) ([9b8d456](https://github.com/validator-labs/validatorctl/commit/9b8d45650ea576e1973fb3ff3ec2aaa6ea72fa21))
+* update chart values to remove kube-rbac-proxy ([#280](https://github.com/validator-labs/validatorctl/issues/280)) ([821ed30](https://github.com/validator-labs/validatorctl/commit/821ed303f05c3ca601a644de7bb3b82a04fcab58))
+
+
+### Dependency Updates
+
+* **deps:** update actions/setup-go digest to 3041bf5 ([#279](https://github.com/validator-labs/validatorctl/issues/279)) ([4f41b5d](https://github.com/validator-labs/validatorctl/commit/4f41b5dba0bd0bd2f9d1b9b324970698c8c23cce))
+* **deps:** update actions/setup-go digest to d35c59a ([#304](https://github.com/validator-labs/validatorctl/issues/304)) ([41a7aab](https://github.com/validator-labs/validatorctl/commit/41a7aab03caeb4625e1098213aa192b2578d0bdf))
+* **deps:** update actions/setup-go digest to f111f33 ([#293](https://github.com/validator-labs/validatorctl/issues/293)) ([8312583](https://github.com/validator-labs/validatorctl/commit/8312583396f55790362f94e986741868978d4277))
+* **deps:** update all non-major dependencies ([#275](https://github.com/validator-labs/validatorctl/issues/275)) ([ea6afc0](https://github.com/validator-labs/validatorctl/commit/ea6afc0d8ee3f8ab47a997ddc74b25b44b54c9a1))
+* **deps:** update all non-major dependencies ([#286](https://github.com/validator-labs/validatorctl/issues/286)) ([fceb531](https://github.com/validator-labs/validatorctl/commit/fceb531dc1a270f1411a80cd9b3afc6c520043d7))
+* **deps:** update anchore/sbom-action action to v0.17.9 ([#284](https://github.com/validator-labs/validatorctl/issues/284)) ([81ecf32](https://github.com/validator-labs/validatorctl/commit/81ecf32c9d844fcc62f20689cf78ff07e535f880))
+* **deps:** update build digest to 2f5dbc3 ([#298](https://github.com/validator-labs/validatorctl/issues/298)) ([c9500e3](https://github.com/validator-labs/validatorctl/commit/c9500e3f3377145ea2ab37678f9791d53b49e86e))
+* **deps:** update build digest to 95a81bf ([#296](https://github.com/validator-labs/validatorctl/issues/296)) ([ac9ecb9](https://github.com/validator-labs/validatorctl/commit/ac9ecb94f8a73f3ca41452c0fe96dbffef0fb843))
+* **deps:** update build digest to 991853a ([#299](https://github.com/validator-labs/validatorctl/issues/299)) ([b8919f1](https://github.com/validator-labs/validatorctl/commit/b8919f1a834aedeb2e60fc15c7b01d564d0b046a))
+* **deps:** update build digest to d789840 ([#300](https://github.com/validator-labs/validatorctl/issues/300)) ([eaa13e2](https://github.com/validator-labs/validatorctl/commit/eaa13e2accf403663a874f4fa784f87fa24ca28a))
+* **deps:** update golang.org/x/exp digest to 1829a12 ([#277](https://github.com/validator-labs/validatorctl/issues/277)) ([1e91773](https://github.com/validator-labs/validatorctl/commit/1e91773e20a153195dc1ce1ab4da537a6ae71e97))
+* **deps:** update golang.org/x/exp digest to 4a55095 ([#285](https://github.com/validator-labs/validatorctl/issues/285)) ([2564ce0](https://github.com/validator-labs/validatorctl/commit/2564ce08b9b63b203d9c28f728c7efdb6a7040a5))
+* **deps:** update golang.org/x/exp digest to 939b2ce ([#291](https://github.com/validator-labs/validatorctl/issues/291)) ([17bc170](https://github.com/validator-labs/validatorctl/commit/17bc170a76a176c040ec38aa3aa4f50949d87e82))
+* **deps:** update golang.org/x/exp digest to aa4b98e ([#297](https://github.com/validator-labs/validatorctl/issues/297)) ([c369db4](https://github.com/validator-labs/validatorctl/commit/c369db4c6a16c22948c7ddab594465ffaac71d11))
+* **deps:** update golang.org/x/exp digest to b2144cd ([#287](https://github.com/validator-labs/validatorctl/issues/287)) ([20c7258](https://github.com/validator-labs/validatorctl/commit/20c72580e4d8190e6948017f2f8ca33eede2f8de))
+* **deps:** update golang.org/x/exp digest to eff6e97 ([#295](https://github.com/validator-labs/validatorctl/issues/295)) ([3c49f1b](https://github.com/validator-labs/validatorctl/commit/3c49f1b58f2cf705dda8fac58949acbbe7d958ba))
+* **deps:** update googleapis/release-please-action digest to a02a34c ([#302](https://github.com/validator-labs/validatorctl/issues/302)) ([674e821](https://github.com/validator-labs/validatorctl/commit/674e821d0e0687932d96d58804fcdfbf09f65188))
+* **deps:** update module github.com/vmware/govmomi to v0.46.3 ([#283](https://github.com/validator-labs/validatorctl/issues/283)) ([1ebc52c](https://github.com/validator-labs/validatorctl/commit/1ebc52c58759d63e7be4b7cfd79f68cf020ec25d))
+* **deps:** update softprops/action-gh-release digest to 72f2c25 ([#305](https://github.com/validator-labs/validatorctl/issues/305)) ([4c0d284](https://github.com/validator-labs/validatorctl/commit/4c0d284aa123de2f06026888c06e76c78a1c60e6))
+* **deps:** update softprops/action-gh-release digest to c95fe14 ([#292](https://github.com/validator-labs/validatorctl/issues/292)) ([7a105a4](https://github.com/validator-labs/validatorctl/commit/7a105a4a5f367dabbe5ee122303e86efb458bbcf))
+
 ## [0.2.6](https://github.com/validator-labs/validatorctl/compare/v0.2.5...v0.2.6) (2024-11-28)
 
 
