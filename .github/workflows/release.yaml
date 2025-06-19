@@ -54,7 +54,7 @@ jobs:
           VERSION_SUFFIX="" make build-release
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@df80a981bc6edbc4e220a492d3cbe9f5547a6e75 # v0.17.9
+        uses: anchore/sbom-action@9246b90769f852b3a8921f330c59e0b3f439d6e9 # v0.20.1
         env:
           SBOM_NAME: validator-linux-amd64-${{ needs.release-please.outputs.tag_name }}
         with:
