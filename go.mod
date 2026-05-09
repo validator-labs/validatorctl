@@ -1,6 +1,6 @@
 module github.com/validator-labs/validatorctl
 
-go 1.23.10
+go 1.25.0
 
 require (
 	emperror.dev/errors v0.8.1
@@ -26,7 +26,7 @@ require (
 	github.com/validator-labs/validator-plugin-oci v0.3.5
 	github.com/validator-labs/validator-plugin-vsphere v0.1.6
 	github.com/vmware/govmomi v0.46.3
-	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
+	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.32.0
@@ -243,10 +243,10 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/mod v0.23.0 // indirect
+	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
