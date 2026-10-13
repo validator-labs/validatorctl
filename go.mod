@@ -1,6 +1,6 @@
 module github.com/validator-labs/validatorctl
 
-go 1.23.10
+go 1.24.0
 
 require (
 	emperror.dev/errors v0.8.1
@@ -15,9 +15,9 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spectrocloud-labs/embeddedfs v0.1.0
 	github.com/spectrocloud-labs/prompts-tui v0.1.2
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.19.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/validator-labs/validator v0.1.15
 	github.com/validator-labs/validator-plugin-aws v0.1.12
 	github.com/validator-labs/validator-plugin-azure v0.0.26
@@ -128,7 +128,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible // indirect
-	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
 	github.com/go-openapi/analysis v0.23.0 // indirect
@@ -150,7 +150,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/certificate-transparency-go v1.2.1 // indirect
 	github.com/google/gnostic-models v0.6.9-0.20230804172637-c7be7c783f49 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-containerregistry v0.20.2 // indirect
 	github.com/google/go-github/v55 v55.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -162,7 +162,8 @@ require (
 	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.1-vault-5 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
-	github.com/in-toto/in-toto-golang v0.9.0 // indirect
+	github.com/in-toto/attestation v1.1.2 // indirect
+	github.com/in-toto/in-toto-golang v0.11.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jedisct1/go-minisign v0.0.0-20230811132847-661be99b8267 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
@@ -212,7 +213,7 @@ require (
 	github.com/sagikazarmark/locafero v0.6.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sassoftware/relic v7.2.1+incompatible // indirect
-	github.com/secure-systems-lab/go-securesystemslib v0.8.0 // indirect
+	github.com/secure-systems-lab/go-securesystemslib v0.10.0 // indirect
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sigstore/cosign/v2 v2.4.1 // indirect
@@ -224,7 +225,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/thales-e-security/pool v0.0.2 // indirect
@@ -242,18 +243,18 @@ require (
 	go.opentelemetry.io/otel/trace v1.29.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/mod v0.23.0 // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/term v0.27.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/term v0.38.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/time v0.7.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240827150818-7e3bb234dfed // indirect
-	google.golang.org/protobuf v1.35.2 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
