@@ -1,6 +1,6 @@
 module github.com/validator-labs/validatorctl
 
-go 1.23.10
+go 1.25
 
 require (
 	emperror.dev/errors v0.8.1
@@ -17,7 +17,7 @@ require (
 	github.com/spectrocloud-labs/prompts-tui v0.1.2
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/validator-labs/validator v0.1.15
 	github.com/validator-labs/validator-plugin-aws v0.1.12
 	github.com/validator-labs/validator-plugin-azure v0.0.26
@@ -156,7 +156,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gookit/color v1.5.4 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
@@ -220,7 +220,7 @@ require (
 	github.com/sigstore/rekor v1.3.6 // indirect
 	github.com/sigstore/sigstore v1.8.11 // indirect
 	github.com/sigstore/timestamp-authority v1.2.2 // indirect
-	github.com/slack-go/slack v0.15.0 // indirect
+	github.com/slack-go/slack v0.23.1 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
