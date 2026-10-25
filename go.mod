@@ -1,6 +1,6 @@
 module github.com/validator-labs/validatorctl
 
-go 1.23.10
+go 1.24
 
 require (
 	emperror.dev/errors v0.8.1
@@ -175,7 +175,7 @@ require (
 	github.com/juju/mgo/v2 v2.0.2 // indirect
 	github.com/juju/schema v1.0.1 // indirect
 	github.com/juju/version v0.0.0-20210303051006-2015802527a8 // indirect
-	github.com/klauspost/compress v1.17.10 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/letsencrypt/boulder v0.0.0-20240620165639-de9c06129bec // indirect
